@@ -1,0 +1,1339 @@
+# Truth Onion — state of the project
+
+Written 2026-07-20; updated 2026-08-01 (release prep). A working handoff document:
+what exists, why it is shaped the way it is, what was tried and abandoned, and
+what is still open. The design documents (`truth-onion-spec.md`,
+`truth-onion-spec-addendum.md`, `truth-onion-stage-one-kickoff.md`, and now
+`truth-onion-stage-2-9-addendum.md` + `truth-onion-stage-2-9-kickoff.md`, saved
+into the repo this stage) remain the source of intent; this describes the state
+of the build against them.
+
+---
+
+## 1. What it is, in one paragraph
+
+An evidence engine. Claims about a topic sit on five concentric rings by **how
+well-supported they are** (core → outermost), with a second vertical axis for
+**documented outcome** (helped / harmed). The rules that decide placement are
+enforced at the data layer with no override path, so the tool can — and
+routinely does — refuse its own operator. A BYOK research companion rides along
+as a read-only advisor with a character-card personality layer that cannot
+reach the ledger. The eventual goal (Prototypes 4–6) is a shared spatial world
+whose geometry *is* the epistemology; nothing about that is built yet, and the
+current stage deliberately assumes none of it.
+
+**Status: Stage 2.98 complete — claim pages, review-status socket, and the
+operator's anonymized feedback path. Final pre-release feature stage (by
+operator decision, superseding 2.97's claim to the title). Next: the
+public release checklist — then 2.99 (the Proving Grounds, per the
+post-release design capture Amendment A), then Stage 3.
+The header add-claim question is resolved: the FEEDBACK link replaced it
+(operator decision); adding a claim lives in the search dropdown. Operator addition
+(2026-07-29): CONFIRM-BEFORE-MUTATE — adding or removing a record entity
+(support/kernel links, source attach/detach/library-delete, claim submit,
+topic create, parked-entry delete, import-replace) asks first via one
+inline confirm bar, routed through run()'s confirm option. The frozen
+(time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
+decides after it. Challenges/promote/demote keep their own deliberate
+multi-field flows without a second confirm — extend if wanted. Pinned
+(stage297 E7).** 243 tests passing across eighteen suites. The
+taxonomy revision moved to Stage 2.99 (operator decision 2026-07-27,
+amendment appended to the 2.9 addendum). **Release prep executed
+2026-08-01 (§3.2k): checklist items 0a–3 verified, repo initialized with a
+clean first commit, Fly.io deploy artifacts + build-time deploy gate in
+place. Stopped before push and deploy — those are the operator's:
+create the Fly account (MFA, monitored thetruthonion.org address) and the
+GitHub remote, push, deploy, then checklist items 4–7 against the hosted
+URL.** Under version control as of this session (§8 risk closed).
+
+**Standing rule (operator, 2026-07-27, applies to every future session):**
+nothing created during a build session — verification fixtures, seeded data,
+test artifacts in the live DB — is removed before operator verification.
+Cleanup is a separate step, proposed and operator-approved.
+
+---
+
+## 2. Architecture
+
+### 2.1 Three enforcement layers, one direction of trust
+
+```
+client/  React + Vite. Presentation and the companion. Trusted with NOTHING.
+server/  Express + SQLite (node:sqlite). rules.js + service.js + schema CHECKs.
+tests/   Seven suites against the real API with the real seed, in memory.
+```
+
+The rule that organizes everything: **the UI never decides.** Every write that
+could change a claim's standing goes through `server/rules.js`, and there is no
+API endpoint that sets a tier directly. The client cannot cheat because the
+client is never asked. This is why the frontend can be rewritten freely (2D →
+3D was additive) without touching a single epistemic guarantee.
+
+### 2.2 The rules layer (`server/rules.js`)
+
+Pure functions over `{kind, layer, targetTier, sources}` returning
+plain-language failures. The important structural choices:
+
+- **`placementFailures()` is the single arbiter.** `earnedTier()` walks tiers
+  calling it; `tierPreview()` calls it for each inward tier. The preview
+  therefore *cannot* green-light a promotion the battery would refuse — they
+  are not two implementations kept in sync, they are one function called twice.
+- **`statusFor(tier)` derives status** (core→confirmed, outermost→refuted, else
+  contested). Status is never settable, so it can't be faked independently of
+  standing.
+- **`carriesWeight(source)`** is the self-assertion rule in code: a source
+  carries weight only if it *supports*, is not claimant-self-published, and is
+  not anonymous or self-published. Everything else is a restatement.
+- **Failures name the blocker.** A contradiction refusal cites the specific
+  contradicting citation text. "No" is useless without "because of this."
+
+Backstops live below the code: SQLite `CHECK` constraints for
+moral/framing-not-in-core and metaphysical-takes-no-tier, and triggers for
+outer-cannot-feed-inner. Two independent layers say no.
+
+### 2.3 The companion (`client/src/companion/`)
+
+A read-and-talk layer with a hard structural boundary, not a behavioral one.
+
+| File | Role |
+|---|---|
+| `providers.js` | BYOK transport. `guardProviderUrl` is the choke point. |
+| `tools.js` | The read-only manifest + executor. Unknown name → refusal. |
+| `search.js` | §14 live search, fetch, and mechanical verification. |
+| `pipeline.js` | The two-pass mask-lift + fidelity gate + chat turn. |
+| `cards.js` | Character-card parsing and the persona prompt block. |
+| `store.js` | localStorage: settings, keys, card — isolated entries. |
+| `threads.js`, `tts.js`, `builder.js`, `hash.js` | Conversations, voice, card builder, prompt hash. |
+
+Data flow for a claim narration:
+
+```
+claim record ──► pass 1 (core prompt only, card STRUCTURALLY absent)
+                    └─► substance manifest (JSON) ──► groundCheck vs record
+                                                          │
+                    ┌─────────────────────────────────────┘
+                    ▼
+                 pass 2 (core + card) ──► fidelity gate ──► pass? render
+                                                       └──► fail? interleaved
+```
+
+The two passes exist because analysis and voice must not share a context. In
+pass 1 the card is *absent from the request*, not merely instructed against —
+so no persona can color a finding. Pass 2 gets a fixed manifest and is a
+render-only task.
+
+### 2.4 The verification path (built this week)
+
+```
+companion tool ──► /api/fetch (same-origin, keyless, GET)
+                       └─► fetch-proxy.js: SSRF guard → plain fetch
+                                              │ unreadable shell or 403/429?
+                                              ▼
+                                    browser-render.js: headless Edge/Chrome
+                                              │
+                                              ▼
+                             mechanical substring check → {verified}
+```
+
+`verified` is computed server-side from text that was actually retrieved. It is
+a fact the model cannot author. Results carry `via: "fetch" | "browser"` so the
+record shows *how* a page was read.
+
+---
+
+## 3. Design decisions and why
+
+### 3.1 The engine
+
+**Rules at the data layer, never the UI.** The product IS the refusal. A rule
+that lives in a form validator is a suggestion; a rule in `rules.js` plus a
+schema `CHECK` is a property. Every later stage (multiplayer, federation,
+user-hosted worlds) assumes this, which is why the spec forbids skipping ahead.
+
+**Claim text is immutable.** A tier is earned by an exact sentence. If text
+could drift after placement, a claim could earn Core saying one thing and
+quietly come to say another — the single most dangerous silent failure the
+model allows. `PATCH`/`PUT` on a claim throws by design. A revision is a new
+claim that earns its own placement.
+
+**Hard to promote, easy to demote.** Promotion requires surviving the review
+battery and is recorded pass-or-fail in challenge history; demotion is one step
+with a stated reason. The asymmetry is the epistemics.
+
+**Metaphysical claims take no radial tier.** Ranking "God exists" as weakly
+supported covertly asserts its negation as strong. Routing it off-axis keeps
+the tool from becoming an anti-anything engine. Note the deliberate seam:
+*empirical* claims attached to belief systems (young-earth timelines) still get
+mapped and can still land debunked.
+
+**Depth 1 is the default.** Uncertainty is opt-in. Opening the app shows what
+is established and nothing else; reaching the speculative edge is a deliberate
+act of dialing outward. Critically, the dial never conceals the *existence* of
+deeper material — counts stay visible ("8 more claims at deeper levels"), only
+content waits. A filter that hid its own hiding would be a lie.
+
+**The parking lot sits outside the epistemics entirely.** No tier, no weight,
+no linkability, absent from every view and count. Half-formed thoughts need a
+home that isn't the outer ring, or the outer ring becomes a junk drawer and
+stops meaning "checked and weak."
+
+**`is_origin_of` carries zero weight.** Attaching Ioannidis 2005 as *supporting*
+"most published findings are false" was nearly self-assertion — the claim's
+coiner cited as evidence for the claim. The relation displays provenance
+honestly while contributing nothing promotional.
+
+**Source library with ripple.** A source is one entity per topic attached to
+many claims. Deleting it re-evaluates every dependent claim in the same
+operation, demoting each to what its remaining evidence earns. Convenience was
+the excuse; integrity is the reason.
+
+### 3.2 The companion
+
+**Structural protection, not content policing.** Card validation used to reject
+"programmed agreement" instructions by string-matching persona text. That was
+removed by operator ruling (§11): the mask lift already removes the card from
+analysis, so string-checking was a lock on a door that no longer existed — and
+a bypassable rule teaches hiding rather than honesty. The real floor is the
+immutable core prompt no card touches. **Cards may now contain any persona
+content.**
+
+**Keys never touch the server — as a property.** `guardProviderUrl` refuses to
+attach credentials to any request resolving to the app's own origin (or to a
+relative URL, which would resolve there). The promise is enforced by a guard
+with a test, not by discipline.
+
+**The write boundary is the executor, not the prompt.** The manifest contains
+no mutating operation, and any tool name outside it throws `RefusedToolError`.
+Adding search (§14) routed new tools through `makeCompanionExecutor` precisely
+so the refusal path stayed identical — a name in neither set is still refused.
+
+**The character is present in 100% of responses (§12c).** On fidelity-gate
+failure the pipeline makes ONE attempt then degrades automatically to
+*interleaved* — gated record blocks with in-character commentary between them.
+The earlier behavior (retry, then fall back to bare analysis) is gone: a
+character that vanishes when the news is complicated is a character that
+signals "now the machine is talking," which is both worse UX and worse
+epistemics.
+
+**The gate checks substance, not wording.** Numerals, proper nouns, tier
+anchors, and terms of art ("zero weight", "not established") must survive;
+ordinary vocabulary belongs to the voice and is free. A gate on wording would
+have made every persona sound the same, defeating the point of personas.
+
+**Topic context is injected, never requested (§13b).** The active topic's id
+and name go into the system prompt with an instruction to use the id in tool
+calls and never show it. An internal database id surfacing to an operator is a
+leak of the machine into the fiction.
+
+**Verification is mechanical and three-valued.** `verify_source` may only
+support the words "verified" / "confirmed" when the server-side check returns
+`verified: true`. The three states are `true` (present), `false` on a readable
+page (genuinely absent), and `inconclusive` (page unreadable — *nothing was
+learned*). The core prompt states the rule that took a real bug to earn: **an
+unverified correction is as false as an unverified assertion.**
+
+### 3.2d Stage 2.9d — providers, cards, gate, global search
+
+**Provider adapters (`client/src/companion/providers.js`), verified per
+provider:** OpenRouter (openai shape, works browser-direct) · Anthropic
+(direct; permitted WITH the `anthropic-dangerous-direct-browser-access`
+opt-in header) · Google Gemini (direct; CORS served; key rides the
+`x-goog-api-key` HEADER, never the query string — URL keys land in server
+logs) · OpenAI (direct) is LISTED AS UNSUPPORTED: api.openai.com serves no
+CORS headers, the settings entry is disabled with the honest reason and a
+pointer at OpenRouter, and `buildChatRequest` throws plainly rather than
+falling back. **Keys never touch the server is load-bearing and permanent:**
+no relay for any provider, ever — a relay would make the public demo host a
+handler of visitors' API keys. Key privacy is pinned PER ADAPTER (key never
+in URL, never at app origin, always in the right header). End-to-end calls
+against live providers require the operator's own keys; wire shapes are
+pinned by test.
+
+**Card import (2.9d B):** picker, drag-drop, and paste all funnel through
+`validateCardText` — SHAPE validation only (§11 stands: any persona content
+is legal); refusals name the blocker; export/import round-trips losslessly
+(pinned). **Composer** auto-grows to 140px then scrolls; Enter sends,
+Shift+Enter newlines. **Panel widths** persist in `onion.ui.*` (own family,
+clamped bounds, never sent to the server, reset-survival pinned).
+
+**Topic-shape gate (rules layer).** `topicShapeFailures` in rules.js —
+deterministic heuristics, no LLM: trailing sentence punctuation; question
+forms (leading interrogative or "?" anywhere); copula "X is/are/was/were Y"
+(first word exempt so the question check owns "Is God real?"); causal/
+propositional verbs (causes/proves/means/shows/implies/leads to/results in).
+The refusal names the blocker and the honest path ("create a topic like
+'God' … add this as a claim there") and states it is a heuristic — the gate
+catches obvious claim-shapes, not all possible ones. The UI submits and
+renders the refusal; it never pre-decides. **Seed-curation note:** live
+topic #6 "Christ is God" is exactly the mistaken claim-shaped topic; it
+predates the gate, remains untouched this stage (no removal machinery), and
+is release seed-curation.
+
+**Global record search (Amendment A).** FTS5 `search_index`, trigger-
+maintained, derived-data only: claim text, placement reasons, source
+citations (per attachment so every hit carries a claim's tier), kernel gap
+statements, challenge text. Parked notes have NO trigger and provably never
+enter the index. Ranking is bm25 — lexical relevance only; tier is displayed
+on every hit and never a ranking input in either direction (boosting core
+would bury debunked claims, and "kept visible" is the point of the
+outermost shell). Every result carries tier/kind/off-axis/topic/matched-
+field inseparably (payload pinned). Typeahead quick-jump unchanged;
+submitting opens the full-results overlay grouped by topic; opening a hit is
+deliberate navigation and extends the dial when the claim sits deeper.
+Deferred by the amendment, recorded: faceted entity/location/date search —
+needs structured metadata the schema doesn't have; guessing it would break
+the never-guessed rule. Revisit at corpus scale, post-multiplayer.
+
+### 3.2i Stage 2.98 — claim pages, review socket, feedback quarantine
+
+**Claim pages** (`server/claimpages.js`, routes `/claim/<id>`): stable,
+server-rendered, read-only permalinks generated ENTIRELY from the record —
+header with tier/kind/status chips, review line, verbatim placement
+reason, evidence with weights, challenges with outcomes, kernel links with
+full gap statements in static broken-line grammar, support link tree
+(each related claim → its page), interleaved history with the
+superseded/corrected marks, audit links into the engine, clone-the-repo
+footer. **URL scheme: `/claim/<id>`** — seeded ids are deterministic
+(fixed-order seed), pinned by a double-seed test. **Status travels
+inseparably**: `<title>` and OpenGraph title/description carry
+`[STATUS · tier]` — a refuted claim unfurls as refuted (pinned; verified
+live: "[REFUTED · outermost tier] MKUltra evolved into…"). Off-axis
+claims render their explanation, never a rank. Record-only generation
+pinned (the page grows only when the record grows). Pages inherit every
+demo protection: non-GET → 405, rate limiter mounted on `/claim`,
+cacheable (max-age 60). **Look:** light mode = the public site's palette
+(parchment/pastel/Georgia serif, matching truthonion-site); dark mode =
+the engine (Void Indigo/neon) via prefers-color-scheme — both pinned.
+**Stretch (interactive embedded mini-map): DEFERRED** — the static link
+tree ships; report per kickoff.
+
+**2.98 correction (operator inspection): THE CLAIM PAGE IS A DOCUMENT.**
+The operator hit /claim/28 through the Vite dev origin, whose SPA fallback
+swallowed the route and mounted the full engine — not the feature. Fixed
+three ways, all pinned: (1) vite proxies /claim to the engine server, so
+the document serves identically in dev and production; (2) pages are
+LIGHT/PASTEL ONLY — the earlier dark-mode request is superseded by the
+correction ("the engine is dark/neon; the page is light/pastel — instantly
+distinguishable, by design"): no prefers-color-scheme, no neon hex
+anywhere on a page; (3) not-the-SPA is structural — a page contains no
+<script> tag and references no engine bundle asset (article-class weight,
+renders with JS off, view-source shows the claim). The bridge is two
+doors: the page's prominent "Open in the engine" deep link (?claim=<id> —
+the SPA resolves it on load: topic opened, claim selected single-click,
+dial extended, param cleared) and the panel's "page ↗" affordance.
+
+**Operator additions after the correction (2026-08-01):**
+- **Hero + logo.** The page carries the site's masthead mark (inline SVG,
+  light variant: indigo T-glyph + pastel rings + wordmark) and an indigo
+  hero band with the pastel ring art behind the claim headline, chips, and
+  the engine door — the layout family of thetruthonion.org. Indigo #131A2A
+  is the light palette's own ink; the engine's neon set and
+  prefers-color-scheme remain pinned absent (P7/P8).
+- **On-page time machine.** Scrubbing happens on the page itself, not by
+  bouncing to the engine: every recorded moment of the claim is a plain
+  `?at=<timestamp>` link (a "Time machine" track of stops + history
+  timestamps as links), and `/claim/<id>?at=` renders the document as it
+  stood then — reconstructed server-side from `claimAtTime`, so the page
+  stays script-free. Historical views: banner "as it stood on … — a
+  reconstruction from the record, read-only"; share title carries "as of";
+  robots noindex + canonical to the present; pre-epoch views say they
+  predate recorded history; not-yet-created moments say the claim was
+  absent (never guessed); placement-reason honesty (the record keeps only
+  the current wording — noted on every reconstruction); the feedback form
+  is deferred to the present document; unreadable ?at is a 400 with the
+  message, not a 404. Pinned in P9/P10.
+
+**Review-status socket (kickoff C):** `review` reserved as an events
+action (append-only, same shape); `reviewStatus()` derives the display; NO
+path writes one (pinned per server file). Zero events read: "Independent
+review: none yet — single-curator record." — on every claim panel and
+page. Contest-the-key (2.99) and Stage 3 review plug in here.
+
+**Anonymized feedback (operator addition):** the header feedback link
+REPLACED the add-claim button (flow stays in the search dropdown), and
+every claim page carries a feedback form. Design honors the strain-return
+constraints: payload = enumerated category + free text only, shown in full
+before sending; NO identity fields exist in the schema; size-capped
+(2000), rate-limited (5/min), append-only quarantine table with **no read
+endpoint at all** — never in search, replay, or any surface (all pinned);
+the operator reads it offline via sqlite. POST /api/feedback is registered
+BEFORE the demo read-only gate deliberately: feedback is not a record
+mutation, and demo visitors are exactly who it's for. Volume is a prompt
+to look, never a force that moves.
+
+### 3.2h Stage 2.97 — the portable parking lot
+
+**One adapter, two backends** (`client/src/parking.js`). The full engine
+keeps server-backed parking unchanged (routed through the adapter). Demo
+mode stores notes DEVICE-LOCALLY under `onion.parking.notes`: the demo
+branch of the adapter is constructed WITHOUT the api object, so a visitor's
+notes structurally cannot touch the server (pinned with a poisoned-proxy
+test and verified against the built demo package: zero parking network
+requests; notes survive reloads and the demo's boot-time DB reset). The
+demo UI says plainly that notes live in this browser only. "Make it a
+claim" stays full-engine-only.
+
+**The export format (the forward-compat contract), version 1:**
+`{ format: 'truth-onion-parking', version: 1, exported_at, items: [{ text
+(required), created_at?, topic?, claim?, sources?: [{url?, title?, why?}],
+reasoning? }] }` — pretty-printed so the owner recognizes their own work in
+a text editor. Export is user-initiated only; nothing auto-uploads, ever.
+
+**Import**: picker + drag-drop onto the parking tab; validated WHOLE with
+the blocker named (bad JSON, wrong/missing format or version, future
+version, malformed items) — never partial, never coerced. Merge is the
+default with duplicate detection on normalized note content; replace sits
+behind an explicit confirmation. Imports land in the parking lot and only
+the parking lot: parking.js never imports the api client and references no
+record entity; the App import handler drives only the adapter (both
+pinned). In server mode, structured items are flattened to labeled text
+for the text-only parked_notes table — reported in the result notice,
+never silent. On-device (demo) storage keeps structured fields losslessly.
+
+Settled and untouched: parked notes have no epistemic standing, deletion
+stays unlogged, demo mutations still 403, the demo DB still resets pristine.
+
+**Amendment A (2026-07-29) — park-in-place & resumable work.** The parked
+unit is SUSPENDED WORK: `{kind, context ref, draft, note, timestamps}`,
+kinds `note · claim-draft · challenge · source-attach · claim-pointer`.
+Park buttons live on the add-claim form, the challenge form, the
+source-attach form, and every claim panel (pointer + note); parking never
+submits anything. Resume navigates back — topic, claim (extending the dial
+if needed, like search hits), form, every field as left. **The park
+freezes the draft, never the world (pinned):** `resolveParkedRef` resolves
+the reference against today's topics at render/resume time; the stored
+claim snippet is labeled "noted as" in the listing and never presented as
+current; a dangling pointer degrades to a fully readable draft with the
+reason named. Submission after resume goes through the rules exactly as if
+never parked. The export format is **version 2** (v1 files read forever as
+notes); structured entries ride the full engine's text column as a JSON
+envelope (`{"@parked":…}`), decoded by the adapter — lossless in both
+backends, no schema change; the raw envelope never surfaces as entry text
+(caught live, pinned). Merge dedup now keys on the whole parked unit
+(kind + note + text + draft). The notepad input auto-grows (composer
+pattern).
+
+### 3.2g Stage 2.96 — setup walkthrough & guided tour
+
+**One script, two voices** (`client/src/tour/`). `stops.js` holds the nine
+grounding docs — cold open, depth dial, tier colors, claim panel, chain
+view, search, off-axis, time scrubber (incl. the epoch boundary demoed
+live, one minute before the epoch), showcase boundary + clone path. The
+FRAMEWORK executes each stop's `apply` spec through App callbacks — view,
+depth, selection, chain, tabs, scrub — deterministically; the tour holds no
+API access and cannot dispatch (pinned). Keyless mode renders the doc
+verbatim: no canned chat, no fake companion (pinned — no assistant-styled
+literals). Keyed mode voices the doc through the visitor's own adapter with
+the substance gate; a dropped-substance render or provider failure falls
+back to the written doc with the reason named. A stop with no grounding doc
+REFUSES before any model call — the companion does not invent UI (pinned).
+In-stop Q&A is grounded in the stop doc and has no record tools; questions
+needing the record are pointed at the companion panel (decision recorded).
+
+**Setup walkthrough**: provider (unsupported ones disabled with the honest
+reason) → key source + honest cost note ("your key and your spend") → the
+TRUE guarantee, phrased no stronger than the key-privacy tests pin →
+paste → live test call via chatComplete with named failures → optional card
+import → a fork, never a wall. Companion-mode tour requires a passing test
+call — the tour never fakes a companion.
+
+**Cold open intact:** the invite is a small dismissible card, offered once
+(`onion.ui.tourOffered`), never a takeover, deferring to the demo intro;
+re-launchable from the header (❔ tour). Skippable/resumable, keyboard
+navigable, reduced-motion respected.
+
+**Panel placement (operator correction, 2026-07-28):** the tour box must
+never sit on what a stop is showing. Every stop carries a default corner
+(`panelPos` — sidebar stops go bottom-left, map stops bottom-right, pinned
+for the sidebar stops), and the whole panel drags by its header; a dragged
+position wins for the rest of the tour. "Skip setup" now falls through to
+the written tour instead of dead-ending (a wall is not a fork); a separate
+✕ closes outright.
+
+### 3.2f Stage 2.95 — the time machine
+
+**Reconstruction runs BACKWARD from the present** (`server/timemachine.js`,
+read-only by construction — no `.run()` in the module, pinned). Current
+state is ground truth; logged events undo changes since the epoch; tier
+timelines come uniformly from challenge rows ("a → b" with their own
+timestamps), which cover pre- and post-epoch alike. Detached sources are
+restored into past views from the library (flagged `reconstructed`);
+removed kernel links restore as stubs; a post-ts `vertical_set` renders the
+past vertical as unknown-at-equator rather than guessed. What cannot be
+reconstructed is named in `reconstruction_notes` — shown, never papered
+over.
+
+**The log epoch is first-class** (kickoff Amendment A). Epoch =
+2026-07-27 22:19:01 on the live DB. Scrubbing earlier shows "recorded
+history begins here"; pre-epoch views carry `complete:false` and a
+banner; backfilled events are `origin:'derived'` with `actor:null` —
+distinct in data and in rendering (dashed badge, "actor: unknown").
+History actors are LOG-sourced or null, never defaulted (a first cut
+hardcoded 'local' for post-epoch entries — caught and fixed; pinned).
+Trade-off restated: seeded topics have thin pre-epoch replay; honest
+thinness beats fabricated depth.
+
+**Error vs. supersession** is classified mechanically in claim history:
+`contradicting_evidence` (or `bad_source` with a recorded evidence change
+since placement) → "superseded by later evidence"; `mis_tiered`/
+`equivocation`/`layer_mismatch` → "corrected placement"; anything else
+stays unlabeled. Failed promotions render as "refused" entries. The
+history is the interleaved record — placements, moves, attachments,
+challenges in time order — so what-was-known-when is visible, not
+flattened.
+
+**Strict read-only, structurally:** all six time-machine endpoints are
+GET; no write route accepts a timestamp; every client write funnels
+through run(), which consults `timeState.writeBlockedReason` and refuses
+with the reason and the way back. Scrubbed double-click selects only
+(chain view and narration read the present record — decision recorded).
+Scrub state lives in App, so it composes with the dial and survives the
+2D/3D toggle.
+
+**Statistics are readouts, never leaderboards:** topic aggregates only —
+migrations (with refused promotions counted), churn, survival days per
+tier, challenge outcomes, demotion character, supersession rate. The
+payload keys no actor/user/name/ranking/top-N fields (pinned recursively).
+
+**Scope-event deferral (kickoff D):** the schema has no scope-event or
+hash-supersession record types (Legal Amendments F/G unimplemented), so
+the replay covers evidence events only; tombstone/redaction rendering is
+deferred until those records exist, and a test pins that they were not
+invented here.
+
+### 3.2e Stage 2.9d Amendment B — honest progress & working view
+
+**The stage indicator is wired to real pipeline events and nothing else.**
+`pipeline.js` exports STAGES and fires `onStage` exactly at real
+transitions; nothing advances on a timer; skipped stages never fire; a
+mid-stage error carries the stage it failed in ("failed while drafting in
+voice — …"). Label→pipeline mapping: `manifest` "reading the record…" =
+pass-1 bare-core manifest + groundCheck (groundCheck is synchronous and
+mechanical, so it shares the pass-1 stage rather than flashing for 0ms) ·
+`analysis` "consulting the record…" = chat pass-1 tool loop · `render`
+"drafting in voice…" = pass-2 persona render · `gate` "checking the draft
+against the record…" = fidelity check · `interleave` = interleaved-mode
+commentary · `interleave_degrade` = post-gate-failure re-render. Pinned by
+sequence tests per mode, including the induced mid-stage failure.
+
+**Nothing streams pre-gate.** No pass streams today at all — the pipeline
+has no token callback (pinned by source scan), so the gate always sees, and
+the operator only ever sees, completed checked text. The stage indicator
+carries the wait. If post-gate streaming is ever added, only gated text may
+stream.
+
+**The working view is real or absent — never fabricated.**
+`normalizeResponse` surfaces a `reasoning` field ONLY when the provider
+actually returned a separate thinking channel (Anthropic `thinking` blocks;
+Gemini `thought` parts — which are also excluded from narration text;
+OpenRouter `reasoning`). No channel → no field → no section (absent rather
+than guessed, same rule as the vertical axis). Working notes are component
+state captured at the callModel boundary: never a message, so never in
+threads, never pinnable, never persisted; the pipeline output provably never
+carries reasoning (pinned). Scratch-styled (hatched, warning-bordered,
+labeled "ungated working notes").
+
+**Per-stage timings** print to the dev console and render as a small
+monospace line after each response — measurement first, optimization
+deliberately out of scope.
+
+**Claim-picker search (operator request).** The three connect-a-claim
+dropdowns (support target, kernel target, demote-kernel) are now search
+inputs: empty focus lists the claim's own onion first with an honest "N
+claims in other onions — type to search them" hint; typing ranks across all
+onions with the same pinned lexical-only ranker; candidates stay pre-filtered
+by the caller (dial-visible, tier-eligible), and the picker fetches nothing
+(pinned). The attach-a-source library select got the same treatment
+(`SourcePicker.jsx`): search the topic library by citation, same ranker, no
+reach beyond the attachable candidates it is handed (pinned).
+
+### 3.2c Stage 2.9c — color system, tabs, search
+
+**Tier tokens live in ONE file: `client/src/tokens.js`** (design authority:
+`truth-onion-design-brief.md`, scoped by the 2.9c kickoff, both in the repo
+root). The neon set colors dark surfaces (3D tiles, 2D rings, chips, legend);
+the pastel set is defined and reserved for light/reading surfaces, which do
+not exist in-app yet. JS consumers import the maps; CSS consumers use the
+`--tier-*` variables injected by `applyTokens()` at boot — the stylesheet
+never restates a tier hex, pinned by test (K2 scans every client source).
+Hue now encodes TIER, not claim kind: tiles and 2D nodes are tier-colored;
+kind moved to outline treatment (chips: solid/dashed/dotted borders, no
+fills; 2D nodes: stroke dash pattern) so kind can never be misread as tier.
+The UI ground moved to Void Indigo with Vellum secondary ink, per the brief.
+Reported near-collision, kept per kickoff rule 4: the refuted/critical red
+(#d03b3b) sits near the inner-tier neon (#FF5E3A); they never appear as the
+same element kind (status is stroke/chip, tier is fill), so no change made.
+
+**Tabs are presentation only.** Claim panel: Claim (identity + support and
+kernel links + link challenges — links are the claim's standing, so they
+live with it) · Sources · Move (tier floors, promote/demote, claim
+challenges) · History (one row per record, id-anchored so the 2.95 timeline
+jump can land without rework). Topic panel: About · Parking Lot · Off-axis.
+All form state lives in the parent, so switching tabs never loses input;
+pending input shows a dot, never auto-switches; arrows/Home/End navigate;
+reduced-motion disables the pane fade. The Off-axis tab respects the dial:
+below depth 5 it shows the honest count and a dial-out button, never the
+text.
+
+**Search replaces the topic row; ranking is lexical-only by construction.**
+`client/src/searchRank.js` scores a (query, text) string pair and can read
+nothing else — no activity, recency, challenge counts, or tier. Reasoning: a
+search that surfaces "active" claims first is a soft popularity channel, and
+popularity moving visibility is adjacent to popularity moving claims —
+refused. Pinned four ways: decoy-field invariance, tier-neutral tiebreaks,
+determinism, and a source scan for banned identifiers. Claim results respect
+the dial: hidden matches are counted ("N more at deeper levels — extend
+dial"), never excerpted. Selecting a claim uses single-click semantics
+(panel opens, no chain view). The current topic shows as a header chip.
+
+### 3.3 Stage 2.9 — kernel links and lineages
+
+**A kernel link is annotation, not support — and the rules never read it.**
+`claim_kernels` is a separate table the placement functions never query, so
+zero weight is structural, not policed. The explicit guards on top (a
+`kernel_of` source relation refused by name; `carriesWeight` keyed to
+`'supports'` alone) close the mis-shaping paths. Pinned by tests that a claim
+kernel-linked to a two-primary-doc Core claim still fails every floor.
+
+**Zero weight cuts both ways: a kernel link can never block an earned move.**
+If a claim's evidence later earns the kernel's tier, promotion proceeds and
+the now-falsified link is severed inside the same transaction, recorded in the
+event log with the promotion as its reason. Keeping it would render a lie;
+blocking the move would give the link weight. A schema trigger backstops the
+direction rule against any other tier-move path.
+
+**Kernel and support links are mutually exclusive per pair, at both layers.**
+A kernel link says evidence STOPS between two claims; a support link says it
+connects them. The rules refuse the contradiction with the reason named, and
+triggers refuse it again below the code. This is the whole-vs-broken grammar
+enforced at the data layer, not just drawn.
+
+**The routing rule lives where routes are computed.** `getLineages` walks only
+recorded support links (BFS, deterministic order) from kernel toward the outer
+claim. A nearest-looking neighbor with no evidentiary relation cannot appear on
+a path because there is no code path that would add it. If no support chain
+reaches the claim, the route is the bare two-point break — a wide void is its
+own honest signal.
+
+**Style derives from kind at the data-to-render boundary.**
+`client/src/lineageRender.js` emits every line the 3D view draws. `style` is
+computed from `kind` (support→solid, kernel→broken) and is not an input, so no
+code path can render a kernel link whole — pinned by test, including an
+adversarial forged-payload case.
+
+**Deselect: stay-put, Escape goes home.** Both behaviors were prototyped;
+return-home on every deselect was jarring when hopping between neighboring
+claims mid-exploration, so deselect keeps the camera where the story ended
+(orbit target re-centers), and Escape is the deliberate release that tweens
+back to the canonical resting framing. The addendum's own bias ("possibly:
+stay on deselect, home on Escape") held up. *(2.9b: the empty-space-click-
+goes-home part is superseded — an empty click now only restores state; the
+camera never moves except on Escape.)*
+
+**Tile materials derive from the record, always.** Mass/finish = weight-
+carrying source count; weathering = challenges survived; pulse = a challenge
+or re-tier within 30 days. No stored appearance fields — pinned by a test
+that greps the claims schema for any.
+
+### 3.3b Stage 2.9b — legibility & seeding (supersessions)
+
+**Interaction supersession (2.9b, replaces the 2.9 select behavior).**
+Single-click = tile select + evidence panel ONLY — no lineage draw, no
+clearing, no reframing. Double-click on a claim with a kernel lineage = the
+CHAIN VIEW: every tile not in the chain clears fully (no ghosting), the chain
+rotates globe-style about the vertical axis — animated, unhurried — until it
+lies legible across the visible face, and narration rides over the cleared
+state. Double-click without a lineage: no clearing, narration only. Empty
+click restores the full sphere AT THE CURRENT DIAL DEPTH — the whole model is
+a pure reducer (`client/src/interaction.js`) whose transitions are pinned by
+test, including "no transition but the dial touches depth." Inside the chain,
+clicking a chain tile selects it for the panel and the chain persists.
+Lineage chips step the camera along the path node by node; in a fan, the
+active lineage draws and the others reduce to a minimal kernel indication.
+
+**Rest-state legibility (2.9b, replaces the Voronoi tessellation).** Tiles
+are small, crisp, discrete discs; open space on the sphere is correct and
+expected. Size comes from `placement.tileAngularRadius(ringRadius, count)` —
+the function admits no claim at all, so evidence weight has no path into
+size (pinned structurally by signature and behaviorally). The sphere idles
+rotating globe-style at rest; picking converts hits into globe-local space
+and a click outside a tile's angular radius is honestly empty space.
+
+**Open space is transparent — the dyson-sphere reading (operator correction,
+2026-07-27).** The first cut kept an opaque shell base, which made a
+nearly-empty outermost tier read as a dark ball hiding everything inside —
+and left nothing visible to click, so the mouse felt stuck in rotation mode.
+Corrected: the inter-tile background is transparent (alphaTest discard, so
+the depth buffer stays honest with no transparency-sorting artifacts), inner
+shells show through the gaps, and picking walks the ray near-to-far — a
+click in a gap passes through to the first tile behind it. This supersedes
+the Stage-One "clicking always targets the outermost visible shell" rule:
+clicking targets what the eye actually sees. Camera handling: side-to-side
+orbit is endless; vertical tilt is clamped to ±15° around the equator view
+so outcome latitudes stay readable and the poles never flip overhead.
+
+**Second round of operator corrections (2026-07-27), all applied:**
+- *Chain presentation is SIDE-ON.* The first cut rotated the chain to face
+  the camera — but a chain runs mostly radially, so face-on is end-on:
+  foreshortened to a barely-visible line whose break looked closed. The
+  alignment now lands the chain 90° off the camera azimuth (nearest side),
+  fully extended, break visibly open.
+- *The chain view fires for support links too.* A middle claim's evidentiary
+  descent is a chain (all solid, no break) — kernel links are not required.
+  Double-click on any claim with kernel OR support links clears and presents.
+- *Narration is offered, never automatic.* Double-click no longer invokes
+  the companion; it shows a "Narrate claim #N?" button over the sphere, and
+  narration runs only when asked. The offer withdraws when selection moves.
+- *Tiles wrap the ±180° texture seam* (the half-tile bug) and the refuted
+  mark is a single diagonal strike inside the disc with a fine rim — no more
+  broken-image look.
+
+**Third round of operator corrections (2026-07-27), all applied:**
+- *Weathering moved from face to RIM.* Face scratches read as noise/artifacts
+  rather than material. Challenge survival now wears the tile's EDGE — a
+  thicker, darker, notched rim for battle-tested claims, a thin pristine rim
+  for never-challenged ones. The only mark that ever crosses a face is the
+  refuted diagonal (the 2D view's ✕, kept for debunked claims only).
+- *The chain is framed, not just rotated.* Shell radii span only a couple of
+  world units, so a chain viewed at full-sphere distance is a stub. After
+  the side-on rotation the camera now glides in until the chain fills the
+  view. On restore, if the zoom left the camera inside the shells it glides
+  back out past the outermost; otherwise stay-put holds.
+- *The chain is the CONNECTED support component, both directions.* The first
+  cut walked supported_by only, so 26 (rests on 24) never showed 30 (which
+  24 props up). Membership now walks support links both ways; every drawn
+  edge keeps its recorded direction.
+- *Chain labels ladder; the kernel line sweeps.* Node labels take rotating
+  height bands ordered along the chain, so no two can overlap; the gap
+  statement sits in its own band below the line. The broken kernel line is
+  no longer a straight hop: it travels an S-shaped sweep out into space —
+  swinging wide and hooking back — so the leap has visible length and the
+  break sits on a journey, not a stub. (The straight render survives nowhere;
+  the whole-vs-broken boundary test is unaffected — style still derives from
+  kind.)
+
+**Fourth round of operator corrections (2026-07-27), all applied:**
+- *No painted highlight inside tiles.* The "polish" specular sweep read as a
+  light glowing inside the tile and carried nothing; mass now lives in the
+  fill's saturation/depth alone.
+- *Shells are double-sided.* A tile reads — and clicks — the same from
+  inside the sphere as from outside; the far hemisphere is part of the
+  world, not a void.
+- *Sparse rings stagger.* siteFor is seeded per tier, so a lone tile on one
+  shell can never sit radially stacked over a lone tile on the next (pinned
+  by test T3).
+- *The kernel sweep is half-sphere scale.* Swing raised from ~1 world unit
+  to ≥2.6 (and 1.6× the straight distance), with stronger outward drift —
+  the curve leaves the neighborhood and hooks back. The chain framing now
+  includes the curve's own extent so the sweep never exits the view.
+- *Labels get UNIQUE bands.* Alternating above/below the node with magnitude
+  growing every pair — no two labels can share a height — and label sprites
+  shrank to 0.85× to cut footprint.
+
+**Outcome latitude (2.9b).** Latitude encodes documented outcome from the
+record only: netting-to-~zero outcome evidence rides ON the equator line;
+nothing attached sits in the band just above/below (4–11°, never on the
+line, never past 11°); documented direction earns displacement (16–70°),
+magnitude normalized within the topic. The bands cannot overlap — pinned.
+No guide ring is drawn; the equator population is a natural cluster.
+Weathering keeps its single meaning (challenge survival); netted-vs-undecided
+is carried by position, not material.
+
+### 3.4 Storage durability (§12b/§13c)
+
+Keys, the active card, and threads each live in their **own** `onion.companion.*`
+localStorage entry, never inside the settings blob. A single bad write or parse
+failure can no longer take another down with it. `loadSettings` returns
+`_ok: false` on a parse failure so the caller refuses to overwrite — the
+"vanish bug," where a failed read let a subsequent save clobber a good key.
+All app resets are server-side DB operations that cannot reach browser storage;
+this is asserted by test rather than assumed.
+
+---
+
+## 4. Conventions
+
+**Documents.** `README.md` describes what exists and how to run it.
+`DECISIONS.md` holds designs agreed but deliberately *not built*.
+`TAXONOMY-STRAINS.md` is append-only evidence for a future redesign.
+`PROJECT-STATE.md` (this file) is the working picture.
+
+**Strain journal format.** Numbered entries with: the claim that surfaced it,
+document kind, *what the vocabulary forced*, *what was lost*, *workaround used*.
+Genre sections group entries (Replication Crisis 1–4, legal 5–6). Entries are
+appended and never revised into agreement with later understanding — a
+superseded entry gets a correction appended, not a rewrite.
+
+**Section numbering (`§9b`, `§12c`, `§13c`, `§14`).** These reference pasted
+kickoff documents that are **not in the repo**. Code comments cite them
+liberally. This is a real traceability gap — see §8.
+
+**Code comments explain *why*, never *what*.** The house style is a short
+paragraph at the head of a module stating the threat it defends against or the
+decision it encodes, and inline notes only where the reasoning is invisible
+from the code. Comments justify constraints; they never narrate mechanics.
+
+**Test naming is a prefix + a sentence that states the guarantee**, e.g.
+`D12b3. a read failure never lets a save clobber the good key (the vanish bug)`,
+`V4. a 200 EMPTY SHELL (JS-rendered) is inconclusive, NEVER a confident "not found"`.
+Prefixes group by concern (D = durability/demo, V = verification, B = browser,
+S = search, F = fidelity fallback, P = proxy guard, C = card/gate). Tests are
+plain `node:assert` scripts with a hand-rolled runner printing `PASS`/`FAIL` and
+a count — no framework, run directly by `node`.
+
+**Refusal messages are plain language, name the blocker, and state the honest
+path.** Never "invalid input"; always "Core requires at least two independent
+primary documents or court records; this claim has 0."
+
+**Companion role in operator sessions** (standing constraint): citation
+formatting, archive capture, verbatim journaling, export. It does **not**
+source, draft claim text, or infer strains. Journal entries are
+operator-dictated and recorded verbatim.
+
+---
+
+## 5. What is built
+
+**Engine (Stage 1 → 2.5) — complete.**
+Five tiers + vertical axis; kinds and layers; the categorization gate; the full
+rule set with schema backstops; promotion battery with challenge history;
+demote/correct (debunker) flow; challenges; source library with ripple
+re-evaluation; tier-requirements preview; parking lot; `is_origin_of`;
+export/import through the rules layer; multi-topic; depth dial; 3D onion view
+(Three.js, Voronoi tiles on nested shells); read-only demo package + Docker
+deploy variant.
+
+**Companion (Stage 2.8) — complete.**
+BYOK provider layer (OpenRouter / Anthropic / OpenAI-compatible) with the key
+guard; read-only tool manifest (5 tools) with executor refusal; two-pass
+mask-lift with the substance-fidelity gate and automatic interleaved degrade;
+character cards (standard card JSON, structured `powers` declarations); TTS
+(Web Speech default, BYOK premium voices, visible fallback notice); prompt-hash
+display; isolated storage for keys/card/threads.
+
+**Live search + verification (§14 + this week) — complete.**
+`web_search` (OpenRouter online plugin, or Brave/Tavily/Exa with a dedicated
+key), `fetch_url`, `verify_source`; deterministic host→tier pre-classification
+with an explicit "unclassifiable → strain candidate" signal; SSRF-guarded
+server fetch proxy; headless-browser fallback for JS-rendered pages; tri-state
+verification; every search/fetch/verify logged.
+
+**Stage 2.9 — kernel links & lineages — complete.**
+`kernel_of` claim-to-claim relation with mandatory three-part gap statement
+(establishes / asserts-beyond / path-inward), zero evidentiary weight, strict
+kernel-inward direction, refusals naming the blocker, schema backstops (CHECK
++ triggers, including kernel-and-support mutual exclusion per pair); debunker
+flow auto-creates the link (path-inward derived from the tier preview);
+kernel and hop challenges through the existing challenge machinery (upheld
+removes the link, rejected marks it questioned); routed lineages computed
+server-side (`/api/claims/:id/lineage` — routes walk only recorded support
+links); converging fans with independent break points and lineage stepping;
+whole-vs-broken grammar pinned at the data-to-render boundary
+(`client/src/lineageRender.js` — style derives from kind, not an input);
+rest/hover/select/double-click interaction model with record-derived tile
+materials (mass/weathering/pulse); lineage-aware narration with the gap
+statement in the groundable record; pin-to-notebook (isolated
+`onion.companion.notebook` entry, no API path); append-only `events` table
+recording every state change with actor, timestamp, reason.
+
+**Stage 2.9b — legibility & seeding — complete.** Chain view on double-click
+with the single-click supersession (see §3.3b); discrete crisp tiles with
+idle globe rotation; outcome-latitude vertical axis; kernel links seeded for
+all debunked claims (see the seeding report in §6).
+
+## 3.2j Stage 2.98b — record permanence & source links (2026-08-01)
+
+**Principle enacted:** record entities are never hard-deleted through any
+UI or API path — they change status, with a reason, and remain visible in
+a diminished state. Two independent layers say no: the rules layer refuses
+first in plain language; schema triggers (`trg_sources_no_delete`,
+`trg_attach_no_delete`) refuse again beneath the code.
+
+**Hard-delete affordance inventory (all resolved):**
+- *Source detach (⨯)* → **withdraw from this claim**: mandatory reason
+  (422 `withdrawal_reason_required` without one), attachment row keeps
+  `withdrawn_at`/`withdrawn_reason` (schema v4), renders struck/diminished
+  on the Sources tab and the claim page ("Withdrawn — no longer part of
+  the case", with reason, date, and the review line), ripple identical to
+  the old detach. `POST /api/claims/:id/sources/:sourceId/withdraw`;
+  the DELETE verb answers 405 with the principle stated.
+- *Library delete (⌫lib)* → **withdraw from library**: same reason gate;
+  the entry stays in the library listing marked withdrawn; every leaning
+  claim re-evaluates in one operation; withdrawn evidence cannot be newly
+  attached (refused, named), and find-or-create never silently revives a
+  withdrawn entity — an identical citation becomes a new active one.
+- *Kernel-link remove (✕)* / *support-link remove (✕)* → **affordance
+  removed entirely** (the kickoff's second option). Links are relations
+  whose ends both remain fully visible; they now end only through recorded
+  adjudication — the existing kernel-link/hop challenge machinery (reason,
+  outcome, permanent challenge row) — or rules-layer severance on tier
+  moves. Chosen over withdrawn-status rows because the tier rules and
+  schema triggers read the link tables directly, and "no tier logic
+  changes" is binding. `removeKernelLink` is deleted; `removeSupport` is
+  unrouted, reason-mandatory, called only by the hop-challenge path.
+- *Claims, topics, challenges*: verified — no delete path exists in UI or
+  API. *Parking lot*: stated exception, truly deletable, unlogged, kept.
+- *Bonus audit fix*: demotion's support-link severance previously returned
+  in the payload but logged NO event — replay could not reconstruct those
+  links. It now logs `support_link_removed` per severed link.
+
+**Event-type reuse (none added):** withdrawal reuses `source_detached` and
+`library_source_deleted` (same semantics, now always carrying the
+operator's reason); link ends reuse `kernel_link_removed` /
+`support_link_removed`. Kernel removal events now carry the full authored
+gap statement in `detail`, and replay renders it verbatim instead of the
+"not retained" placeholder. Replay reconstructs withdrawn sources from
+their SURVIVING rows (relation intact, no guessing); the legacy event-based
+path remains for pre-2.98b hard deletes.
+
+**Review socket (B):** the honest single-curator line renders on withdrawn
+entries (panel + page) and on source attach/withdraw history entries.
+Display only; still no writer.
+
+**Source link audit (C):** every seeded source linked or honestly labeled
+— 48 sources: 40 linked (Senate originals 94755_I/II/III + 95mkultra,
+govinfo STATUTE-90-Pg3006 for Private Law 94-126, Ford Library, FBI Vault,
+CourtListener API-confirmed opinions, DOIs, archive.org for the defunct
+Carney statement and the Marks book), 6 class-labeled, 2 could-not-verify
+(Media PA cache, the Nov 1964 King letter) — labeled, not guessed. Single
+mapping in `server/sourcelinks.js`, applied by `seed()` and once to the
+live DB (38 rows; disclosed — no event type exists for source-metadata
+correction and the kickoff forbids new types). Audit table:
+`truth-onion-2-98b-source-audit.md`. Seed-lint pinned (stage298b C1).
+
+**Also this session (operator requests):** the claim-page logo mark now
+links to https://thetruthonion.org/ and the masthead is sticky
+(position:sticky, top:0) so the mark stays visible during scroll.
+
+**Amendment A (2026-08-01) — withdrawal adjudicates before it takes
+effect.** Auditable vandalism is still vandalism: one actor's filing no
+longer subtracts anything. Withdrawal is two-phase, challenge-shaped:
+- **Filing proposes** (schema v5: `proposed_at`/`proposed_reason` on
+  sources + claim_sources; reason still mandatory; `withdrawal_proposed`
+  event). The proposal renders on the source immediately — "withdrawal
+  proposed — {reason} · keeps its full standing until adjudication" — but
+  has ZERO rule effect, structurally: every rule reads `withdrawn_*`
+  alone, and `withdrawn_*` is set only by adjudication. Pinned: file a
+  proposal, floors and tier-preview byte-identical (A9).
+- **Adjudication**: upheld → the 2.98b effect (withdrawn status,
+  diminished render, ripple) fires at adjudication time, recorded with the
+  REUSED effect events (`source_detached`/`library_source_deleted`) so
+  replay timing is exact; rejected → the source stands and the attempt is
+  permanent history (`withdrawal_rejected` event), like a failed
+  promotion. Endpoints: `POST …/withdraw` (file) and
+  `POST …/withdraw/adjudicate {outcome}` (both scopes).
+- **Implementation choice (reported per the latitude):** PARALLEL
+  machinery, not challenge rows — challenges require a claim_id and
+  contest a claim's standing or a link; a withdrawal targets an attachment
+  or a library entity (no single claim). The challenge SHAPE is kept
+  (file → adjudicate → both outcomes permanent); the challenge table is
+  not overloaded.
+- **Curator honesty:** "Adjudicated by curator · Independent review: none
+  yet — single-curator record" renders on pending proposals, withdrawn
+  entries, and proposal/rejection history lines (panel + page). Stage 3
+  swaps the adjudicator for the review pipeline with no schema change;
+  bad-actor bounding is Stage 3 scope, noted and not built (see design
+  capture Amendment C for the Sybil-resistance design).
+- **Stated asymmetry (settled):** additions take effect immediately and
+  answer to challenges afterward; removals adjudicate before effect.
+- **Replay:** proposal and adjudication are distinct events; the pending
+  window shows the source ACTIVE with its proposal annotation
+  (reconstructed from the event record, so adjudicated proposals still
+  render in the windows they were open); effect is never retroactive to
+  filing time. Pinned in A9–A11.
+- **UI (operator request):** the two withdraw buttons became ONE
+  "Withdrawal ▾" dropdown offering "from this claim…" / "from the
+  library…"; the form files a proposal; pending proposals carry
+  uphold/reject controls, both confirmed. Pinned in A12.
+
+## 3.2k Release prep (2026-08-01) — checklist 0a–3 + Fly.io artifacts
+
+Executed per the release decision record (items 0a, 0a-i, 0b, 0c, 1, 2, 2a,
+2b, 3) and the Fly.io handoff. **Stops before push and deploy** — the
+operator creates the Fly account and the GitHub remote, pushes, and deploys.
+
+**0a — seed curation.** The shipped seed is structurally curated: the
+pristine demo DB is built from `server/seed.js` (MKUltra + COINTELPRO) plus
+the versioned `exports/the-replication-crisis.json` fixture imported through
+the rules layer — the live DB (which holds the "Christ is God" test topic,
+Purdue, and the empty Epstein topic) is never the source of what ships, and
+stays intact. Pinned R1: shipped topics are exactly the curated three, with
+a residue scan over every claim.
+
+**0a-i — encoding.** Diagnosis: the mojibake is STORED, not render-time —
+the five curl-era gap statements in the live DB carry U+FFFD (four
+`claim_kernels` rows + five `events.reason` rows; the render path was
+already clean: `<meta charset="utf-8">` plus Express's `charset=utf-8`
+Content-Type). The live rows stay as they are (live record intact; its
+correction remains the separately-approved re-creation). The SHIPPED seed
+now carries the four kernel links authored directly in `seed.js` with
+correct typography — the logged data correction to the seed the decision
+record prescribes — so the demo ships the debunker-lineage content clean.
+(The fifth live link, RC #28→#22, was removed by the operator on the live
+DB and is deliberately not resurrected in the seed.) Pinned R2 (zero U+FFFD
+in any text column of the shipped seed), R3 (charset pinned by header and
+meta on every claim page; zero U+FFFD on every page), R4 (the four links,
+en-/em-dashes verified).
+
+**0b/0c — repo.** Initialized (`main`), `.gitignore` before the first
+commit (DB files + `server/data/`, `.env*`, `node_modules`, `client/dist`,
+`demo/`, `.claude/settings.local.json`); README rewritten from the public
+draft to the current build (what/run/suites/showcase-proxy-absent/license-
+pending); LICENSE committed as an explicit stub — filled the day the
+operator's license lands, never guessed — with `package.json` pointing at
+it; all kickoff/spec/addendum docs committed so `§` citations resolve.
+Verified staged: no DB blob, no secret (pattern scan), Epstein export empty.
+**The §8 "no version control" risk is closed.**
+
+**1 — rebuild.** Demo package rebuilt with everything through 2.98b; booted
+and verified live: three curated topics, `/api/fetch` 404, mutations 403,
+kernel fans present and clean, curator labels rendering. Full suite green —
+totals in the table below (243 across eighteen suites).
+
+**2 — showcase message.** `fetch_url` / `verify_source` in the demo surface
+"Mechanical verification is not available in this demo — clone the repo to
+run mechanical verification locally…" (constant
+`SHOWCASE_VERIFY_UNAVAILABLE` in `companion/search.js`). Two layers: the
+executor short-circuits on the demo flag (`proxyAbsent`, wired from
+`/api/meta` demo_mode through App → Companion) and never issues the doomed
+request; and a live 404 from `viaProxy` converts to the same answer —
+"fetch proxy error 404" can no longer surface. `verify_source` answers in
+the tri-state: `verified:false, quote_found:null, inconclusive:true` —
+nothing was learned. Pinned R5/R6.
+
+**2a — proxy-path audit (the enumeration).** Every code path that can touch
+the absent fetch proxy:
+1. `client/src/companion/search.js → viaProxy` — the ONLY client reference
+   to `/api/fetch` (pinned by source scan, R7), reached by exactly two
+   tools: `fetch_url` and `verify_source`. Both degrade to the showcase
+   answer (above).
+2. Server registration: `/api/fetch` exists only when `demo` is false
+   (pinned D4/D5); the demo package does not even ship
+   `fetch-proxy.js`/`browser-render.js`.
+3. `web_search` — never touches the proxy (BYOK browser→provider).
+4. Source-attach flows and parked source drafts — no verify step exists in
+   them; nothing calls the proxy (2b labels carry the honesty instead).
+5. The tour — holds no API access at all (2.96 pin).
+6. Future (2.99a): sandbox attach must attach-and-weigh normally with
+   verification simply marked absent, using the shared labels in
+   `client/src/verifyStatus.js` — the constant is already the single copy.
+
+**2b — verification-status labels.** Recorded sources: `verification:
+'curator'` is DERIVED (never stored) from the 2.98b audit mapping in
+`sourcelinks.js` — every URL-carrying entry was resolved live in that
+audit; the label "mechanically verified locally by curator" renders on the
+Sources tab and claim pages. Class-labeled/could-not-verify entries keep
+their in-citation honesty labels and get no chip. Demo-attached sources:
+`client/src/verifyStatus.js` holds the one copy of the boundary text
+("not verified — the live verifier is deliberately switched off on this
+public demo; it runs in the full engine (clone the repo) and will verify
+this source automatically when your save is imported at multiplayer"); the
+demo parking store stamps `source-attach` drafts `verification: 'pending'`,
+which rides the save file (export) losslessly — and NO other machinery
+exists behind it. Pinned R8/R8b.
+
+**3 — rate limiting.** Already mounted on `/api` and `/claim` with the
+demo-boot default of 120 req/min/IP (feedback keeps its own 5/min); now
+pinned for BOTH route families plus the nonzero boot default (R9).
+
+**Deploy artifacts (Fly.io).** `deploy/Dockerfile` (multi-stage, portable):
+`npm ci` → **`RUN npm test` — the deploy gate; a red suite, including a
+build that silently reacquires the fetch proxy (D4), means no image
+exists** → `npm run build-demo` seeds the pristine DB AT IMAGE BUILD from
+the versioned fixtures → a runtime stage with no browser binary and no
+VOLUME. Root `fly.toml` (at the root so `fly deploy`'s build context is the
+repo): shared-cpu-1x, 512MB, scale-to-zero, **no [mounts] stanza ever** —
+the DB resets on every deploy/restart by design; persistence is client-side
+saves. `deploy/README.md` documents the operator flow, the $10/mo spend
+alert (operator sets it in the dashboard), and test-window upsizing
+(bill-by-hours: scale up for the window, scale back after).
+`build-demo.mjs` no longer generates deploy files — they are authored,
+reviewed artifacts pinned by R10. Root `.dockerignore` keeps DBs and local
+installs out of the image context.
+
+**Recorded constraint for the 2.99b kickoff (not built now):** the app
+database never holds strain submissions — ephemeral hosting makes that
+silent data loss. Ship-out-on-write to operator-controlled durable storage,
+or refuse honestly.
+
+**Test suites (243 passing).**
+
+| Suite | Tests | Covers |
+|---|---|---|
+| `dod` | 14 | The six Stage One definition-of-done criteria |
+| `pressure` | 10 | Tier laundering, zero-weight aggregation, circular support |
+| `stage2` | 8 | Cross-topic constraints and cycles, dial independence |
+| `stage25` | 11 | Library ripple, parking isolation, origin zero-weight, export/import |
+| `stage29` | 28 | Kernel links, lineages, whole-vs-broken boundary, narration, events |
+| `stage29b` | 11 | Interaction supersession, tile-size discipline, outcome latitude, stagger |
+| `stage29c` | 9 | Tier tokens single-source, kind/tier separation, lexical-only search |
+| `stage29d` | 15 | Per-adapter key privacy, card round-trip, UI prefs, topic gate, FTS search |
+| `stage29e` | 8 | Real-event stages, stage-named errors, no pre-gate render, honest reasoning |
+| `stage295` | 9 | Replay reconstruction, supersession legibility, read-only pin, epoch honesty |
+| `stage296` | 6 | Tour completeness, grounded narration refusal, keyless honesty, key phrasing |
+| `stage297` | 15 | Device-only demo parking, v1+v2 lossless export, park-in-place, live-resolve resume, parking-only import, confirm-before-mutate |
+| `stage298` | 14 | Status-carrying pages + share cards, record-only render, stable URLs, document correction, hero + logo, on-page time machine, review socket, feedback quarantine |
+| `stage298b` | 15 | Recorded withdrawal (reason gate, 405s, schema backstop), two-phase propose/adjudicate (zero effect before adjudication, rejected attempts permanent, lifecycle replay), diminished render, adjudication-only link ends, gap retention, severance logging, affordance inventory, Withdrawal dropdown, seed source-link lint |
+| `demo` | 5 | Read-only enforcement, zero residue, fetch proxy absent |
+| `companion` | 40 | Grounding, isolation, fidelity, keys, tools, search, storage |
+| `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
+| `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
+
+**Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
+hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
+Epstein Case (0 — created, empty).
+
+---
+
+## 6. What is pending
+
+**Immediate (strain hunt, in flight).**
+- **Entry 6 needs a correction appended.** It states "no headless browser
+  needed — plain Node fetch defeats the 403." That was disproven on 2026-07-20:
+  plain fetch defeats the *bot-block*, not *JavaScript rendering*, and the split
+  runs through a single domain (justice.gov `criminal-vns` pages are
+  server-rendered; `/archives/opa/pr/` releases are JS shells). Uncorrected, it
+  will mislead the Stage 2.9 redesign.
+- **Target #2, the civil settlement, is unblocked but not entered.** All nine
+  candidate quotes now verify against live pages. Candidate A (DOJ federal
+  civil, $2.8B FCA) and B (Sackler $225M, names living people — Rule 11) are
+  the clean *settlement ≠ finding of fact* specimens; C (CA AG $6B) verified but
+  is really the bankruptcy-releases target wearing a settlement coat. Awaiting
+  operator claim text and source choice.
+- **Six remaining strain targets** from the mini-build list.
+- **Purdue claims #32/#33** sit at middle/contested, under-placed by three rings
+  for the Entry 5 reason. Reaching core needs the filed plea agreement and
+  Information off the docket — PACER remains unreachable.
+
+**Stage 2.95 — the time machine.** Separate kickoff, does not start in the
+2.9 session. The event-log audit it depends on is done (see the audit findings
+below); two record types it may want do NOT exist and were deliberately not
+invented here: hash-supersession events and scope events (Legal Amendments
+F/G). 2.95 must scope around their absence — that is a design decision left
+open, not a gap someone forgot.
+
+**Stage 2.99 — the taxonomy redesign** (moved from 2.9 by operator decision
+2026-07-27; last stage before multiplayer). The whole point of the strain
+journal. Six entries across two genres is the input the redesign was waiting
+for. Not started, and deliberately so: the taxonomy is revised **once**,
+never patched piecemeal.
+
+**Event-log audit findings (2.9, scope F).** Before this stage there was NO
+general event log: placements/promotions/demotions lived only in the
+challenges table (no actor anywhere), source attach/detach, library deletes,
+and support link changes were recorded nowhere, and nothing carried an actor.
+Closed in this schema pass with the append-only `events` table (UPDATE/DELETE
+refused by trigger): claim_created, promotion, promotion_failed, demotion
+(including ripple demotes with the library delete as reason), source_attached,
+source_detached, library_source_deleted, support_link_added/removed,
+kernel_link_created/removed, challenge_recorded, vertical_set, topic_created —
+each with actor (default 'local' until multiplayer supplies real ones),
+timestamp, and reason. Known residual gaps, reported not papered over:
+support/kernel link removals accept an omitted reason and record "no reason
+stated"; pre-2.9 history exists only in the challenges table and cannot be
+back-filled honestly.
+
+**Parked-note deletion stays unlogged — SETTLED (operator, 2.9b kickoff), do
+not re-decide in 2.95.** The event log exists so the map can replay honestly;
+a parked note has no tier, weight, or place on the rings and cannot affect
+the map at any timestamp, so its deletion cannot make a replay dishonest.
+Logging it would drag private scratch into a permanent record for zero
+replay benefit. Trade-off stated: an unlogged deletion path exists, scoped
+to data with zero epistemic standing.
+
+**Seeding report (2.9b, scope D).** Kernel links now exist in the live DB
+for every debunked (outermost) claim, authored through the rules layer, in
+the event log with actor "claude (2.9b seeding)", and NOT removed (standing
+rule): #11 (MKUltra) as a two-kernel fan — #1 existence, #2 exposure; #20
+(COINTELPRO) as a two-kernel fan — #13 the program's documented disruption,
+#17 the one documented death contribution (Hampton) that the claim
+universalizes; #28 (Replication Crisis) → #22, the preregistered replication
+projects. Claims with nothing to seed, reported not forced: the Epstein topic
+has zero claims; Purdue's two claims sit at middle with no debunked tier.
+KNOWN DEFECT awaiting operator-approved correction: the five gap statements
+were posted via curl from a shell whose codepage mangled non-ASCII glyphs —
+en-dashes and curly apostrophes are stored as U+FFFD (text otherwise
+intact). There is no kernel-link update path by design, and the standing
+rule forbids delete-and-recreate without approval; the proposed fix is a
+same-content re-creation with correct encoding, on operator sign-off.
+
+**Stage 3+ (designed, not built).** Multiplayer and adversarial review;
+Matrix/Postgres split with canonical placement never living in the federated
+layer; source capture + content hashing (spec §4); pseudonymous identity;
+active-investigation mode; the spatial world. `DECISIONS.md` holds the one
+design already settled: companion voice renders **once** on the owner's client
+and transmits as audio, never re-rendered per listener.
+
+---
+
+## 7. Approaches tried and rejected
+
+**Card content validation by string-matching.** Rejected on the §11 ruling: the
+mask lift already removes the card from analysis, so the check guarded nothing,
+and a bypassable behavioral rule teaches evasion. Replaced by structural
+absence.
+
+**Retry-on-gate-failure, then bare analysis.** Rejected (§12c). Retrying a
+persona render is a slot machine, and falling back to bare output makes the
+character disappear exactly when the record is hardest. Replaced by one attempt
+then automatic interleaved delivery.
+
+**Declaring search tools alongside the OpenRouter web plugin.** Caused a live
+`400: Tool names must be unique` — the plugin injects its own `web_search`.
+Fixed two ways: a mode split (online mode ships the plugin and no search tools)
+and a defensive `dedupeTools` in the provider layer. Both kept; the dedupe is
+cheap insurance against a future provider doing the same thing.
+
+**Client-side fetch for source verification.** Blocked by CORS on every
+third-party page. Moved server-side.
+
+**Believing the 403 was site policy.** `WebFetch` got 403 from justice.gov; a
+plain Node server-side fetch got 200. The block was fetcher infrastructure, not
+the site. Lesson retained in Entry 6.
+
+**"Plain fetch is enough, no headless browser."** Held for two days, then
+disproven — JS-rendered pages return 200 with an empty shell. Now: plain fetch
+first, browser only on an unreadable shell or a bot-block status. The fast path
+is pinned by a test (`B3`) so the browser never becomes the default.
+
+**Playwright with a downloaded Chromium.** Rejected for weight. `puppeteer-core`
+drives the machine's *already-installed* Edge (Chrome if present, `CHROME_PATH`
+to override) — a small driver dependency and no browser binary in the tree.
+
+**Treating an unreadable page as "quote not found."** A real defect, caught
+before it corrupted the record: the proxy confidently reported that Perry's
+verbatim DOJ quotes were absent from pages it had never actually read. This is
+the same false-negative class as the companion "correcting" the true "36
+victims" claim. Fixed with the tri-state (`quote_found: null`).
+
+**Serving the fetch proxy in demo mode.** Originally made GET-only *so it would
+pass* the read-only middleware. That reasoning was backwards and is now
+reversed — see §8.
+
+**(2.9) Letting a kernel link block promotion when the gap closes.** Rejected:
+that would give a zero-weight annotation tier-moving power in the negative
+direction. Replaced by sever-on-promotion, recorded with the move as reason.
+
+**(2.9) Routing through claims that descend from the kernel but have no
+relation to the outer claim.** Rejected: "related to the kernel" is not
+"shares the lineage" — that path dresses a leap as a gentle slope using real
+but irrelevant claims. Routes require a support chain that actually reaches
+the outer claim; otherwise the break is drawn bare.
+
+**(2.9) Return-home on every deselect.** Prototyped and rejected by feel —
+jarring when reading neighboring claims in sequence. Kept as the Escape /
+empty-click gesture instead (see §3.3).
+
+**(2.9) Repainting shell textures per-frame for the contention pulse.**
+Rejected for cost; the pulse is additive glow sprites animated in the render
+loop over a static texture, so the resting sphere stays cheap.
+
+**(2.9b) Voronoi full-surface tessellation.** Superseded, not merely
+restyled: tiles that fill all available surface made every shell read as
+uniformly "full" regardless of how much was actually claimed. Discrete tiles
+with open space carry that information honestly.
+
+**(2.9b) Lineage-draw on single-click, camera-framing the fan.** Superseded
+by operator decision: select had become a loud gesture (clearing, reframing)
+for the quietest intent (read one claim). The chain view moved to
+double-click, and rotation — not camera flight — does the presenting.
+
+**(2.9b) curl-from-bash for seeding non-ASCII content.** Rejected after it
+mangled en-dashes/apostrophes into U+FFFD in five gap statements (see the
+seeding report). Any future live-DB content write goes through a Node script
+posting UTF-8 explicitly.
+
+---
+
+## 8. Open questions and risks
+
+**No version control — CLOSED (release prep, 2026-08-01).** The repo is
+initialized on `main` with a clean first commit (.gitignore in place before
+it; no DB blob or secret staged — verified). The operator creates the
+remote and pushes; credentials never pass through the agent.
+
+**The `§` numbering points outside the repo.** Comments across the companion
+cite `§9b`, `§11`, `§12c`, `§13c`, `§14` as if they were durable references, but
+those kickoff documents were pasted into chat and never saved. Anyone reading
+the code later — including me in a fresh session — cannot resolve them. Either
+save the kickoffs into the repo or convert the citations to self-describing
+names. *(Partially addressed 2026-07-27: the Stage 2.9 addendum and kickoff
+are now saved in the repo root, so 2.9-era references resolve. The older
+kickoffs remain unsaved.)*
+
+**The taxonomy redesign has no scoped shape yet.** Six entries say *where* the
+vocabulary strains; none of them proposes a replacement, correctly, since the
+journal's discipline is log-don't-solve. But at some point that has to convert
+into a design, and the conversion criteria ("enough genres") are not written
+down anywhere.
+
+**Two-source Core in the legal genre may be miscalibrated.** Entries 5 and 6
+both bottom out in the same place: an adjudicated federal conviction earns
+`middle` because its only attachable source is an agency page. That has now
+happened twice with different claims. It may be a taxonomy gap, or it may be
+that "two independent primary documents" is the wrong floor when the primary
+document is a court filing behind a paywall. Worth deciding deliberately in 2.9
+rather than drifting.
+
+**Demo companion behavior with the proxy absent — CLOSED (release item 2).**
+The showcase message ships in both layers (demo-flag short-circuit +
+404 conversion); `fetch proxy error 404` can no longer reach a visitor.
+See §3.2k.
+
+**`puppeteer-core` requires a local Chrome or Edge.** Fine on Windows (Edge
+ships with the OS) and on any dev machine; it would need an explicit Chromium in
+a container. Nothing depends on it today outside the local engine, and failure
+is graceful (inconclusive with a stated reason), but the dependency is real.
+
+**Preview-harness sandboxing blocks the browser spawn.** When the dev server is
+started through the agent preview harness, headless Edge cannot launch and
+`/api/fetch` degrades to inconclusive. Started normally (`npm run dev`), it
+works. Not a product bug, but it will confuse anyone debugging through that path.
+
+### Corrected this session
+
+I reported last turn that the demo package had been "rebuilt with all of it."
+**That was wrong**, and verifying it for this document is how it surfaced.
+`server/index.js` had gained top-level imports of `fetch-proxy.js` and
+`browser-render.js`, but `scripts/build-demo.mjs` copies a fixed file list that
+does not include them — so the built demo crashed on boot with
+`ERR_MODULE_NOT_FOUND`. It had been broken since the proxy landed.
+
+The fix addressed a second problem the first one exposed: `/api/fetch` is a GET,
+so the demo's read-only middleware waved it straight through. A publicly hosted
+showcase was therefore offering anonymous callers an open fetcher that could
+spawn a headless browser per request — an abuse relay and a trivial resource
+sink, with no demo benefit whatsoever. The route is now registered only when
+`demo` is false, and both modules are imported lazily so the demo package need
+not carry them. Pinned by `demo` tests D4 (absent in demo) and D5 (present in
+the local engine). The rebuilt package boots, serves three topics, and answers
+404 on `/api/fetch`.
+
+---
+
+## 9. Running it
+
+Node 22.5+ required (uses built-in `node:sqlite`; built on Node 24). On this
+machine Node is at `C:\Program Files\nodejs` and is **not on PATH**.
+
+```bash
+npm run dev
+```
+
+App on http://localhost:5173, API on 3111, database at
+`server/data/truth-onion.db`.
+
+```bash
+npm test
+```
+
+Eighteen suites, 243 tests, against the real API with the real seed, in memory.
+
+```bash
+npm run build-demo
+```
+
+Writes the read-only showcase to `demo/` and the hosted variant to `deploy/`.
+`npm run export -- "<topic>"` and `npm run import -- <file>` move topics through
+the rules layer; `npm run reset` wipes and reseeds (**hand-built topics are
+destroyed — export first**).

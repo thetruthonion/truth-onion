@@ -1,0 +1,21 @@
+# Databases — the record lives locally; the repo ships the rules and the
+# versioned seed fixtures (server/seed.js + exports/*.json), never a DB blob.
+server/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Secrets — keys are BYOK and live in the browser; nothing key-shaped may
+# ever be committed.
+.env
+.env.*
+
+# Dependencies and build output.
+node_modules/
+client/dist/
+demo/
+
+# Local editor/agent state and stray archives.
+.claude/settings.local.json
+files.zip

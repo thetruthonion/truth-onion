@@ -1,0 +1,38 @@
+# Truth Onion — public read-only demo on Fly.io (release decision record).
+#
+# This file lives at the REPO ROOT so `fly deploy` uses the repo as the build
+# context (deploy/Dockerfile copies the whole tree into the build stage).
+# Operator flow — from a shell logged into the Fly account created under the
+# monitored thetruthonion.org address (MFA on):
+#
+#   fly launch --copy-config --no-deploy    # first time: creates the app, keeps this config
+#   fly deploy                              # builds the image (test gate inside) and ships it
+#
+# NO [mounts] SECTION MAY EVER APPEAR HERE. The database is ephemeral by
+# design: it resets to the pristine seed on every deploy and every machine
+# restart; persistence is client-side saves (settled decision). A volume
+# would silently turn guest residue into state. Pinned by test R10.
+
+app = "truth-onion-demo"
+primary_region = "iad" # operator's pick at `fly launch`; any region works
+
+[build]
+  dockerfile = "deploy/Dockerfile"
+
+[env]
+  # Uncomment and fill when known; both are optional and safe to set later:
+  # PUBLIC_ORIGIN = "https://demo.thetruthonion.org"  # canonical origin for claim-page share links
+  # DEMO_REPO_URL = "https://github.com/OWNER/truth-onion"  # clone link in refusal + showcase messages
+
+[http_service]
+  internal_port = 3111
+  force_https = true
+  # Scale-to-zero: the demo sleeps when nobody is reading and wakes on the
+  # next request. Every wake is a fresh pristine database — by design.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

@@ -1,0 +1,14 @@
+PLACEHOLDER — LICENSE PENDING
+
+The license for this repository is an open operator decision (release
+checklist item 0c). This file is committed as a stub so the slot exists from
+commit one, and it is filled the day the chosen license lands — the license
+is chosen deliberately, never guessed.
+
+Until a license text replaces this file: all rights reserved. The repository
+being publicly readable is not a grant of license.
+
+When the license lands, update in the same change:
+- this file (the full license text),
+- the "License" section of README.md (the license name),
+- the "license" field of package.json.

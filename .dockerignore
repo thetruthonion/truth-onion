@@ -1,0 +1,15 @@
+# Keep the image build context clean: no local installs, no build output,
+# no databases. The pristine demo DB is built INSIDE the image from the
+# versioned fixtures — a local DB sneaking into the context would defeat
+# the seed-at-image-build rule.
+node_modules
+demo
+client/dist
+.git
+server/data
+*.db
+*.db-*
+.env
+.env.*
+files.zip
+.claude

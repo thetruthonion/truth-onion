@@ -1,0 +1,32 @@
+{
+  "name": "truth-onion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "Evidence engine: claims earn their place on concentric tiers, rules enforced at the data layer with no override path.",
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"node server/index.js\" \"vite\"",
+    "start": "npm run dev",
+    "reset": "node server/reset.js",
+    "export": "node server/export-cli.js",
+    "import": "node server/import-cli.js",
+    "build": "vite build",
+    "build-demo": "node scripts/build-demo.mjs",
+    "test": "node tests/dod.test.mjs && node tests/pressure.test.mjs && node tests/stage2.test.mjs && node tests/stage25.test.mjs && node tests/stage29.test.mjs && node tests/stage29b.test.mjs && node tests/stage29c.test.mjs && node tests/stage29d.test.mjs && node tests/stage29e.test.mjs && node tests/stage295.test.mjs && node tests/stage296.test.mjs && node tests/stage297.test.mjs && node tests/stage298.test.mjs && node tests/stage298b.test.mjs && node tests/demo.test.mjs && node tests/companion.test.mjs && node tests/fetchproxy.test.mjs && node tests/release.test.mjs"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1",
+    "d3-geo-voronoi": "^2.1.0",
+    "express": "^4.21.2",
+    "puppeteer-core": "^25.3.0",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^6.0.7"
+  }
+}
