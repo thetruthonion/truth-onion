@@ -28,7 +28,15 @@ import {
   exportTopic,
   importTopic
 } from './service.js';
-import { RuleError, TIERS } from './rules.js';
+import { RuleError, TIERS, PERSONAS } from './rules.js';
+import {
+  makeSave,
+  SaveFormatError,
+  SANDBOX_ENTRY_NOTE,
+  SANDBOX_FULL_MESSAGE,
+  SANDBOX_GONE_MESSAGE,
+  SANDBOX_SIZE_MESSAGE
+} from './sandbox.js';
 import {
   topicTimeline,
   topicAtTime,
@@ -40,55 +48,86 @@ import {
 import { renderClaimPage, reviewStatus } from './claimpages.js';
 
 const DEMO_MESSAGE = () =>
-  'This is the read-only showcase — clone the repo to run the full engine and try to cheat it yourself' +
-  (process.env.DEMO_REPO_URL ? `: ${process.env.DEMO_REPO_URL}` : '.');
+  'This shared record is read-only — your first write creates a private copy where the rules answer to you' +
+  (process.env.DEMO_REPO_URL ? `; clone the repo to run the full engine: ${process.env.DEMO_REPO_URL}` : '.');
 
-export function buildApp(db, { demo = false, rateLimit = 0 } = {}) {
+// 2.99a Amendment B: the in-product feedback modal and its quarantine
+// endpoint are REMOVED — an ephemeral app DB cannot honestly keep an
+// accept-then-lose inbox promise. Feedback is a mailto until the durable
+// pipe ships with 2.99b.
+
+// `sandbox: true` builds the app that serves ONE visitor's private copy:
+// writes allowed (that is the point), fetch proxy still absent (demo
+// posture unchanged), no static serving, no page routes reachable from
+// outside (the parent forwards /sandbox/:sid/api only). Same buildApp,
+// same routes, same rules — not a fork.
+export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, sandboxManager = null } = {}) {
   const app = express();
   app.use(express.json());
 
-  // Stage 2.98 (operator addition): anonymized feedback. Registered BEFORE
-  // the demo read-only gate DELIBERATELY — feedback is not a record
-  // mutation; it lands in the append-only quarantine table that no engine
-  // surface ever reads (there is no read endpoint at all). Payload only:
-  // category + message; request metadata is used for the rate limit and
-  // dropped; no identity fields exist in the schema.
-  const fbHits = new Map();
-  app.post('/api/feedback', express.urlencoded({ extended: false }), (req, res) => {
-    const now = Date.now();
-    const ip = req.ip || req.socket.remoteAddress || 'unknown';
-    let h = fbHits.get(ip);
-    if (!h || now - h.start > 60_000) {
-      h = { start: now, count: 0 };
-      fbHits.set(ip, h);
-    }
-    if (++h.count > 5) {
-      return res.status(429).json({ error: 'Feedback rate limit: 5 per minute. Try again shortly.' });
-    }
-    if (fbHits.size > 10_000) fbHits.clear();
-    const category = String(req.body?.category || 'other');
-    const message = String(req.body?.message || '').trim();
-    if (!message) return res.status(422).json({ error: 'Feedback needs a message.' });
-    if (message.length > 2000) {
-      return res.status(422).json({ error: 'Feedback is capped at 2000 characters.' });
-    }
-    try {
-      db.prepare('INSERT INTO feedback (category, message) VALUES (?, ?)').run(
-        ['bug', 'confusion', 'dispute', 'idea', 'other'].includes(category) ? category : 'other',
-        message
-      );
-    } catch (e) {
-      return res.status(422).json({ error: `Refused: ${e.message}` });
-    }
-    const redirect = String(req.query.redirect || '');
-    if (redirect.startsWith('/claim/')) {
-      return res.redirect(303, `${redirect}?sent=1#feedback`);
-    }
-    res.json({ received: true, note: 'Payload stored in the quarantine inbox. Nothing else was kept.' });
-  });
+  // Inside a sandbox copy, the acting persona rides a header and is clamped
+  // to the known set — the event log records personas, never freeform
+  // names. The gates themselves live in the rules layer.
+  if (sandbox) {
+    app.use('/api', (req, res, next) => {
+      if (req.method !== 'GET' && req.body && typeof req.body === 'object') {
+        const p = String(req.headers['x-onion-actor'] || 'curator');
+        req.body.actor = PERSONAS.includes(p) ? p : 'curator';
+      }
+      next();
+    });
+  }
 
-  // Demo mode: reading is the demo. Every mutation is refused at the
-  // middleware layer — hiding buttons is presentation; this is enforcement.
+  // 2.99a Amendment C: copy-on-first-write. Creating a copy is not a record
+  // mutation, so this registers BEFORE the read-only gate. Reads never
+  // create a session; the cap gates writes only, with the honest refusal.
+  if (demo && sandboxManager) {
+    app.post('/api/sandbox/copy', (req, res) => {
+      let made;
+      try {
+        made = sandboxManager.create({ save: req.body && req.body.save ? req.body.save : undefined });
+      } catch (e) {
+        if (e instanceof SaveFormatError) {
+          return res.status(422).json({ error: `Save not imported: ${e.message}`, rule: 'save_format' });
+        }
+        return res.status(422).json({ error: `Save not imported — the record inside it failed the restore: ${e.message}`, rule: 'save_format' });
+      }
+      if (made.full) {
+        return res.status(503).json({ error: SANDBOX_FULL_MESSAGE, rule: 'sandbox_full' });
+      }
+      res.status(201).json({
+        session_id: made.session.id,
+        expires_at: new Date(made.session.expiresAt).toISOString(),
+        ttl_minutes: Math.round(sandboxManager.limits.ttlMs / 60_000),
+        entry_note: SANDBOX_ENTRY_NOTE
+      });
+    });
+
+    // The save file — the only persistence a copy has.
+    app.get('/sandbox/:sid/save', (req, res) => {
+      const s = sandboxManager.get(req.params.sid);
+      if (!s) return res.status(410).json({ error: SANDBOX_GONE_MESSAGE, rule: 'sandbox_gone' });
+      sandboxManager.touch(s.id);
+      res.json(makeSave(s.db));
+    });
+
+    // Delegate the copy's API to the copy's own app — built by the SAME
+    // buildApp, so the same routes and the same rules layer answer.
+    app.use('/sandbox/:sid/api', (req, res, next) => {
+      const s = sandboxManager.get(req.params.sid);
+      if (!s) return res.status(410).json({ error: SANDBOX_GONE_MESSAGE, rule: 'sandbox_gone' });
+      sandboxManager.touch(s.id);
+      if (req.method !== 'GET' && sandboxManager.sizeOf(s) > sandboxManager.limits.sizeCapBytes) {
+        return res.status(413).json({ error: SANDBOX_SIZE_MESSAGE, rule: 'sandbox_size_cap' });
+      }
+      req.url = '/api' + req.url;
+      s.app(req, res, next);
+    });
+  }
+
+  // Demo mode: the shared record is read-only. Every mutation is refused at
+  // the middleware layer — hiding buttons is presentation; this is
+  // enforcement. (Sandbox copies are separate apps and never pass here.)
   if (demo) {
     app.use('/api', (req, res, next) => {
       if (req.method !== 'GET') {
@@ -119,6 +158,7 @@ export function buildApp(db, { demo = false, rateLimit = 0 } = {}) {
     };
     app.use('/api', limiter);
     app.use('/claim', limiter);
+    app.use('/sandbox', limiter);
   }
 
   app.get('/api/meta', (req, res) => {
@@ -137,7 +177,7 @@ export function buildApp(db, { demo = false, rateLimit = 0 } = {}) {
   // The modules are imported lazily so the demo package need not ship them at
   // all — it copies a fixed server file list, and a hard import of a file it
   // does not carry is a boot crash.
-  if (!demo) {
+  if (!demo && !sandbox) {
     app.get('/api/fetch', (req, res, next) => {
       const url = String(req.query.url || '');
       const quote = req.query.quote != null ? String(req.query.quote) : undefined;
@@ -236,7 +276,7 @@ export function buildApp(db, { demo = false, rateLimit = 0 } = {}) {
   }));
 
   app.post('/api/claims/:id/promote', wrap((req, res) => {
-    res.json(promoteClaim(db, Number(req.params.id), req.body.target_tier));
+    res.json(promoteClaim(db, Number(req.params.id), req.body.target_tier, { actor: req.body.actor }));
   }));
 
   app.post('/api/claims/:id/demote', wrap((req, res) => {
@@ -269,7 +309,7 @@ export function buildApp(db, { demo = false, rateLimit = 0 } = {}) {
   });
 
   app.post('/api/claims/:id/supports', wrap((req, res) => {
-    res.json(addSupport(db, Number(req.params.id), Number(req.body.supported_id)));
+    res.json(addSupport(db, Number(req.params.id), Number(req.body.supported_id), { actor: req.body.actor }));
   }));
 
   app.delete('/api/claims/:id/supports/:supportedId', (req, res) => {
@@ -388,9 +428,10 @@ export function buildApp(db, { demo = false, rateLimit = 0 } = {}) {
   app.patch('/api/claims/:id', immutable);
   app.put('/api/claims/:id', immutable);
 
-  // Built frontend, if present (dev uses the Vite server instead).
+  // Built frontend, if present (dev uses the Vite server instead). A
+  // sandbox copy's app serves API only — the one surface is the parent's.
   const dist = join(dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist');
-  if (existsSync(dist)) app.use(express.static(dist));
+  if (!sandbox && existsSync(dist)) app.use(express.static(dist));
 
   app.use((err, req, res, next) => {
     if (err instanceof RuleError) {
@@ -432,7 +473,35 @@ if (isMain) {
   }
   const port = process.env.ONION_PORT || 3111;
   const rateLimit = demo ? Number(process.env.DEMO_RATE_LIMIT || 120) : 0;
-  buildApp(db, { demo, rateLimit }).listen(port, () => {
+
+  // 2.99a: in demo mode, per-visitor sandbox copies restore from the SAME
+  // curated-record fixture the pristine DB was built from — one seed, one
+  // restore path. No fixture, no sandbox (reported, not silent).
+  let sandboxManager = null;
+  if (demo) {
+    const { readFileSync } = await import('node:fs');
+    const fixturePath = join(
+      dirname(fileURLToPath(import.meta.url)),
+      '..',
+      'exports',
+      'curated-record.history.json'
+    );
+    if (existsSync(fixturePath)) {
+      const { makeSandboxManager } = await import('./sandbox.js');
+      sandboxManager = makeSandboxManager({
+        fixture: JSON.parse(readFileSync(fixturePath, 'utf8')),
+        buildApp
+      });
+      sandboxManager.startSweeper();
+      console.log(
+        `Sandbox: copy-on-first-write enabled (cap ${sandboxManager.limits.cap}, TTL ${Math.round(sandboxManager.limits.ttlMs / 60_000)} min).`
+      );
+    } else {
+      console.log('Sandbox disabled: exports/curated-record.history.json not found in this package.');
+    }
+  }
+
+  buildApp(db, { demo, rateLimit, sandboxManager }).listen(port, () => {
     console.log(
       `Truth Onion API on http://localhost:${port}${demo ? ' (read-only demo mode)' : ''}`
     );

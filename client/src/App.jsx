@@ -5,7 +5,23 @@ import ClaimPanel from './ClaimPanel.jsx';
 import AddClaim from './AddClaim.jsx';
 import DepthDial from './DepthDial.jsx';
 import Companion from './Companion.jsx';
-import { api, RuleRejection } from './api.js';
+import { api, RuleRejection, setSandboxBase, setSandboxActor } from './api.js';
+import {
+  indicatorText,
+  apiBase as sbxApiBase,
+  needsCopy,
+  divergenceEvents,
+  autosaveLabel,
+  SAVE_PROMPT_MESSAGE,
+  PERSONA_SWITCH_LABEL
+} from './sandboxState.js';
+import {
+  fileHandlesSupported,
+  pickAutosaveFile,
+  makeAutosaver,
+  readBrowserAutosave,
+  downloadSave
+} from './autosave.js';
 import TabBar from './Tabs.jsx';
 import SearchBox from './SearchBox.jsx';
 import { loadPanelWidth, savePanelWidth, PANEL_BOUNDS } from './uiPrefs.js';
@@ -67,11 +83,16 @@ export default function App() {
   const [narrationOffer, setNarrationOffer] = useState(null);
   // 2.9c: topic-panel tab — presentation only, never gates data.
   const [topicTab, setTopicTab] = useState('about');
-  // 2.98 (operator): the anonymized feedback modal.
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [fbCategory, setFbCategory] = useState('other');
-  const [fbMessage, setFbMessage] = useState('');
-  const [fbState, setFbState] = useState(null); // null | 'sending' | {ok} | {error}
+  // 2.99a (Amendment C): copy-on-first-write. The visitor browses the
+  // canonical record until their first attempted write transparently
+  // creates a private session copy; the indicator is the honesty organ.
+  const [sbx, setSbx] = useState({ sid: null, expiresAt: null, persona: 'curator', viewCanonical: false });
+  const [savePrompt, setSavePrompt] = useState(false); // fires at first write
+  const [saveStatus, setSaveStatus] = useState({ mode: null, filename: null, error: null }); // autosave indicator state
+  const autosaverRef = useRef(null); // {write} — set by save setup
+  const autosaveTimer = useRef(null);
+  const [diffView, setDiffView] = useState(null); // null | {events: [...]} | {loading:true}
+  const canonicalMaxEvent = useRef(null); // last canonical event id, for divergence
   // 2.95: topic-health readouts (aggregates only, never leaderboards).
   const [health, setHealth] = useState(null);
   // 2.96: the tour. Invite offered once (flag in onion.ui.*), re-launchable
@@ -149,6 +170,7 @@ export default function App() {
     window.addEventListener('pointerup', onUp);
   };
 
+  const [resumeOffer, setResumeOffer] = useState(null); // a browser autosave found at boot
   useEffect(() => {
     api
       .meta()
@@ -157,9 +179,34 @@ export default function App() {
         if (m.demo_mode && !sessionStorage.getItem('onion.intro.seen')) {
           setShowIntro(true);
         }
+        if (m.demo_mode) {
+          // The canonical record's last event id — the divergence baseline.
+          api
+            .events()
+            .then((evs) => {
+              canonicalMaxEvent.current = evs.reduce((m2, e) => Math.max(m2, e.id), 0);
+            })
+            .catch(() => {});
+          // A browser autosave from an earlier visit: offer resume, never
+          // auto-import — the save is the visitor's, the choice is theirs.
+          const found = readBrowserAutosave();
+          if (found) setResumeOffer(found);
+        }
       })
       .catch(() => {});
   }, []);
+
+  // Amendment B: the exit nudge — browser-storage autosave is real but
+  // browser-bound; leaving is the moment to say "download to keep it".
+  useEffect(() => {
+    if (saveStatus.mode !== 'browser' || !sbx.sid) return;
+    const nudge = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', nudge);
+    return () => window.removeEventListener('beforeunload', nudge);
+  }, [saveStatus.mode, sbx.sid]);
   const dismissIntro = () => {
     sessionStorage.setItem('onion.intro.seen', '1');
     setShowIntro(false);
@@ -458,6 +505,40 @@ export default function App() {
   const [confirmReq, setConfirmReq] = useState(null); // {message, proceed}
   const askConfirm = (message, proceed) => setConfirmReq({ message, proceed });
 
+  // ---- 2.99a sandbox helpers ---------------------------------------------
+  // Adopt a created/imported copy: route the api at it, default persona,
+  // fire the save prompt (first-write timing — losable work now exists).
+  const adoptCopy = (made, { prompt = true } = {}) => {
+    setSbx({ sid: made.session_id, expiresAt: made.expires_at, persona: 'curator', viewCanonical: false });
+    setSandboxBase(`/sandbox/${made.session_id}`);
+    setSandboxActor('curator');
+    if (prompt) setSavePrompt(true);
+  };
+
+  // The copy expired (or the save import target vanished): say so plainly,
+  // return to the canonical record — autosaves mean the work survives.
+  const copyGone = (message) => {
+    setSbx({ sid: null, expiresAt: null, persona: 'curator', viewCanonical: false });
+    setSandboxBase('');
+    autosaverRef.current = null;
+    setSaveStatus({ mode: null, filename: null, error: null });
+    setNotice(message);
+  };
+
+  // Debounced autosave — every change writes the ONE standard save format.
+  const scheduleAutosave = () => {
+    if (!autosaverRef.current || !sbx.sid) return;
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(async () => {
+      try {
+        const save = await api.fetchSandboxSave();
+        await autosaverRef.current.write(JSON.stringify(save, null, 2));
+      } catch (e) {
+        setSaveStatus((s) => ({ ...s, error: e.message }));
+      }
+    }, 1200);
+  };
+
   const run = async (fn, successMsg, opts = {}) => {
     // 2.95 (pinned): a historical view NEVER writes. Every mutation in the
     // app funnels through here; while scrubbed it refuses with the reason.
@@ -473,6 +554,25 @@ export default function App() {
     setRejection(null);
     setNotice(null);
     setBusy(true);
+    // Copy-on-first-write (2.99a Amendment C): in demo, the first attempted
+    // write transparently creates the private copy and the write lands in
+    // it. The cap refusal gates THIS moment — reading never consumes a
+    // session — and a full sandbox leaves reading fully available.
+    if (needsCopy({ demo, sid: sbx.sid })) {
+      try {
+        const made = await api.createSandboxCopy();
+        adoptCopy(made);
+      } catch (e) {
+        setError(e.message);
+        setBusy(false);
+        return;
+      }
+    } else if (demo && sbx.sid && sbx.viewCanonical) {
+      // Writes always belong to the copy — leave canonical viewing mode
+      // rather than letting the shared record 403 a write the copy owns.
+      setSbx((s) => ({ ...s, viewCanonical: false }));
+      setSandboxBase(sbxApiBase({ sid: sbx.sid, viewCanonical: false }));
+    }
     try {
       const result = await fn();
       await reload();
@@ -497,10 +597,16 @@ export default function App() {
         msg += ` It now sits beyond your depth view — dial to ${depthNeededFor(moved)} to see it.`;
       }
       setNotice(msg);
+      scheduleAutosave();
     } catch (e) {
       if (e instanceof RuleRejection) setRejection(e);
-      else setError(e.message);
+      else if (e.rule === 'sandbox_gone') {
+        copyGone(e.message);
+        await reload(); // base is canonical again — the reading view returns
+        return;
+      } else setError(e.message);
       await reload();
+      scheduleAutosave();
     } finally {
       setBusy(false);
     }
@@ -636,24 +742,69 @@ export default function App() {
 
   return (
     <>
+      {/* 2.99a Amendments A + C: the card is DOORS, not teaching. The two
+          facts no visitor may miss — the shared record is read-only; a
+          private copy exists where you can act — plus the doors. All
+          instruction lives in the tour; sandbox detail lives on the
+          first-write message; no guarantee-shaped sentence anywhere. */}
       {showIntro && (
         <div className="intro-overlay" role="dialog" aria-label="Welcome">
           <div className="intro-card">
             <h2 style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink)', fontSize: 15 }}>
-              Truth Onion — read-only showcase
+              Truth Onion
             </h2>
-            <ul>
-              <li>This sphere shows only what's established. Turn the dial to see further out.</li>
-              <li>Click any tile for its evidence, placement reason, and challenge history.</li>
-              <li>
-                Everything here obeys rules enforced at the data layer — this demo is read-only;
-                the full engine refuses cheating instead.
-              </li>
-            </ul>
-            <button className="primary" onClick={dismissIntro}>
-              Explore
-            </button>
+            <p>
+              The curated record of three documented topics — every claim placed by its
+              evidence, debunked claims kept visible. This shared record is read-only; the
+              sandbox gives you a private copy where the rules answer to you.
+            </p>
+            <div className="row">
+              <button className="primary" onClick={dismissIntro}>
+                Explore the record
+              </button>
+              <button
+                onClick={() => {
+                  dismissIntro();
+                  dismissTourInvite();
+                  setTourState({ phase: 'setup' });
+                }}
+              >
+                Take the tour
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+      {/* A browser autosave from an earlier visit: the offer, not an auto-
+          import. Resuming builds a fresh copy from the save's record. */}
+      {resumeOffer && !sbx.sid && (
+        <div className="notice" role="status">
+          A sandbox autosave from {resumeOffer.saved_at?.slice(0, 16).replace('T', ' ') || 'an earlier visit'} lives
+          in this browser.{' '}
+          <button
+            className="small"
+            onClick={async () => {
+              try {
+                const made = await api.createSandboxCopy(resumeOffer);
+                adoptCopy(made, { prompt: false });
+                autosaverRef.current = makeAutosaver({
+                  mode: 'browser',
+                  onStatus: (st) => setSaveStatus((s) => ({ ...s, mode: 'browser', error: st.ok ? null : st.error }))
+                });
+                setSaveStatus({ mode: 'browser', filename: null, error: null });
+                setResumeOffer(null);
+                await reload();
+                setNotice('Resumed from your autosave — this copy is the save, restored.');
+              } catch (e) {
+                setError(e.message);
+              }
+            }}
+          >
+            resume from it
+          </button>{' '}
+          <button className="small" onClick={() => setResumeOffer(null)}>
+            not now
+          </button>
         </div>
       )}
       <header className="topbar">
@@ -687,23 +838,97 @@ export default function App() {
             }}
             onFullSearch={runFullSearch}
           />
+          {/* 2.99a Amendment C: the indicator is the honesty organ — the
+              visitor must always know which record they are looking at. */}
           {demo && (
-            <span className="demo-badge" title="Mutations are refused by the server, not just hidden here">
-              read-only showcase
+            <span
+              className="demo-badge"
+              title={
+                sbx.sid
+                  ? 'Your private copy — the same rules answer here; the shared record is untouched'
+                  : 'The shared record is read-only, refused by the server — your first write creates a private copy'
+              }
+            >
+              {indicatorText(sbx)}
             </span>
           )}
-          {/* Operator decision (2.98): the feedback link replaces the header
-              add-claim button — adding a claim lives in the search dropdown.
-              Feedback is anonymized: payload only, quarantined, never read
-              by the engine. Works for everyone, demo included. */}
-          <button
+          {demo && sbx.sid && !sbx.viewCanonical && (
+            <>
+              <button
+                className="small"
+                title="What your copy changed, event by event"
+                onClick={async () => {
+                  setDiffView({ loading: true });
+                  try {
+                    const evs = await api.events();
+                    setDiffView({ events: divergenceEvents(evs, canonicalMaxEvent.current ?? 0) });
+                  } catch (e) {
+                    setDiffView({ events: [], error: e.message });
+                  }
+                }}
+              >
+                what differs
+              </button>
+              <button
+                className="small"
+                title="Browse the canonical record again — your copy stays intact"
+                onClick={async () => {
+                  setSbx((s) => ({ ...s, viewCanonical: true }));
+                  setSandboxBase('');
+                  await reload();
+                }}
+              >
+                view canonical
+              </button>
+            </>
+          )}
+          {demo && sbx.sid && sbx.viewCanonical && (
+            <button
+              className="small"
+              onClick={async () => {
+                setSbx((s) => ({ ...s, viewCanonical: false }));
+                setSandboxBase(sbxApiBase({ sid: sbx.sid, viewCanonical: false }));
+                await reload();
+              }}
+            >
+              back to your copy
+            </button>
+          )}
+          {/* Import a save into a fresh copy (round-trip pinned server-side). */}
+          {demo && !sbx.sid && (
+            <label className="small" style={{ cursor: 'pointer' }} title="Import a sandbox save file — a fresh private copy restored from it">
+              import save
+              <input
+                type="file"
+                accept="application/json,.json"
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!file) return;
+                  try {
+                    const save = JSON.parse(await file.text());
+                    const made = await api.createSandboxCopy(save);
+                    adoptCopy(made, { prompt: true });
+                    await reload();
+                    setNotice('Save imported into a fresh private copy.');
+                  } catch (err) {
+                    setError(err.message);
+                  }
+                }}
+              />
+            </label>
+          )}
+          {/* 2.99a Amendment B: feedback is a mailto — the durable in-product
+              pipe is 2.99b scope; an ephemeral DB keeps no inbox promises. */}
+          <a
             className="primary"
-            style={!demo ? { marginLeft: 'auto' } : undefined}
-            onClick={() => setFeedbackOpen(true)}
-            title="Send anonymized feedback — category + text only, no identity, quarantined outside the record"
+            style={{ marginLeft: !demo ? 'auto' : undefined, textDecoration: 'none' }}
+            href={`mailto:truth.onionwright@gmail.com?subject=${encodeURIComponent('[feedback] Truth Onion demo')}`}
+            title="Email the operator — opens your mail app; nothing is collected in-product"
           >
             ✉ feedback
-          </button>
+          </a>
         </div>
         <div className="topbar-row">
           <DepthDial depth={depth} setDepth={setDepth} />
@@ -738,6 +963,56 @@ export default function App() {
           >
             ❔ tour
           </button>
+          {/* 2.99a: the persona switcher appears when the copy does. Preset,
+              simulated standing — the honesty label is the title AND the
+              visible legend below. Gates live in the rules layer. */}
+          {demo && sbx.sid && (
+            <span className="persona-switch" title={PERSONA_SWITCH_LABEL}>
+              <label style={{ fontSize: 11.5, marginRight: 4 }}>acting as</label>
+              <select
+                value={sbx.persona}
+                onChange={(e) => {
+                  const persona = e.target.value;
+                  setSbx((s) => ({ ...s, persona }));
+                  setSandboxActor(persona);
+                }}
+              >
+                <option value="curator">Curator — full powers in this copy</option>
+                <option value="contributor">Contributor — adds & proposes, adjudicates nothing</option>
+                <option value="reviewer">Reviewer — adjudicates others' proposals</option>
+              </select>
+              <span className="muted" style={{ fontSize: 10.5, display: 'block' }}>
+                {PERSONA_SWITCH_LABEL}
+              </span>
+            </span>
+          )}
+          {demo && sbx.sid && (
+            <span className="autosave-status" style={{ fontSize: 11.5 }} title="One save format — the autosaved file IS the standard save">
+              {saveStatus.error ? '⚠ ' : ''}
+              {autosaveLabel(saveStatus)}
+              {!saveStatus.mode && (
+                <button className="small" style={{ marginLeft: 6 }} onClick={() => setSavePrompt(true)}>
+                  set up a save
+                </button>
+              )}
+              {saveStatus.mode === 'browser' && (
+                <button
+                  className="small"
+                  style={{ marginLeft: 6 }}
+                  title="Download the save to keep it anywhere else"
+                  onClick={async () => {
+                    try {
+                      downloadSave(JSON.stringify(await api.fetchSandboxSave(), null, 2));
+                    } catch (e) {
+                      setSaveStatus((s) => ({ ...s, error: e.message }));
+                    }
+                  }}
+                >
+                  download
+                </button>
+              )}
+            </span>
+          )}
           <div className="legend">
             {['core', 'inner', 'middle', 'outer', 'outermost'].map((t) => (
               <span key={t}>
@@ -794,59 +1069,99 @@ export default function App() {
         </div>
       )}
 
-      {feedbackOpen && (
-        <div className="fullsearch-overlay" role="dialog" aria-label="Send anonymized feedback">
+      {/* 2.99a Amendment B/C: the save prompt — fires at first write, the
+          moment losable work begins existing. Skippable; reachable any time
+          from the header. Two labeled modes, never one unlabeled checkmark. */}
+      {savePrompt && (
+        <div className="fullsearch-overlay" role="dialog" aria-label="Set up a save file">
           <div className="fullsearch-panel" style={{ maxWidth: 520 }}>
             <div className="fullsearch-head">
-              <strong>Anonymized feedback</strong>
-              <button className="small" style={{ marginLeft: 'auto' }} onClick={() => { setFeedbackOpen(false); setFbState(null); }}>
+              <strong>Your copy exists — set up its save</strong>
+              <button className="small" style={{ marginLeft: 'auto' }} onClick={() => setSavePrompt(false)}>
+                skip for now
+              </button>
+            </div>
+            <p className="empty" style={{ marginTop: 0 }}>{SAVE_PROMPT_MESSAGE}</p>
+            <div className="row">
+              {fileHandlesSupported() && (
+                <button
+                  className="primary"
+                  onClick={async () => {
+                    try {
+                      const picked = await pickAutosaveFile();
+                      if (!picked) return;
+                      autosaverRef.current = makeAutosaver({
+                        mode: 'file',
+                        handle: picked.handle,
+                        onStatus: (st) =>
+                          setSaveStatus((s) => ({ ...s, mode: 'file', filename: picked.filename, error: st.ok ? null : st.error }))
+                      });
+                      setSaveStatus({ mode: 'file', filename: picked.filename, error: null });
+                      setSavePrompt(false);
+                      scheduleAutosave();
+                    } catch (e) {
+                      setSaveStatus((s) => ({ ...s, error: e.message }));
+                    }
+                  }}
+                >
+                  autosave to a file (pick once)
+                </button>
+              )}
+              <button
+                className={fileHandlesSupported() ? undefined : 'primary'}
+                onClick={() => {
+                  autosaverRef.current = makeAutosaver({
+                    mode: 'browser',
+                    onStatus: (st) =>
+                      setSaveStatus((s) => ({ ...s, mode: 'browser', error: st.ok ? null : st.error }))
+                  });
+                  setSaveStatus({ mode: 'browser', filename: null, error: null });
+                  setSavePrompt(false);
+                  scheduleAutosave();
+                }}
+              >
+                autosave in this browser
+              </button>
+            </div>
+            <p className="muted" style={{ fontSize: 11.5 }}>
+              {fileHandlesSupported()
+                ? 'File autosave writes your chosen file on every change. Browser autosave survives refresh and reopen within this browser’s limits — download to keep it anywhere else.'
+                : 'This browser does not support persistent file handles, so autosave lives in browser storage — it survives refresh and reopen within its limits; download any time to keep it anywhere else.'}
+              {' '}Manual export stays available; the autosaved file IS the standard save format.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 2.99a Amendment C: the divergence view — what your copy changed. */}
+      {diffView && (
+        <div className="fullsearch-overlay" role="dialog" aria-label="What differs from the canonical record">
+          <div className="fullsearch-panel" style={{ maxWidth: 640 }}>
+            <div className="fullsearch-head">
+              <strong>Your copy vs. the canonical record</strong>
+              <button className="small" style={{ marginLeft: 'auto' }} onClick={() => setDiffView(null)}>
                 close
               </button>
             </div>
-            <p className="empty" style={{ marginTop: 0 }}>
-              Exactly the category and text below are sent — no identity, no account, nothing
-              else. It lands in an append-only quarantine inbox outside the record: the engine
-              never reads it, and it never renders anywhere. Volume is a prompt for the operator
-              to look, never a force that moves anything.
-            </p>
-            <label>Category</label>
-            <select value={fbCategory} onChange={(e) => setFbCategory(e.target.value)}>
-              <option value="other">general</option>
-              <option value="bug">something is broken</option>
-              <option value="confusion">something is confusing</option>
-              <option value="dispute">I dispute a placement</option>
-              <option value="idea">idea</option>
-            </select>
-            <label>Message (max 2000 characters)</label>
-            <textarea
-              maxLength={2000}
-              value={fbMessage}
-              onChange={(e) => setFbMessage(e.target.value)}
-              placeholder="what you'd tell the operator…"
-            />
-            <p className="muted" style={{ fontSize: 11.5 }}>
-              Payload to be sent, in full: {`{ category: "${fbCategory}", message: "${fbMessage.slice(0, 60)}${fbMessage.length > 60 ? '…' : ''}" }`}
-            </p>
-            <div className="row">
-              <button
-                className="primary"
-                disabled={!fbMessage.trim() || fbState === 'sending'}
-                onClick={async () => {
-                  setFbState('sending');
-                  try {
-                    await api.feedback({ category: fbCategory, message: fbMessage.trim() });
-                    setFbState({ ok: true });
-                    setFbMessage('');
-                  } catch (e) {
-                    setFbState({ error: e.message });
-                  }
-                }}
-              >
-                {fbState === 'sending' ? 'sending…' : 'send'}
-              </button>
-            </div>
-            {fbState?.ok && <p className="key-promise">✓ Received into the quarantine inbox. Nothing else was kept.</p>}
-            {fbState?.error && <p className="rejection">{fbState.error}</p>}
+            {diffView.loading && <div className="empty">reading your copy's event log…</div>}
+            {diffView.error && <div className="rejection">{diffView.error}</div>}
+            {diffView.events && diffView.events.length === 0 && (
+              <div className="empty">No divergence yet — your copy still matches the canonical record exactly.</div>
+            )}
+            {diffView.events?.map((e) => (
+              <div className="event" key={e.id}>
+                <span className="muted">{e.created_at}</span> · <strong>{e.action.replace(/_/g, ' ')}</strong>
+                {' '}· actor: {e.actor}
+                {e.claim_id != null && <> · claim #{e.claim_id}</>}
+                <div className="muted" style={{ fontSize: 11.5 }}>{e.reason}</div>
+              </div>
+            ))}
+            {diffView.events && (
+              <p className="muted" style={{ fontSize: 11.5 }}>
+                Every entry above is your copy's own event log past the canonical record's last
+                entry — the same append-only log the engine keeps, with your personas as actors.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -1069,6 +1384,7 @@ export default function App() {
               narrationRequest={narrationRequest}
               onNarrationDone={() => setNarrationRequest(null)}
               demo={demo}
+              apiBase={sbxApiBase(sbx)}
             />
           </aside>
         )}
@@ -1192,7 +1508,11 @@ export default function App() {
               depth={depth}
               setDepth={setDepth}
               run={run}
-              demo={demo}
+              // 2.99a Amendment C: write affordances SHOW in demo — the
+              // first attempt transparently creates the private copy and
+              // the rules answer there. Read-only is the server's posture
+              // on the shared record, no longer the panel's.
+              demo={false}
               frozen={frozen}
               onPark={parkEntry}
               resume={panelResume}

@@ -78,7 +78,9 @@ export default function SearchBox({
   const fullRow = q.trim() && onFullSearch ? [{ kind: 'full', action: 'full', text: q.trim() }] : [];
   // The search bar owns creation too (2.97 punch list): both add flows live
   // in the dropdown alongside search — entry points only, same gated flows.
-  const createRows = !q.trim() && !demo
+  // 2.99a Amendment C: they show in demo too — a first write is exactly how
+  // a visitor's private copy comes into being.
+  const createRows = !q.trim()
     ? [
         { kind: 'new', action: 'new', text: '+ new topic' },
         { kind: 'newClaim', action: 'newClaim', text: '+ add claim' }

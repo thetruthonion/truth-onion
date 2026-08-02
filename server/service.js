@@ -17,6 +17,7 @@ import {
   verticalFailure,
   kernelLinkFailures,
   topicShapeFailures,
+  personaGateFailures,
   statusFor,
   truncate,
   RuleError
@@ -48,6 +49,16 @@ function reject(failures, earned) {
     rule: first.rule,
     earned_tier: earned
   });
+}
+
+// 2.99a: simulated-persona standing gates (rules.js personaGateFailures).
+// Inert for the engine's own seat — the gates activate only for the three
+// preset personas, so the sandbox and the engine stay one code path.
+function gatePersona(ctx) {
+  const failures = personaGateFailures(ctx);
+  if (failures.length) {
+    throw new RuleError(failures.map((f) => f.reason).join(' '), { rule: 'persona_standing' });
+  }
 }
 
 // Re-entrant transactions via savepoints, so composite operations (ripple
@@ -192,7 +203,8 @@ function normVertical(v = {}) {
   };
 }
 
-export function createTopic(db, { name, description }) {
+export function createTopic(db, { name, description, actor }) {
+  gatePersona({ actor, operation: 'create_topic' });
   if (!name || !String(name).trim()) {
     throw new RuleError('A topic needs a name.', { rule: 'invalid_input' });
   }
@@ -213,6 +225,7 @@ export function createTopic(db, { name, description }) {
     .prepare('INSERT INTO topics (name, description) VALUES (?,?)')
     .run(String(name).trim(), String(description || '').trim());
   logEvent(db, {
+    actor,
     action: 'topic_created',
     topic_id: Number(id),
     reason: `Topic "${String(name).trim()}" created.`
@@ -315,7 +328,8 @@ export function createClaim(db, p) {
   });
 }
 
-export function promoteClaim(db, claimId, targetTier) {
+export function promoteClaim(db, claimId, targetTier, { actor } = {}) {
+  gatePersona({ actor, operation: 'promote' });
   const claim = getClaim(db, claimId);
   if (!claim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
   if (claim.kind === 'metaphysical') {
@@ -361,6 +375,7 @@ export function promoteClaim(db, claimId, targetTier) {
       `stays at ${claim.radial_tier}`
     );
     logEvent(db, {
+      actor,
       action: 'promotion_failed',
       claim_id: claimId,
       topic_id: claim.topic_id,
@@ -393,6 +408,7 @@ export function promoteClaim(db, claimId, targetTier) {
       claimId
     );
     logEvent(db, {
+      actor,
       action: 'promotion',
       claim_id: claimId,
       topic_id: claim.topic_id,
@@ -452,6 +468,7 @@ export function demoteClaim(
   claimId,
   { target_tier, reason, type = 'mis_tiered', established_facts, kernel, actor }
 ) {
+  gatePersona({ actor, operation: 'demote' });
   const claim = getClaim(db, claimId);
   if (!claim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
   if (claim.kind === 'metaphysical') {
@@ -886,10 +903,38 @@ export function proposeWithdrawal(db, claimId, sourceId, { reason, actor } = {})
   });
 }
 
+// 2.99a: who filed the open proposal against this target? Read from the
+// EVENT LOG — the record already carries the proposer as the actor of the
+// latest withdrawal_proposed event, so proposer-never-upholds needs no new
+// column. (proposed_at is cleared on adjudication, so the latest matching
+// event is the open proposal.)
+function withdrawalProposer(db, { claimId = null, sourceId, library = false }) {
+  const row = library
+    ? db
+        .prepare(
+          `SELECT actor FROM events WHERE action = 'withdrawal_proposed' AND claim_id IS NULL
+           AND detail LIKE ? ORDER BY id DESC LIMIT 1`
+        )
+        .get(`library source #${sourceId} %`)
+    : db
+        .prepare(
+          `SELECT actor FROM events WHERE action = 'withdrawal_proposed' AND claim_id = ?
+           AND detail LIKE ? ORDER BY id DESC LIMIT 1`
+        )
+        .get(claimId, `source #${sourceId} %`);
+  return row?.actor ?? null;
+}
+
 // Adjudicate a pending attachment withdrawal. Upheld: the 2.98b effect —
 // withdrawn status, diminished render, ripple — fires NOW, at adjudication
 // time. Rejected: the source stands; the attempt is permanent history.
 export function adjudicateWithdrawal(db, claimId, sourceId, { outcome, note, actor } = {}) {
+  gatePersona({
+    actor,
+    operation: 'adjudicate',
+    proposer: withdrawalProposer(db, { claimId, sourceId }),
+    outcome
+  });
   const claim = getClaim(db, claimId);
   if (!claim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
   if (!['upheld', 'rejected'].includes(outcome)) {
@@ -965,6 +1010,12 @@ export function proposeLibraryWithdrawal(db, sourceId, { reason, actor } = {}) {
 // fires at adjudication time, never at filing time. Rejected: the entity
 // stands; the attempt is permanent history.
 export function adjudicateLibraryWithdrawal(db, sourceId, { outcome, note, actor } = {}) {
+  gatePersona({
+    actor,
+    operation: 'adjudicate',
+    proposer: withdrawalProposer(db, { sourceId, library: true }),
+    outcome
+  });
   const source = db.prepare('SELECT * FROM sources WHERE id = ?').get(sourceId);
   if (!source) throw new RuleError('No such source.', { rule: 'invalid_input' });
   if (!['upheld', 'rejected'].includes(outcome)) {
@@ -1027,6 +1078,7 @@ export function addKernelLink(
   claimId,
   { kernel_id, establishes, asserts_beyond, path_inward, origin = 'manual', actor }
 ) {
+  gatePersona({ actor, operation: 'create_kernel_link' });
   const outer = getClaim(db, claimId);
   const kernel = kernel_id != null ? getClaim(db, kernel_id) : null;
   if (!outer || !kernel) throw new RuleError('No such claim.', { rule: 'invalid_input' });
@@ -1092,7 +1144,8 @@ export function addKernelLink(
 // through recorded adjudication — a kernel-link challenge upheld — or
 // rules-layer severance on tier moves; both log the full gap statement.
 
-export function addSupport(db, supporterId, supportedId) {
+export function addSupport(db, supporterId, supportedId, { actor } = {}) {
+  gatePersona({ actor, operation: 'add_support_link' });
   const supporter = getClaim(db, supporterId);
   const supported = getClaim(db, supportedId);
   if (!supporter || !supported) throw new RuleError('No such claim.', { rule: 'invalid_input' });
@@ -1146,6 +1199,7 @@ export function addSupport(db, supporterId, supportedId) {
         supportedId
       );
       logEvent(db, {
+        actor,
         action: 'support_link_added',
         claim_id: supporterId,
         topic_id: supporter.topic_id,
@@ -1182,6 +1236,7 @@ export function removeSupport(db, supporterId, supportedId, { reason, actor } = 
 }
 
 export function setVertical(db, claimId, v) {
+  gatePersona({ actor: v?.actor, operation: 'set_vertical' });
   const claim = getClaim(db, claimId);
   if (!claim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
   const vertical = normVertical(v);
@@ -1469,6 +1524,7 @@ export function exportTopic(db, topicId) {
 // A legal export re-imports cleanly; a tampered one is refused with the
 // normal plain-language reasons, and the whole import rolls back.
 export function importTopic(db, payload) {
+  gatePersona({ actor: payload?.actor, operation: 'import_topic' });
   if (!payload || payload.format !== 'truth-onion-topic') {
     throw new RuleError('Not a Truth Onion topic export.', { rule: 'invalid_input' });
   }

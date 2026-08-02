@@ -5,6 +5,7 @@ import TabBar from './Tabs.jsx';
 import ClaimPicker from './ClaimPicker.jsx';
 import SourcePicker from './SourcePicker.jsx';
 import { CURATOR_VERIFIED_LABEL, DEMO_UNVERIFIED_LABEL } from './verifyStatus.js';
+import { PAGE_IMPERMANENCE_HINT } from './sandboxState.js';
 
 const RELATIONS = ['supports', 'contradicts', 'is_origin_of'];
 const REL_GLYPH = { supports: '＋', contradicts: '−', is_origin_of: '⊙' };
@@ -258,11 +259,15 @@ export default function ClaimPanel({
       <p className="claim-text">{claim.text}</p>
       {reviewLine && <p className="review-line">{reviewLine}</p>}
       <div className="row" style={{ marginBottom: 6 }}>
-        <a className="small page-link" href={`/claim/${claim.id}`} target="_blank" rel="noreferrer" title="This claim's shareable page — generated entirely from the record">
+        {/* 2.99a Amendment C: pages render the CANONICAL record on a
+            disposable host — the affordance says so instead of implying a
+            permanence the demo can't keep. */}
+        <a className="small page-link" href={`/claim/${claim.id}`} target="_blank" rel="noreferrer" title={`This claim's shareable page — generated entirely from the record. ${PAGE_IMPERMANENCE_HINT}`}>
           page ↗
         </a>
         <button
           className="small"
+          title={PAGE_IMPERMANENCE_HINT}
           onClick={() => {
             navigator.clipboard?.writeText(`${window.location.origin}/claim/${claim.id}`).then(() => {
               setLinkCopied(true);

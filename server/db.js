@@ -153,35 +153,16 @@ BEGIN
   SELECT RAISE(ABORT, 'the event log is append-only');
 END;
 
--- Stage 2.98: the feedback QUARANTINE. Structurally outside the record:
--- append-only (triggers below), payload-only (no identity fields exist in
--- the schema), size-capped at the route, and NEVER read by the engine — no
--- endpoint selects from it; not map, not search, not replay, not narration.
--- The operator reads it offline. Report volume is a prompt to look, never
--- a force that moves anything.
+-- Stage 2.98's feedback quarantine table was REMOVED in 2.99a (Amendment
+-- B): an ephemeral demo database cannot honestly keep an accept-then-lose
+-- inbox promise. Feedback is a mailto (category in the subject) until the
+-- durable in-product pipe ships with 2.99b. The operator's live DB keeps
+-- its existing table and rows — this schema simply no longer creates one.
 --
--- Also reserved here (Stage 2.98 kickoff C): the 'review' value of
+-- Still reserved here (Stage 2.98 kickoff C): the 'review' value of
 -- events.action. Append-only like every event, same actor/timestamp/reason
 -- shape; NO path writes one yet — contest-the-key (2.99) and multiplayer
 -- review (Stage 3) plug into that socket.
-CREATE TABLE IF NOT EXISTS feedback (
-  id INTEGER PRIMARY KEY,
-  category TEXT NOT NULL DEFAULT 'other' CHECK (category IN ('bug','confusion','dispute','idea','other')),
-  message TEXT NOT NULL CHECK (length(trim(message)) > 0 AND length(message) <= 2000),
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TRIGGER IF NOT EXISTS trg_feedback_no_update
-BEFORE UPDATE ON feedback
-BEGIN
-  SELECT RAISE(ABORT, 'the feedback quarantine is append-only');
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_feedback_no_delete
-BEFORE DELETE ON feedback
-BEGIN
-  SELECT RAISE(ABORT, 'the feedback quarantine is append-only');
-END;
 
 -- Stage 2.9d: the global search index (FTS5, trigger-maintained). DERIVED
 -- data only — it adds no authored fields and can be rebuilt from the record

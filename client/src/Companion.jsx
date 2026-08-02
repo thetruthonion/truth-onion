@@ -50,7 +50,7 @@ function MessageBody({ m }) {
   return <div className="bubble-text">{m.text}</div>;
 }
 
-export default function Companion({ corePrompt, currentClaim, activeTopic = null, narrationRequest, onNarrationDone, demo = false }) {
+export default function Companion({ corePrompt, currentClaim, activeTopic = null, narrationRequest, onNarrationDone, demo = false, apiBase = '' }) {
   const [settings, setSettings] = useState(loadSettings);
   const [showSettings, setShowSettings] = useState(false);
   const [hash, setHash] = useState('');
@@ -163,7 +163,9 @@ export default function Companion({ corePrompt, currentClaim, activeTopic = null
     return out;
   };
   const runBareLoop = async ({ system, messages: m }) => {
-    const readExec = makeToolExecutor({ origin: '' });
+    // 2.99a: when the visitor has a private copy, the companion reads THAT
+    // record — its tools follow the same base the app's own reads use.
+    const readExec = makeToolExecutor({ origin: apiBase });
     let tools = TOOL_MANIFEST;
     let execTool = readExec;
     let extraBody;
@@ -218,7 +220,7 @@ export default function Companion({ corePrompt, currentClaim, activeTopic = null
         // failure narrates the claim without it rather than inventing one.
         let claimForNarration = narrationRequest;
         try {
-          const lin = await (await fetch(`/api/claims/${narrationRequest.id}/lineage`)).json();
+          const lin = await (await fetch(`${apiBase}/api/claims/${narrationRequest.id}/lineage`)).json();
           if (lin && Array.isArray(lin.lineages)) {
             claimForNarration = { ...narrationRequest, lineage: lin.lineages };
           }

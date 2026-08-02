@@ -10,15 +10,43 @@ export class RuleRejection extends Error {
   }
 }
 
+// 2.99a: one switch for which record this client reads and writes — '' is
+// the canonical (read-only) record; '/sandbox/<sid>' is the visitor's
+// private copy. Writes also carry the acting persona; the server clamps it
+// to the known set and the rules layer holds the gates.
+let sandboxBase = '';
+let sandboxActor = 'curator';
+export function setSandboxBase(base) {
+  sandboxBase = base || '';
+}
+export function getSandboxBase() {
+  return sandboxBase;
+}
+export function setSandboxActor(actor) {
+  sandboxActor = actor || 'curator';
+}
+export function getSandboxActor() {
+  return sandboxActor;
+}
+
 async function call(method, path, body) {
-  const res = await fetch(path, {
+  const routed = sandboxBase && path.startsWith('/api') ? `${sandboxBase}${path}` : path;
+  const res = await fetch(routed, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(sandboxBase ? { 'x-onion-actor': sandboxActor } : {})
+    },
     body: body === undefined ? undefined : JSON.stringify(body)
   });
   const json = await res.json();
   if (res.status === 422) throw new RuleRejection(json);
-  if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);
+  if (!res.ok) {
+    const err = new Error(json.error || `Request failed (${res.status})`);
+    err.rule = json.rule;
+    err.status = res.status;
+    throw err;
+  }
   return json;
 }
 
@@ -54,8 +82,27 @@ export const api = {
   addKernel: (id, payload) => call('POST', `/api/claims/${id}/kernels`, payload),
   lineage: (id) => call('GET', `/api/claims/${id}/lineage`),
   search: (q) => call('GET', `/api/search?q=${encodeURIComponent(q)}`),
-  feedback: (payload) => call('POST', '/api/feedback', payload),
   reviewStatus: (id) => call('GET', `/api/claims/${id}/review-status`),
+  // 2.99a copy-on-first-write: create (or restore from a save) a private
+  // sandbox copy. Always targets the canonical origin — a copy is made
+  // FROM the shared record, never from another copy.
+  createSandboxCopy: (save) =>
+    fetch('/api/sandbox/copy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(save ? { save } : {})
+    }).then(async (res) => {
+      const json = await res.json();
+      if (!res.ok) {
+        const err = new Error(json.error || `Copy not created (${res.status})`);
+        err.rule = json.rule;
+        err.status = res.status;
+        throw err;
+      }
+      return json;
+    }),
+  // The copy's save file (path is outside /api, so no base prefixing).
+  fetchSandboxSave: () => call('GET', `${sandboxBase}/save`),
   timeline: (topicId) => call('GET', `/api/topics/${topicId}/timeline`),
   topicAt: (topicId, ts) => call('GET', `/api/topics/${topicId}/at?ts=${encodeURIComponent(ts)}`),
   claimAt: (id, ts) => call('GET', `/api/claims/${id}/at?ts=${encodeURIComponent(ts)}`),

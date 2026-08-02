@@ -36,7 +36,9 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 251 tests passing across nineteen suites. The
+(stage297 E7).** 267 tests passing across twenty suites. **Stage 2.99a
+(sandbox core & personas) built 2026-08-02 — see §3.2m; the demo now has
+its participation layer, awaiting operator verification.** The
 taxonomy revision moved to Stage 2.99 (operator decision 2026-07-27,
 amendment appended to the 2.9 addendum). **Release prep executed
 2026-08-01 (§3.2k): checklist items 0a–3 verified, repo initialized with a
@@ -1116,7 +1118,124 @@ machine showed a fake single-day history. Now:
   remains the fresh-engine/local-dev seed (fresh timestamps are honest
   there — the record genuinely begins at first boot).
 
-**Test suites (251 passing).**
+## 3.2m Stage 2.99a — sandbox core & personas (2026-08-02)
+
+**One surface, copy-on-first-write (Amendment C, supersedes the two-door
+model).** Every visitor lands in the engine browsing the canonical curated
+record. The FIRST attempted write — add a claim, attach a source, file a
+challenge — transparently creates a private session copy and the write
+lands in it; the shared record's 403-everything posture is untouched (its
+refusal message now points at the door: "your first write creates a
+private copy where the rules answer to you"). Reads never create or
+consume a session (pinned by a full-route crawl). The client routes
+writes to the copy: `run()` is the single funnel and intercepts exactly
+once.
+
+**Session architecture.** `server/sandbox.js` `makeSandboxManager`: each
+copy is an in-memory SQLite restored by `restoreHistory` from the SAME
+curated-record fixture the pristine DB is built from, served by an app
+built by the SAME `buildApp` (`sandbox: true` = writes on, fetch proxy
+still absent, no static, no reachable page routes). Not a fork,
+structurally: sandbox.js imports neither rules nor routes (pinned), and a
+refusal sampler (zero-weight-at-core, floor-not-met, reason-less
+withdrawal, topic-shape gate) fires byte-identically in-copy and
+in-engine (pinned). Parent routes: `POST /api/sandbox/copy` (before the
+read-only gate; body may carry a save), `GET /sandbox/:sid/save`,
+`/sandbox/:sid/api/*` delegated to the copy's app; `/sandbox` inherits
+the demo rate limiter.
+
+**Limits (recorded for host sizing):** 24 concurrent copies · 30-minute
+idle TTL (sweep every minute; wipe = close + delete, pinned) · 8 MB
+per-copy size cap (413 refuses growth, reading continues) · cap gates
+first-write only with the honest full-message; reading never blocks.
+
+**The indicator is the honesty organ** (client/src/sandboxState.js, pure
+functions, pinned): "canonical record" → "your copy — diverged from the
+record" with a divergence view (the copy's events past the canonical
+baseline — the same append-only log, persona actors shown) and a
+view-canonical/return toggle. A write while viewing canonical rejoins the
+copy first.
+
+**Personas (provisional table — illustrative of Stage 3, thresholds not
+final; standing PRESET, never earned; the honesty label rides every
+surface).** Gates live in `rules.js` (`personaGateFailures`), inert for
+non-persona actors ('local' = the engine seat), enforced in service ops;
+the sandbox app clamps the actor header to the known set.
+- **Curator** — full current-engine powers in the copy.
+- **Contributor** — add claims/sources, file challenges and withdrawal
+  proposals; adjudicates nothing.
+- **Reviewer** — Contributor powers + adjudicates proposals filed by
+  OTHER actors. **Proposer-never-upholds, first in-code enforcement:** the
+  proposer is read from the event log (the withdrawal_proposed event's
+  actor — no new column); reviewer-upholds-own refused with the named
+  blocker; retraction (rejecting one's own) stays permitted.
+- Curator-only ops: promote, demote, set-vertical, kernel link, support
+  link, topic create, import. Noted seam for Stage 3: challenges are the
+  existing single-shot machinery (outcome included), so "file a
+  challenge" currently carries its own adjudication — the two-phase
+  challenge split arrives with real multiplayer review.
+- The copy's event log records personas as actors; replay renders genuine
+  multi-actor history (pinned).
+
+**Save files (extends the 2.97 contract to record-shaped work).** Format
+`truth-onion-sandbox-save` v1: `{format, version, saved_at,
+standing_note, record}` where `record` is the full record-shaped export
+(`exportRecord`: topics/claims/sources/attachments/supports/kernels/
+challenges/events — the history-fixture shape). `standing_note` restates
+the settled contract verbatim: personas/standing are simulation data; at
+Stage 3 imports pass the real rules layer entry by entry; nothing carries
+standing in from a file. Import = a fresh session restored from the save
+(same restore path as everything else); round-trip pinned event-for-
+event. Tampered saves refused whole with the blocker named.
+
+**Autosave (Amendment B, prompt at first write per C).** One format, no
+forks — the autosaved artifact IS the save endpoint's JSON. Chromium:
+File System Access handle, picked once, written debounced ("autosaving to
+{filename}"). Elsewhere: browser storage (`onion.sandbox.autosave`) with
+an exit nudge and a download button ("autosaving in this browser —
+download to keep it anywhere else"). Modes always labeled, never one
+unlabeled checkmark; write failures surface immediately through the
+status callback (pinned). A browser autosave found at boot offers resume
+— never auto-imports.
+
+**Entry card (Amendment A/C): doors, not teaching.** The two facts no
+visitor may miss plus two doors (Explore the record · Take the tour); all
+instruction lives in the tour; the tour's boundary stop became the
+FIRST-WRITE stop (attempt a write, watch the marker flip, read a refusal,
+meet the personas, save — clone path retained). Copy-review pinned: no
+guarantee-shaped sentence on card, stops, or sandbox notes.
+
+**Feedback (Amendment B): the in-product pipe is REMOVED** — endpoint,
+modal, quarantine table (an ephemeral DB cannot keep an accept-then-lose
+inbox promise; the operator's live DB keeps its existing table). The
+affordance is a mailto to truth.onionwright@gmail.com (category-prefilled
+subject) in the header and on claim pages; durable in-product feedback is
+2.99b scope. Pinned: no route (403/404), no table in fresh schemas, no
+orphaned machinery.
+
+**Claim pages: canonical only, honestly impermanent.** Copy-only claims
+have no public page (404 — "links go live at multiplayer", structural:
+the parent forwards only /sandbox/:sid/api and /save); page footer and
+the panel's page/copy-link affordances carry the impermanence line: the
+demo host is temporary by design; permanent addresses arrive with
+multiplayer.
+
+**Tried and rejected this session:**
+- *Monkey-patching window.fetch for copy routing* — rejected: the api.js
+  wrapper is the single client HTTP funnel already; a global patch would
+  also intercept BYOK provider calls it must never touch.
+- *A `proposed_by` column for proposer-never-upholds* — rejected: the
+  event log already records the proposer as the filing event's actor; a
+  second copy of that fact could drift from the record.
+- *Per-request DB resolution inside one app instance* — rejected in favor
+  of one buildApp per copy: the same constructor everywhere is the
+  same-code-path guarantee, and a resolver would thread session identity
+  through every route.
+- *Rewriting demo parking to server-parking-in-copy* — kept device-local
+  (2.97 settled, poisoned-proxy pinned): parking has no epistemic
+  standing, so it is not record-shaped work and never creates a copy.
+
+**Test suites (267 passing).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1139,6 +1258,7 @@ machine showed a fake single-day history. Now:
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
+| `stage299a` | 16 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/autosave pure logic + visible write failure, doors-not-teaching card + no guarantee-shaped copy, canonical-only pages + impermanence line |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1388,7 +1508,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Nineteen suites, 251 tests, against the real API with the real seed, in memory.
+Twenty suites, 267 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

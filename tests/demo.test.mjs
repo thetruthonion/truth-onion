@@ -73,7 +73,10 @@ await test(`D1. all ${MUTATIONS.length} mutating operations return 403 with the 
     const r = await api(method, path, body);
     assert.equal(r.status, 403, `${method} ${path} returned ${r.status}, expected 403`);
     assert.equal(r.body.rule, 'demo_read_only');
-    assert.match(r.body.error, /read-only showcase/i);
+    // 2.99a Amendment C wording: the shared record is read-only and the
+    // refusal points at the copy-on-first-write door, not a dead end.
+    assert.match(r.body.error, /shared record is read-only/i);
+    assert.match(r.body.error, /private copy/i);
   }
 });
 

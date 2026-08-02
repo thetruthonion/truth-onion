@@ -128,19 +128,29 @@ export const TOUR_STOPS = [
     tryIt: 'Scrub into the hatched zone and read the banner.'
   },
   {
+    // 2.99a Amendment C: the first-write stop — the boundary is no longer a
+    // wall, it is where your private copy begins.
     key: 'boundary',
     panelPos: 'bottom-right',
-    title: 'Where the showcase ends',
-    apply: { view: '3d', depth: 1, deselect: true, scrubReset: true },
-    highlight: null,
+    title: 'Your first write — the copy and the refusal',
+    apply: { view: '3d', depth: 5, deselect: true, scrubReset: true },
+    highlight: '.demo-badge',
     copy:
-      'This showcase is read-only, enforced by the server — writing, challenging, and placing ' +
-      'are refused at the API, not hidden in the interface. The full engine is the same code ' +
-      'with writes enabled: clone the repository, run it locally, and try to cheat the rules ' +
-      'yourself — the refusals explain themselves in plain language. Your companion, if you ' +
-      'set one up, runs on your own key, stored in this browser only and never sent to this ' +
-      'server.',
-    tryIt: 'That is the tour. The dial, the search, and the scrubber are yours.'
+      'The shared record you have been reading is read-only, refused by the server. The marker ' +
+      'in the header says which record you are looking at: it reads "canonical record" now, ' +
+      'and the moment you attempt a write — add a claim from the search box, attach a source, ' +
+      'file a challenge — a private copy of the whole record is created for you and the write ' +
+      'lands there, with the marker flipped to "your copy". The same rules layer answers in ' +
+      'your copy: try placing a claim at core with one weak source and read the refusal — it ' +
+      'names the blocker and the tier the evidence earns. A persona switcher appears with the ' +
+      'copy: Curator, Contributor, and Reviewer are preset simulated roles for trying the ' +
+      'multiplayer machinery — a Contributor filing a withdrawal proposal that a Reviewer ' +
+      'adjudicates, never their own. Your copy lives on the server for 30 idle minutes and is ' +
+      'never shared or saved there — set up the autosave when it offers, and export a save ' +
+      'file to keep or resume your work. The live source verifier is switched off on this ' +
+      'public host; clone the repository to run the full engine locally, mechanical ' +
+      'verification included.',
+    tryIt: 'Open the search box, choose "+ add claim", and watch the marker flip as your copy is born.'
   }
 ];
 

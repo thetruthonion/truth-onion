@@ -13,6 +13,24 @@
 // update to the recorded withdrawal — so the FTS maintenance triggers see
 // the same sequence the live record did and the search index stays honest.
 
+// 2.99a: the record-shaped export — every table of a database, verbatim,
+// in the same shape restoreHistory reads. Used by sandbox save files (the
+// whole copy is the visitor's record, so no curation filter here; the
+// curated-fixture export script keeps its own filtered, scanned path).
+export function exportRecord(db) {
+  const all = (sql) => db.prepare(sql).all();
+  return {
+    topics: all('SELECT * FROM topics ORDER BY id'),
+    claims: all('SELECT * FROM claims ORDER BY id'),
+    sources: all('SELECT * FROM sources ORDER BY id'),
+    attachments: all('SELECT * FROM claim_sources ORDER BY claim_id, source_id'),
+    supports: all('SELECT * FROM claim_supports ORDER BY supporter_id, supported_id'),
+    kernels: all('SELECT * FROM claim_kernels ORDER BY id'),
+    challenges: all('SELECT * FROM challenges ORDER BY id'),
+    events: all('SELECT * FROM events ORDER BY id')
+  };
+}
+
 export function restoreHistory(db, fixture) {
   if (!fixture || fixture.format !== 'truth-onion-history') {
     throw new Error('Not a truth-onion-history fixture (missing or wrong "format").');

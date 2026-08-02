@@ -354,6 +354,74 @@ export function verticalFailure({ direction, magnitude, evidenced }, sources) {
   return null;
 }
 
+// ---- Stage 2.99a: simulated-persona standing gates ------------------------
+// Three PRESET personas let one visitor exercise the multiplayer safety
+// machinery inside their private sandbox copy before multiplayer exists.
+// The permission table below is PROVISIONAL — illustrative of Stage 3,
+// thresholds not final — and standing is preset for demonstration, never
+// earned; that honesty label ships everywhere personas surface.
+//
+// The gates live HERE, in the rules layer, because the sandbox UI renders
+// refusals and never pre-decides them — same as every other rule. The
+// engine's own seat (actor 'local', or any non-persona actor) is ungated:
+// these gates activate only for the simulated personas, so sandbox and
+// engine remain the same code path with the same refusals everywhere else.
+export const PERSONAS = ['curator', 'contributor', 'reviewer'];
+export const PERSONA_HONESTY_LABEL =
+  'simulated role · standing preset for demonstration, not earned; real standing rules arrive with multiplayer';
+
+// Operations only the Curator seat may perform in the provisional table.
+// Contributor and Reviewer may add claims and sources through the rules,
+// file challenges, and propose withdrawals; Reviewer may also adjudicate
+// proposals filed by OTHER actors.
+const CURATOR_ONLY_OPS = new Set([
+  'promote',
+  'demote',
+  'set_vertical',
+  'create_kernel_link',
+  'add_support_link',
+  'create_topic',
+  'import_topic'
+]);
+
+// personaGateFailures({actor, operation, proposer, outcome}) → [{reason}].
+// `proposer` is the actor who filed the proposal being adjudicated (read
+// from the event log — the record, not a new column); `outcome` is the
+// adjudication outcome sought. Retraction of one's own proposal (rejecting
+// it) stays permitted; upholding one's own is the first in-code enforcement
+// of the proposer-never-upholds rule.
+export function personaGateFailures({ actor, operation, proposer, outcome } = {}) {
+  if (!PERSONAS.includes(actor) || actor === 'curator') return [];
+  if (operation === 'adjudicate') {
+    if (actor === 'contributor') {
+      return [
+        {
+          reason:
+            `Contributor standing (${PERSONA_HONESTY_LABEL}) adjudicates nothing — it may add claims and sources, file challenges, and propose withdrawals. Adjudication needs Reviewer or Curator standing.`
+        }
+      ];
+    }
+    if (actor === 'reviewer' && proposer === actor && outcome === 'upheld') {
+      return [
+        {
+          reason:
+            'The proposer never upholds their own proposal: this withdrawal was filed by the same Reviewer now adjudicating it. Retracting your own proposal (rejecting it) stays permitted; upholding it needs a different actor.'
+        }
+      ];
+    }
+    return [];
+  }
+  if (CURATOR_ONLY_OPS.has(operation)) {
+    return [
+      {
+        reason:
+          `${operation.replace(/_/g, ' ')} is Curator-seat machinery in this provisional table (illustrative of Stage 3, thresholds not final). ${actor === 'reviewer' ? 'Reviewer' : 'Contributor'} standing (${PERSONA_HONESTY_LABEL}) may add claims and sources through the rules, file challenges, and propose withdrawals${actor === 'reviewer' ? ', and adjudicate proposals filed by other actors' : ''}.`
+      }
+    ];
+  }
+  return [];
+}
+
 // Status is derived from standing, never set directly — one less thing to fake.
 export function statusFor(tier) {
   if (tier === 'core') return 'confirmed';

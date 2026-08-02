@@ -24,9 +24,16 @@ console.log('2/5 Assembling demo/app…');
 rmSync(demo, { recursive: true, force: true });
 mkdirSync(join(demo, 'app', 'server'), { recursive: true });
 mkdirSync(join(demo, 'data'), { recursive: true });
-for (const f of ['index.js', 'db.js', 'rules.js', 'service.js', 'seed.js', 'timemachine.js', 'claimpages.js', 'sourcelinks.js']) {
+for (const f of ['index.js', 'db.js', 'rules.js', 'service.js', 'seed.js', 'timemachine.js', 'claimpages.js', 'sourcelinks.js', 'history.js', 'sandbox.js']) {
   copyFileSync(join(root, 'server', f), join(demo, 'app', 'server', f));
 }
+// 2.99a: sandbox copies restore from the same fixture the pristine DB was
+// built from — the package carries it so copy-on-first-write works hosted.
+mkdirSync(join(demo, 'app', 'exports'), { recursive: true });
+copyFileSync(
+  join(root, 'exports', 'curated-record.history.json'),
+  join(demo, 'app', 'exports', 'curated-record.history.json')
+);
 // The companion's immutable core prompt ships in the bundle; copy the source
 // file too so demo users can inspect what the hash covers.
 copyFileSync(join(root, 'sidekick-prompt.md'), join(demo, 'app', 'sidekick-prompt.md'));

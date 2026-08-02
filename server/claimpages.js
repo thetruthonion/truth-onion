@@ -39,6 +39,12 @@ import { claimHistory, claimAtTime, normTs } from './timemachine.js';
 import { RuleError, truncate } from './rules.js';
 import { CURATOR_VERIFIED_LABEL } from './sourcelinks.js';
 
+// 2.99a Amendment B/C: the feedback address and the impermanence line —
+// the page promises nothing the disposable demo host can't keep.
+export const FEEDBACK_ADDRESS = 'truth.onionwright@gmail.com';
+export const IMPERMANENCE_LINE =
+  'This page is served by the demo host, temporary by design — permanent claim addresses arrive with multiplayer.';
+
 // The reserved review event type (kickoff C). Append-only like every event;
 // NO path writes one yet — contest-the-key (2.99) and multiplayer review
 // (Stage 3) plug in here.
@@ -332,23 +338,11 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
     ${historyHtml}
   </section>`;
 
-  const feedbackHtml = historical
-    ? `<p class="note">Feedback is taken on the present document — <a href="/claim/${liveClaim.id}#feedback">return to now</a> to leave it.</p>`
-    : `<div class="fb" id="feedback">
-      <h2>Feedback</h2>
-      <p class="note">Anonymized: exactly the category and text below are sent — no identity, no metadata kept. It lands in a quarantine inbox outside the record and never renders anywhere.</p>
-      <form method="POST" action="/api/feedback?redirect=/claim/${liveClaim.id}">
-        <select name="category">
-          <option value="other">general</option>
-          <option value="bug">something is broken</option>
-          <option value="confusion">something is confusing</option>
-          <option value="dispute">I dispute this claim's placement</option>
-          <option value="idea">idea</option>
-        </select>
-        <textarea name="message" maxlength="2000" placeholder="your feedback (max 2000 characters)…" required></textarea>
-        <button type="submit">send anonymized feedback</button>
-      </form>
-    </div>`;
+  // 2.99a Amendment B: the in-product feedback pipe is gone until 2.99b
+  // can make it durable — a mailto keeps the channel open without an
+  // accept-then-lose inbox on an ephemeral database.
+  const feedbackMailto = `mailto:${FEEDBACK_ADDRESS}?subject=${encodeURIComponent(`[dispute] claim #${liveClaim.id} — ${truncate(liveClaim.text, 60)}`)}`;
+  const feedbackHtml = `<p class="note" id="feedback">Dispute this placement, or report a problem: <a href="${esc(feedbackMailto)}">email ${esc(FEEDBACK_ADDRESS)}</a>${process.env.DEMO_REPO_URL ? ` or open an issue on <a href="${esc(process.env.DEMO_REPO_URL)}">the public repo</a>` : ''}.</p>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -401,6 +395,7 @@ ${historical ? '<meta name="robots" content="noindex">' : ''}
 
   <footer>
     <p>Every element above is generated from the claim's record — nothing editorial, nothing the record didn't write. <a href="${esc(engineUrl)}">Inspect it in the engine</a>, or verify this yourself: clone the repository and run the same rules locally${process.env.DEMO_REPO_URL ? ` — <a href="${esc(process.env.DEMO_REPO_URL)}">${esc(process.env.DEMO_REPO_URL)}</a>` : ''}.</p>
+    <p class="note">${IMPERMANENCE_LINE}</p>
     ${feedbackHtml}
   </footer>
 </main>

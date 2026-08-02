@@ -247,8 +247,10 @@ await test('P10. ?at= renders the reconstruction: earlier tier, labeled read-onl
   assert.match(mid, /<title>\[CONTESTED · outer tier — as of 2026-01-15/, 'the share title carries the moment');
   assert.ok(mid.includes('name="robots" content="noindex"'), 'historical views stay out of indexes');
   assert.match(mid, /rel="canonical" href="[^"]*\/claim\/\d+"/, 'canonical is the present document');
-  assert.ok(!mid.includes('id="feedback"'), 'no feedback form on a reconstruction');
-  assert.ok(mid.includes('Feedback is taken on the present document'), 'it says why');
+  // 2.99a Amendment B: no feedback FORM exists anywhere — the channel is a
+  // mailto, present on reconstructions and the present document alike.
+  assert.ok(!/<form/i.test(mid), 'no form element on a reconstruction');
+  assert.ok(mid.includes('truth.onionwright@gmail.com'), 'the mailto channel renders');
   assert.ok(mid.includes('current wording of the placement reason'), 'placement-reason honesty: the record keeps only the current wording');
   // 2026-01-15 predates the log epoch (events begin at seed time) — the
   // page says so instead of passing the view off as complete.
@@ -265,7 +267,7 @@ await test('P10. ?at= renders the reconstruction: earlier tier, labeled read-onl
   // And the present view is untouched by all of this: current tier, form back.
   const now = (await api('GET', `/claim/${tmProbe}`)).text;
   assert.match(now, /--tier-outermost\)">outermost tier/);
-  assert.ok(now.includes('id="feedback"'));
+  assert.ok(now.includes('truth.onionwright@gmail.com'), 'the mailto channel on the present document too');
 });
 
 // ------------------------------------------------------------ review socket
@@ -291,61 +293,52 @@ await test('R1. review status is a reserved socket: zero events read the honest 
 });
 
 // ------------------------------------------------------------ feedback quarantine
-await test('F1. feedback is payload-only, capped, rate-limited, append-only — and works in the read-only demo', async () => {
+await test('F1. (2.99a Amendment B) the in-product feedback pipe is GONE: no endpoint, no table, no orphan', async () => {
+  // The endpoint no longer exists: a POST hits the demo read-only gate
+  // (403), and in the full engine there is no route at all (404).
   const demoDb = openDb(':memory:');
   seed(demoDb);
   const demoServer = buildApp(demoDb, { demo: true }).listen(0);
   const demoBase = `http://localhost:${demoServer.address().port}`;
-  const post = (body) =>
-    fetch(`${demoBase}/api/feedback`, {
+  const post = (base, body) =>
+    fetch(`${base}/api/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-  // Record mutations still 403 in demo…
-  const blocked = await fetch(`${demoBase}/api/claims`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-  assert.equal(blocked.status, 403, 'the demo stays read-only for the record');
-  // …but feedback is deliberately allowed: it is not the record.
-  const ok = await post({ category: 'bug', message: 'S298 demo visitor feedback zylograph' });
-  assert.equal(ok.status, 200);
-  const row = demoDb.prepare('SELECT * FROM feedback ORDER BY id DESC LIMIT 1').get();
-  assert.equal(row.message, 'S298 demo visitor feedback zylograph');
-  assert.deepEqual(
-    Object.keys(row).sort(),
-    ['category', 'created_at', 'id', 'message'],
-    'payload only — no identity fields exist in the schema'
-  );
-  assert.equal((await post({ message: 'x'.repeat(2001) })).status, 422, 'size cap named');
-  assert.equal((await post({ message: '' })).status, 422, 'empty refused');
-  let last;
-  for (let i = 0; i < 6; i++) last = await post({ message: `rate probe ${i}` });
-  assert.equal(last.status, 429, 'rate limited');
-  assert.throws(() => demoDb.prepare('UPDATE feedback SET message = ? WHERE id = ?').run('x', row.id), /append-only/);
-  assert.throws(() => demoDb.prepare('DELETE FROM feedback WHERE id = ?').run(row.id), /append-only/);
+  assert.equal((await post(demoBase, { message: 'x' })).status, 403, 'demo: swallowed by the read-only gate, never stored');
+  assert.equal((await post(base, { message: 'x' })).status, 404, 'full engine: no route exists');
+  // No feedback table in a fresh schema — an accept-then-lose inbox on an
+  // ephemeral database is banned; the durable pipe is 2.99b scope.
+  const table = demoDb
+    .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'feedback'`)
+    .get();
+  assert.equal(table, undefined, 'no orphaned feedback table in the schema');
+  // No orphaned server code path.
+  const idx = readFileSync(join(root, 'server', 'index.js'), 'utf8');
+  assert.ok(!/api\/feedback/.test(idx), 'no feedback route remains in the server');
+  for (const f of ['timemachine.js', 'service.js', 'claimpages.js', 'db.js']) {
+    const src = readFileSync(join(root, 'server', f), 'utf8');
+    assert.ok(!/FROM feedback|INSERT INTO feedback|CREATE TABLE.*feedback/i.test(src), `${f} carries no feedback machinery`);
+  }
   demoServer.close();
 });
 
-await test('F2. the quarantine is NEVER read by the engine: no read endpoint, not in search, not in any surface', async () => {
-  const idx = readFileSync(join(root, 'server', 'index.js'), 'utf8');
-  assert.ok(!/app\.get\([^)]*feedback/.test(idx), 'no endpoint reads the feedback table');
-  await api('POST', '/api/feedback', { category: 'idea', message: 'S298 quarantine leak probe xylotest' });
-  const search = (await api('GET', '/api/search?q=xylotest')).body;
-  assert.equal(search.results.length, 0, 'feedback never enters the search index');
-  const raw = db.prepare(`SELECT COUNT(*) AS n FROM search_index WHERE content LIKE '%xylotest%'`).get();
-  assert.equal(raw.n, 0);
-  for (const f of ['timemachine.js', 'service.js', 'claimpages.js']) {
-    const src = readFileSync(join(root, 'server', f), 'utf8');
-    assert.ok(!/FROM feedback/i.test(src), `${f} never reads the quarantine`);
-  }
+await test('F2. the replacement channel is a mailto with the category in the subject — pages and app', async () => {
+  const page = (await api('GET', '/claim/1')).text;
+  assert.ok(page.includes('mailto:truth.onionwright@gmail.com'), 'claim pages carry the mailto');
+  assert.match(page, /subject=/, 'with a prefilled subject line');
+  const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.ok(app.includes('truth.onionwright@gmail.com'), 'the app feedback affordance is the mailto');
+  assert.ok(!/api\.feedback|\/api\/feedback/.test(app), 'no client path posts feedback to the server');
 });
 
-await test('F3. the header feedback link replaced the add-claim button; adding a claim lives in search', async () => {
+await test('F3. the header feedback affordance replaced the add-claim button; adding a claim lives in search', async () => {
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
-  assert.match(app, /✉ feedback/, 'the header carries the feedback link');
+  assert.match(app, /✉ feedback/, 'the header carries the feedback affordance');
   assert.ok(!app.includes('+ Add claim\n'), 'the header add-claim button is gone');
   const searchBox = readFileSync(join(root, 'client', 'src', 'SearchBox.jsx'), 'utf8');
   assert.match(searchBox, /\+ add claim/, 'the add-claim flow remains reachable via the search dropdown');
-  assert.match(app, /quarantine/, 'the modal states the true guarantee');
   const panel = readFileSync(join(root, 'client', 'src', 'ClaimPanel.jsx'), 'utf8');
   assert.match(panel, /page ↗/, 'the claim panel carries the page affordance');
   assert.match(panel, /copy link/, 'and copy-link');
