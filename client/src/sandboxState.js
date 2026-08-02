@@ -79,11 +79,14 @@ export const PAGE_IMPERMANENCE_HINT =
 
 // ---- punch 10/12/14: what the save file carries beyond the record --------
 
-// Punch 11: the voluntary contribution ask — one consistent line, shown at
-// the save moments, dismissible, never repeated in-session, never gating.
-// No endpoint exists; nothing sends automatically.
+// Punch 11, updated by the drop-box handoff: the voluntary contribution
+// ask — one consistent line, shown at the save moments, dismissible, never
+// repeated in-session, never gating. The ANONYMOUS DROP BOX is the primary
+// path (we don't ask who you are and don't retain anything that says);
+// email stays as the if-you'd-like-a-reply option. Nothing sends
+// automatically, ever.
 export const CONTRIBUTION_ASK =
-  "Voluntary: email your save file to truth.onionwright@gmail.com — it shows us where the rules and the vocabulary strain, which is exactly what improves the engine. You'd be sending your own drafts and reasons, so read the file first — it's yours.";
+  "Voluntary: contribute your save file through the anonymous drop box — it shows us where the rules and the vocabulary strain, which is exactly what improves the engine. We don't ask who you are and don't retain anything that says. Prefer email, if you'd like a reply: truth.onionwright@gmail.com. Either way you'd be sending your own drafts and reasons, so read the file first — it's yours.";
 
 // Punch 14: a cheap, stable fingerprint of a save's record (FNV-1a) so a
 // resumed session can name its ancestor — an arc, not a snapshot.

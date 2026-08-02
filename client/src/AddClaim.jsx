@@ -155,16 +155,24 @@ export default function AddClaim({
             <option value="harm">harm (people harmed)</option>
           </select>
         </div>
-        {direction !== 'neutral' && (
-          <div>
-            <label>Magnitude (1–3)</label>
-            <input
-              type="number" min="1" max="3"
-              value={magnitude}
-              onChange={(e) => setMagnitude(Number(e.target.value))}
-            />
-          </div>
-        )}
+        {/* Rider C: the field DISABLES (visibly, with its why) while
+            direction is neutral — it used to hide, and a stale typed value
+            could ride a neutral submission into a silent zero. */}
+        <div>
+          <label>Magnitude (1–3)</label>
+          <input
+            type="number" min="1" max="3"
+            value={magnitude}
+            disabled={direction === 'neutral'}
+            title={direction === 'neutral' ? 'Not recorded while direction is neutral — the axis stays empty rather than guessed.' : undefined}
+            onChange={(e) => setMagnitude(Number(e.target.value))}
+          />
+          {direction === 'neutral' && (
+            <span className="muted" style={{ fontSize: 11.5 }}>
+              Not recorded while direction is neutral — the axis stays empty rather than guessed.
+            </span>
+          )}
+        </div>
       </div>
       {direction !== 'neutral' && (
         <div className="checkline">

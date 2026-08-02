@@ -36,7 +36,7 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 276 tests passing across twenty suites. **Stage 2.99a
+(stage297 E7).** 278 tests passing across twenty suites. **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1417,7 +1417,79 @@ accepted "10000000" but the record never did. If a directional submit
 appeared to accept it, that would be a bug; it could not be reproduced —
 the likely lived case was the neutral path. Reported; nothing changed.
 
-**Test suites (276 passing).**
+## 3.2n Anonymous drop box (2026-08-02, dropbox handoff)
+
+**The strain-return quarantine inbox has its durable home on the SITE
+infrastructure** — a Netlify Function + Netlify Blobs on thetruthonion.org
+(the operator's site account), never the disposable demo host, never the
+app database (standing constraint satisfied). Contribution no longer taxes
+identity as its price.
+
+**The Function** (`netlify/functions/dropbox.mjs` in the SITE repo —
+`C:\Users\Dane\Downloads\truthonion-site`, which is not under git):
+one POST endpoint (`/api/dropbox`) accepting save-file contributions
+(`{kind:'save', save}`, format-sniffed, ≤10 MB) and anonymous feedback
+(`{kind:'feedback', category ∈ enum, message ≤2000}`, ≤4 KB), plus the
+urlencoded path for the script-free claim pages' plain HTML form (a
+cross-origin form POST needs no script and no CORS). Refusals name
+blockers. Storage is APPEND-ONLY, PAYLOAD-ONLY: object key = timestamp +
+content hash; no IP, UA, or headers ever written (the throttle reads the
+IP in memory and discards it) — pinned by `test/dropbox.test.mjs` (6
+tests, D2 is the payload-only pin). Honest defense posture stated in the
+source and pinned: free-tier Netlify has no real edge rate limiting, so
+size caps + schema validation are the primary defenses with best-effort
+per-instance throttling. Receipt DECIDED AT BUILD: included — the content
+hash returns, so a contributor can later prove inclusion without
+identity. CORS `*` (anonymous by design). Deploy notes in
+`README-DEPLOY.md`: needs a build step (git-connect or `netlify deploy
+--prod --build`) — drag-and-drop won't bundle `@netlify/blobs`; the
+OPERATOR deploys from the Netlify account.
+
+**Demo-side UI:** the anonymous feedback box RETURNS as the primary path
+(header popover: category + message, "exactly this is sent — no identity,
+no account", engine-never-reads-it and volume-is-a-prompt lines restored —
+true again because durable storage exists), email inside as the
+if-you'd-like-a-reply option. "Contribute save" lives in the save cluster:
+shows what will be sent (the file, nothing else), offers
+download-to-review-first, sends, shows the receipt. Unreachable endpoint
+(site down, box not yet deployed) → said plainly with the email fallback —
+never a silent failure, never a fake success (pinned I1). Claim pages
+carry the plain-form drop box with the same copy; mailto stays secondary.
+Item-11 copy updated everywhere (ask, README): drop box primary.
+**Anonymity copy rule pinned:** "we don't ask who you are and don't retain
+anything that says" — never "untraceable/invisible" (source scan, I1).
+
+**Rider C — the silent vertical zero, manners fixed (rule unchanged):**
+when a submission carries vertical input the rules will not record
+(neutral direction + typed magnitude), createClaim and setVertical
+responses carry `vertical_notice` ("Outcome direction/magnitude not
+recorded — no documented outcome evidence attached; the axis stays empty
+rather than guessed.") surfaced as a non-blocking notice at submit; the
+AddClaim magnitude field now DISABLES visibly with the same why while
+direction is neutral (it used to hide, letting a stale typed value ride a
+neutral submission into the silent zero — the operator's lived case).
+Directional refusals unchanged and still loud. Pinned I2. (The
+description-gate loophole is NOT here — canonical topics' own
+descriptions are legitimate prose containing assertions; gating them
+needs real design; recorded for 2.99c.)
+
+**C2 — site numbers:** `whats-built.html` refreshed from the current
+build (276→ now 278 at commit time — see the rule) and restructured: one
+`<!-- BUILD-NUMBERS -->` block holds the headline + rows, refreshed as
+one obvious edit from the shipped build's `npm test` report on deploy
+day; no number on the site may exceed what the shipped suites report;
+release checklist item-7 includes eyeballing live-site-vs-live-demo.
+**Reported, not rewritten:** the site's "Designed, not built" section
+still lists kernel links and the time machine, which are long since
+built — operator prose, flagged for the deploy-day pass rather than
+edited unprompted.
+
+**Launch interaction (restated):** the license remains the only launch
+gate; if the site Function isn't deployed by launch, the demo panels
+already say so honestly and fall back to email, and the drop box follows
+by site redeploy — the two deploys are independent by design.
+
+**Test suites (278 passing; + 6 drop-box pins in the site repo).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1440,7 +1512,7 @@ the likely lived case was the neutral path. Reported; nothing changed.
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
-| `stage299a` | 25 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
+| `stage299a` | 27 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1690,7 +1762,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty suites, 276 tests, against the real API with the real seed, in memory.
+Twenty suites, 278 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

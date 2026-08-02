@@ -203,6 +203,20 @@ function normVertical(v = {}) {
   };
 }
 
+// Drop-box handoff rider C (confirmed report b): the neutral branch above
+// zeroes a typed magnitude BY RULE — that stays. What changes is the
+// manners: when a submission carries vertical input the rules will not
+// record, the response SAYS so instead of zeroing silently. Non-blocking;
+// placement behavior unchanged.
+export const VERTICAL_NOT_RECORDED_NOTICE =
+  'Outcome direction/magnitude not recorded — no documented outcome evidence attached; the axis stays empty rather than guessed.';
+
+function verticalNotice(v = {}) {
+  const neutral = !v.direction || v.direction === 'neutral';
+  const typedMagnitude = Number(v.magnitude) > 0;
+  return neutral && typedMagnitude ? VERTICAL_NOT_RECORDED_NOTICE : null;
+}
+
 export function createTopic(db, { name, description, actor }) {
   gatePersona({ actor, operation: 'create_topic' });
   if (!name || !String(name).trim()) {
@@ -341,7 +355,9 @@ export function createClaim(db, p) {
       detail: createdDetail,
       reason: String(p.placement_reason).trim()
     });
-    return getClaim(db, id);
+    const created = getClaim(db, id);
+    const vNotice = verticalNotice(p.vertical);
+    return vNotice ? { ...created, vertical_notice: vNotice } : created;
   });
 }
 
@@ -1274,7 +1290,9 @@ export function setVertical(db, claimId, v) {
           ? 'Vertical placement cleared to neutral.'
           : `Vertical placement set to ${vertical.direction} (${vertical.magnitude}) on documented outcomes.`
     });
-    return getClaim(db, claimId);
+    const updated = getClaim(db, claimId);
+    const vNotice = verticalNotice(v);
+    return vNotice ? { ...updated, vertical_notice: vNotice } : updated;
   });
 }
 

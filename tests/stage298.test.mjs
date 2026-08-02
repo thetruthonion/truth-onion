@@ -247,10 +247,12 @@ await test('P10. ?at= renders the reconstruction: earlier tier, labeled read-onl
   assert.match(mid, /<title>\[CONTESTED · outer tier — as of 2026-01-15/, 'the share title carries the moment');
   assert.ok(mid.includes('name="robots" content="noindex"'), 'historical views stay out of indexes');
   assert.match(mid, /rel="canonical" href="[^"]*\/claim\/\d+"/, 'canonical is the present document');
-  // 2.99a Amendment B: no feedback FORM exists anywhere — the channel is a
-  // mailto, present on reconstructions and the present document alike.
-  assert.ok(!/<form/i.test(mid), 'no form element on a reconstruction');
-  assert.ok(mid.includes('truth.onionwright@gmail.com'), 'the mailto channel renders');
+  // Drop-box handoff: the anonymous box (a plain form posting to the SITE
+  // origin's durable store) renders on reconstructions and the present
+  // document alike; no form ever posts to the app itself.
+  assert.ok(!/action="\/api/i.test(mid), 'no form posts to the app — the ephemeral DB keeps no inboxes');
+  assert.ok(mid.includes('thetruthonion.org/api/dropbox'), 'the drop box is the primary channel');
+  assert.ok(mid.includes('truth.onionwright@gmail.com'), 'email stays as the if-you\'d-like-a-reply option');
   assert.ok(mid.includes('current wording of the placement reason'), 'placement-reason honesty: the record keeps only the current wording');
   // 2026-01-15 predates the log epoch (events begin at seed time) — the
   // page says so instead of passing the view off as complete.
@@ -324,13 +326,16 @@ await test('F1. (2.99a Amendment B) the in-product feedback pipe is GONE: no end
   demoServer.close();
 });
 
-await test('F2. the replacement channel is a mailto with the category in the subject — pages and app', async () => {
+await test('F2. the feedback channels: anonymous drop box primary (site origin), email secondary — never the app DB', async () => {
   const page = (await api('GET', '/claim/1')).text;
-  assert.ok(page.includes('mailto:truth.onionwright@gmail.com'), 'claim pages carry the mailto');
-  assert.match(page, /subject=/, 'with a prefilled subject line');
+  assert.ok(page.includes('thetruthonion.org/api/dropbox'), 'claim pages post the anonymous box to the SITE origin');
+  assert.ok(page.includes('mailto:truth.onionwright@gmail.com'), 'email stays for anyone who wants a reply');
+  assert.match(page, /don't ask who you are and don't retain anything that says/, 'the anonymity claim, exactly as far as it is true');
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
-  assert.ok(app.includes('truth.onionwright@gmail.com'), 'the app feedback affordance is the mailto');
-  assert.ok(!/api\.feedback|\/api\/feedback/.test(app), 'no client path posts feedback to the server');
+  assert.ok(app.includes('FEEDBACK_EMAIL'), 'the app keeps the email option (one constant, dropbox.js)');
+  const dropbox = readFileSync(join(root, 'client', 'src', 'dropbox.js'), 'utf8');
+  assert.ok(dropbox.includes('truth.onionwright@gmail.com'), 'the address lives once, in the drop-box module');
+  assert.ok(!/api\.feedback|\/api\/feedback/.test(app), 'no client path posts feedback to the app server');
 });
 
 await test('F3. the header feedback affordance replaced the add-claim button; adding a claim lives in search', async () => {

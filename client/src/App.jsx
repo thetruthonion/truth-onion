@@ -33,6 +33,7 @@ import {
   CONTRIBUTION_ASK
 } from './sandboxState.js';
 import { recordRefusal, refusalLedger, seedRefusals } from './refusalLog.js';
+import { sendFeedback, sendSave, DROPBOX_ANONYMITY_LINE, FEEDBACK_EMAIL } from './dropbox.js';
 import TabBar from './Tabs.jsx';
 import SearchBox from './SearchBox.jsx';
 import { loadPanelWidth, savePanelWidth, PANEL_BOUNDS } from './uiPrefs.js';
@@ -108,8 +109,12 @@ export default function App() {
   const fileWriteTimer = useRef(null);
   const [diffView, setDiffView] = useState(null); // null | {events: [...]} | {loading:true}
   const canonicalMaxEvent = useRef(null); // last canonical event id, for divergence
-  const [feedbackPop, setFeedbackPop] = useState(false); // punch 3: copy box, not an app launch
+  const [feedbackPop, setFeedbackPop] = useState(false); // drop-box handoff: anonymous box, email secondary
   const [feedbackCopied, setFeedbackCopied] = useState(false);
+  const [fbCategory, setFbCategory] = useState('other');
+  const [fbMessage, setFbMessage] = useState('');
+  const [fbState, setFbState] = useState(null); // null | 'sending' | {ok, receipt} | {error, unreachable}
+  const [contribState, setContribState] = useState(null); // save contribution: null | 'open' | 'sending' | {ok, receipt} | {error}
   const [copyBirthNote, setCopyBirthNote] = useState(false); // punch 1: shown once, non-blocking
   // 2.95: topic-health readouts (aggregates only, never leaderboards).
   const [health, setHealth] = useState(null);
@@ -736,6 +741,9 @@ export default function App() {
       const result = await fn();
       await reload();
       let msg = successMsg;
+      // Rider C: vertical input the rules did not record is NAMED, never
+      // silently zeroed — a non-blocking notice riding the success message.
+      if (result?.vertical_notice) msg += ` ${result.vertical_notice}`;
       if (result && Array.isArray(result.severed_supports) && result.severed_supports.length) {
         msg += ` Severed support links to: ${result.severed_supports
           .map((s) => `#${s.id} “${s.text}”${s.topic ? ` (in the ${s.topic} topic)` : ''}`)
@@ -870,12 +878,15 @@ export default function App() {
 
   const onClaimAdded = (claim) => {
     setAdding(false);
+    // Rider C: the non-blocking notice when vertical input was not
+    // recorded — named at submit, never silently zeroed.
+    const vNote = claim?.vertical_notice ? ` ${claim.vertical_notice}` : '';
     if (claim && !visibleAtDepth(claim, depth)) {
       setNotice(
-        `Claim placed at ${claim.radial_tier ?? 'the off-axis list'} — it survived review, but sits beyond your current depth view. Dial to ${depthNeededFor(claim)} to see it.`
+        `Claim placed at ${claim.radial_tier ?? 'the off-axis list'} — it survived review, but sits beyond your current depth view. Dial to ${depthNeededFor(claim)} to see it.${vNote}`
       );
     } else {
-      setNotice('Claim placed — it survived review.');
+      setNotice(`Claim placed — it survived review.${vNote}`);
     }
     reload();
   };
@@ -1081,41 +1092,87 @@ export default function App() {
               />
             </label>
           )}
-          {/* Punch 3: feedback is a COPY BOX, not an app launch — an
-              anchored popover with the address and a copy button; the
-              mailto stays as a secondary option inside it. Punch 7: pinned
-              to a consistent right edge. */}
+          {/* Drop-box handoff B: the anonymous feedback box returns as the
+              PRIMARY path — durable storage now exists on the site, so the
+              honest copy is true again. Email stays inside as the
+              if-you'd-like-a-reply option (punch 3's copy box). Unreachable
+              endpoint → said plainly, email fallback — never a fake
+              success. Punch 7: pinned to a consistent right edge. */}
           <span className="hdr-feedback" style={{ marginLeft: 'auto', position: 'relative' }}>
             <button
               className="primary"
               onClick={() => {
                 setFeedbackPop((v) => !v);
                 setFeedbackCopied(false);
+                setFbState(null);
               }}
-              title="Feedback goes by email — this shows the address; nothing is collected in-product"
+              title={`Anonymous feedback to the site's drop box — ${DROPBOX_ANONYMITY_LINE}; email available if you'd like a reply`}
             >
               ✉ feedback
             </button>
             {feedbackPop && (
-              <span className="popover" role="dialog" aria-label="Feedback address">
-                <code style={{ userSelect: 'all' }}>truth.onionwright@gmail.com</code>
+              <span className="popover" role="dialog" aria-label="Anonymous feedback" style={{ minWidth: 300 }}>
+                <span className="pop-text">
+                  Anonymous: exactly the category and message below are sent — no identity, no
+                  account; {DROPBOX_ANONYMITY_LINE}. It lands in a quarantine store outside the
+                  record: the engine never reads it, and volume is a prompt for the operator to
+                  look, never a force that moves anything.
+                </span>
+                <select value={fbCategory} onChange={(e) => setFbCategory(e.target.value)}>
+                  <option value="other">general</option>
+                  <option value="bug">something is broken</option>
+                  <option value="confusion">something is confusing</option>
+                  <option value="dispute">I dispute a placement</option>
+                  <option value="idea">idea</option>
+                </select>
+                <textarea
+                  maxLength={2000}
+                  rows={3}
+                  value={fbMessage}
+                  onChange={(e) => setFbMessage(e.target.value)}
+                  placeholder="what you'd tell the operator… (max 2000 characters)"
+                />
                 <button
-                  className="small"
-                  onClick={() =>
-                    navigator.clipboard?.writeText('truth.onionwright@gmail.com').then(
-                      () => setFeedbackCopied(true),
-                      () => setFeedbackCopied(false)
-                    )
-                  }
+                  className="small primary"
+                  disabled={!fbMessage.trim() || fbState === 'sending'}
+                  onClick={async () => {
+                    setFbState('sending');
+                    const out = await sendFeedback({ category: fbCategory, message: fbMessage.trim() });
+                    if (out.ok) {
+                      setFbState({ ok: true, receipt: out.receipt });
+                      setFbMessage('');
+                    } else {
+                      setFbState({ error: out.message, unreachable: out.unreachable });
+                    }
+                  }}
                 >
-                  {feedbackCopied ? '✓ copied' : 'copy'}
+                  {fbState === 'sending' ? 'sending…' : 'send anonymously'}
                 </button>
-                <a
-                  className="small"
-                  href={`mailto:truth.onionwright@gmail.com?subject=${encodeURIComponent('[feedback] Truth Onion demo')}`}
-                >
-                  open mail app
-                </a>
+                {fbState?.ok && (
+                  <span className="pop-text">
+                    ✓ Received into the quarantine store. Nothing about you was kept.
+                    {fbState.receipt ? ` Receipt (content hash): ${fbState.receipt.slice(0, 16)}` : ''}
+                  </span>
+                )}
+                {fbState?.error && <span className="pop-text" style={{ color: 'var(--critical, #d03b3b)' }}>{fbState.error}</span>}
+                <span className="pop-text muted" style={{ fontSize: 11 }}>
+                  Prefer email, if you'd like a reply:{' '}
+                  <code style={{ userSelect: 'all' }}>{FEEDBACK_EMAIL}</code>{' '}
+                  <button
+                    className="small"
+                    onClick={() =>
+                      navigator.clipboard?.writeText(FEEDBACK_EMAIL).then(
+                        () => setFeedbackCopied(true),
+                        () => setFeedbackCopied(false)
+                      )
+                    }
+                  >
+                    {feedbackCopied ? '✓ copied' : 'copy'}
+                  </button>{' '}
+                  <a className="small" href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('[feedback] Truth Onion demo')}`}>
+                    open mail app
+                  </a>
+                </span>
                 <button className="small" onClick={() => setFeedbackPop(false)}>
                   close
                 </button>
@@ -1197,6 +1254,77 @@ export default function App() {
                 <button className="small" title="Write the current copy to your file now (one download)" onClick={updateFileNow}>
                   update file now
                 </button>
+              )}
+              {/* Drop-box handoff B: contribute your save — anonymous, to
+                  the site's durable quarantine store; the file is the only
+                  thing sent. Voluntary, never gating. */}
+              <button
+                className="small"
+                title={`Send this copy's save file to the anonymous drop box — ${DROPBOX_ANONYMITY_LINE}`}
+                onClick={() => setContribState(contribState ? null : 'open')}
+              >
+                contribute save
+              </button>
+              {contribState && (
+                <span className="popover" role="dialog" aria-label="Contribute your save" style={{ minWidth: 300 }}>
+                  {(contribState === 'open' || contribState === 'sending') && (
+                    <>
+                      <span className="pop-text">
+                        What will be sent: this copy's save file — your claims, sources,
+                        challenges, refusals, and reasons — and nothing else; {DROPBOX_ANONYMITY_LINE}.
+                        It's your work: review it first (download below), then send.
+                      </span>
+                      <button
+                        className="small primary"
+                        disabled={contribState === 'sending'}
+                        onClick={async () => {
+                          setContribState('sending');
+                          try {
+                            const save = JSON.parse(await currentSaveText());
+                            const out = await sendSave(save);
+                            setContribState(out.ok ? { ok: true, receipt: out.receipt } : { error: out.message });
+                          } catch (e) {
+                            setContribState({ error: e.message });
+                          }
+                        }}
+                      >
+                        {contribState === 'sending' ? 'sending…' : 'send this copy’s save'}
+                      </button>
+                      <button
+                        className="small"
+                        title="Review before sending — the file is yours"
+                        onClick={async () => downloadSave(await currentSaveText())}
+                      >
+                        download to review first
+                      </button>
+                      <button className="small" onClick={() => setContribState(null)}>
+                        cancel
+                      </button>
+                    </>
+                  )}
+                  {contribState?.ok && (
+                    <>
+                      <span className="pop-text">
+                        ✓ Received into the quarantine store — the file, nothing else.
+                        {contribState.receipt ? ` Receipt (content hash): ${contribState.receipt.slice(0, 16)} — proof of inclusion, no identity.` : ''}
+                      </span>
+                      <button className="small" onClick={() => setContribState(null)}>
+                        close
+                      </button>
+                    </>
+                  )}
+                  {contribState?.error && (
+                    <>
+                      <span className="pop-text" style={{ color: 'var(--critical, #d03b3b)' }}>{contribState.error}</span>
+                      <span className="pop-text muted" style={{ fontSize: 11 }}>
+                        Email works instead: <code style={{ userSelect: 'all' }}>{FEEDBACK_EMAIL}</code> — attach the downloaded save.
+                      </span>
+                      <button className="small" onClick={() => setContribState('open')}>
+                        back
+                      </button>
+                    </>
+                  )}
+                </span>
               )}
               {/* Punch 6b: failure surfaces AT the save control, with the
                   recovery action — never a distant corner banner. */}

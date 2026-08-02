@@ -39,8 +39,11 @@ import { claimHistory, claimAtTime, normTs } from './timemachine.js';
 import { RuleError, truncate } from './rules.js';
 import { CURATOR_VERIFIED_LABEL } from './sourcelinks.js';
 
-// 2.99a Amendment B/C: the feedback address and the impermanence line —
-// the page promises nothing the disposable demo host can't keep.
+// 2.99a Amendment B/C + drop-box handoff: the anonymous drop box on the
+// SITE origin is the primary feedback path (durable, payload-only); email
+// remains for anyone who'd like a reply. The page promises nothing the
+// disposable demo host can't keep.
+export const DROPBOX_URL = 'https://thetruthonion.org/api/dropbox';
 export const FEEDBACK_ADDRESS = 'truth.onionwright@gmail.com';
 export const IMPERMANENCE_LINE =
   'This page is served by the demo host, temporary by design — permanent claim addresses arrive with multiplayer.';
@@ -376,16 +379,28 @@ export function renderClaimPage(db, claimId, { origin = '', at = null, sandbox =
     ${historyHtml}
   </section>`;
 
-  // 2.99a Amendment B + punch 3: feedback is a COPY BOX, not an app launch.
-  // Claim pages are pinned script-free, so the anchored popover is a pure
-  // <details> element: the address shown as selectable text (select-all on
-  // click via CSS user-select), the mailto kept as a secondary option
-  // inside it — nothing auto-launches a mail app.
+  // Drop-box handoff B: the anonymous box is the PRIMARY path — a plain
+  // HTML form (pages are pinned script-free; a cross-origin form POST
+  // needs no script and no CORS) straight to the site's durable quarantine
+  // store. Exactly the category and message are sent — no identity, no
+  // account; we don't ask who you are and don't retain anything that says.
+  // Email stays as the if-you'd-like-a-reply option (punch 3's copy box).
   const feedbackMailto = `mailto:${FEEDBACK_ADDRESS}?subject=${encodeURIComponent(`[dispute] claim #${liveClaim.id} — ${truncate(liveClaim.text, 60)}`)}`;
   const feedbackHtml = `<details class="note fb-pop" id="feedback">
-    <summary>Dispute this placement, or report a problem — feedback goes by email</summary>
-    <p style="margin:6px 0 0"><code style="user-select:all">${esc(FEEDBACK_ADDRESS)}</code> <span class="muted small">(click to select, then copy)</span></p>
-    <p class="small" style="margin:4px 0 0"><a href="${esc(feedbackMailto)}">or open your mail app</a>${process.env.DEMO_REPO_URL ? ` · <a href="${esc(process.env.DEMO_REPO_URL)}">or open an issue on the public repo</a>` : ''}</p>
+    <summary>Dispute this placement, or report a problem — anonymously</summary>
+    <form method="POST" action="${esc(DROPBOX_URL)}" style="margin:8px 0 0">
+      <p class="small" style="margin:0 0 6px">Anonymous: exactly the category and message below are sent — no identity, no account; we don't ask who you are and don't retain anything that says. The engine never reads it; volume is a prompt for the operator to look, never a force that moves anything.</p>
+      <select name="category">
+        <option value="other">general</option>
+        <option value="bug">something is broken</option>
+        <option value="confusion">something is confusing</option>
+        <option value="dispute" selected>I dispute this claim's placement</option>
+        <option value="idea">idea</option>
+      </select>
+      <textarea name="message" maxlength="2000" required placeholder="your feedback (max 2000 characters)…"></textarea>
+      <button type="submit">send anonymously</button>
+    </form>
+    <p class="small" style="margin:8px 0 0">Prefer email, if you'd like a reply: <code style="user-select:all">${esc(FEEDBACK_ADDRESS)}</code> — <a href="${esc(feedbackMailto)}">open your mail app</a>${process.env.DEMO_REPO_URL ? ` · <a href="${esc(process.env.DEMO_REPO_URL)}">or open an issue on the public repo</a>` : ''}</p>
   </details>`;
 
   return `<!DOCTYPE html>

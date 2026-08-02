@@ -131,10 +131,13 @@ every route is rate-limited, and the database resets to the pristine curated see
 every restart. Your first write creates a private sandbox copy; export a save file to
 keep your work.
 
-Voluntary: email your save file to truth.onionwright@gmail.com — it shows us where the
-rules and the vocabulary strain, which is exactly what improves the engine. You'd be
-sending your own drafts and reasons, so read the file first — it's yours. (Saves are
-read by the operator; no response is guaranteed, and nothing ever sends automatically.) **The companion's fetch proxy (`/api/fetch`) is deliberately absent from
+Voluntary: contribute your save file through the anonymous drop box (in the demo's save
+controls, or POST to https://thetruthonion.org/api/dropbox) — it shows us where the
+rules and the vocabulary strain, which is exactly what improves the engine. We don't ask
+who you are and don't retain anything that says. Prefer email, if you'd like a reply:
+truth.onionwright@gmail.com. Either way you'd be sending your own drafts and reasons, so
+read the file first — it's yours. (Drops are read by the operator; no response is
+guaranteed, and nothing ever sends automatically.) **The companion's fetch proxy (`/api/fetch`) is deliberately absent from
 the showcase**: a keyless public fetcher would be an open relay, so `fetch_url` /
 `verify_source` surface an honest "not available in this demo" message instead. Clone
 this repo and run the full engine locally to use mechanical source verification — and

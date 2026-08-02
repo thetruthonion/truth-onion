@@ -674,18 +674,106 @@ await test('H10 (punch 10). preferences ride the save; resume re-prompts nothing
   manager.destroy(imported.body.session_id);
 });
 
-await test('H11 (punch 11). the voluntary contribution ask: one line, three places, nothing automatic, no endpoint', () => {
-  assert.match(CONTRIBUTION_ASK, /^Voluntary: email your save file to truth\.onionwright@gmail\.com/);
+await test('H11 (punch 11, drop-box update). the ask: drop box primary, email if-you\'d-like-a-reply, nothing automatic', () => {
+  assert.match(CONTRIBUTION_ASK, /^Voluntary: contribute your save file through the anonymous drop box/);
+  assert.match(CONTRIBUTION_ASK, /don't ask who you are and don't retain anything that says/);
+  assert.match(CONTRIBUTION_ASK, /Prefer email, if you'd like a reply: truth\.onionwright@gmail\.com/);
   assert.match(CONTRIBUTION_ASK, /read the file first — it's yours\.$/);
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.ok(app.includes('CONTRIBUTION_ASK'), 'shown at the save-setup prompt');
   assert.ok(app.includes('onion.ui.contribAskSeen'), 'dismissible, never repeated in-session');
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  assert.ok(readme.includes('Voluntary: email your save file to truth.onionwright@gmail.com'), 'the README carries the same line');
-  assert.match(readme, /no response is guaranteed/, 'no promise beyond what is true');
-  // No endpoint exists: the server accepts saves ONLY as sandbox imports.
+  assert.ok(readme.includes('contribute your save file through the anonymous drop box'), 'the README leads with the drop box');
+  assert.match(readme, /no response is\s+guaranteed/, 'no promise beyond what is true');
+  // The APP DB accepts saves ONLY as sandbox imports — the drop box lives
+  // on the site origin, never here.
   const idx = readFileSync(join(root, 'server', 'index.js'), 'utf8');
-  assert.ok(!/contribut|submit.*save|save.*upload/i.test(idx), 'no contribution endpoint anywhere');
+  assert.ok(!/contribut|dropbox/i.test(idx), 'no contribution endpoint in the app server');
+});
+
+await test('I1 (drop box). the client: honest success/refusal/unreachable states, email fallback, anonymity copy exactly as true', async () => {
+  const { sendFeedback, sendSave, DROPBOX_URL, DROPBOX_ANONYMITY_LINE, DROPBOX_UNREACHABLE_MESSAGE } = await import('../client/src/dropbox.js');
+  assert.equal(DROPBOX_URL, 'https://thetruthonion.org/api/dropbox', 'the box lives on the SITE origin');
+  // Success returns the receipt; the payload is exactly the kind+fields.
+  let sent;
+  const okFetch = async (url, opts) => {
+    sent = { url, body: JSON.parse(opts.body) };
+    return { ok: true, json: async () => ({ stored: true, receipt: 'a'.repeat(64) }) };
+  };
+  const ok = await sendFeedback({ category: 'idea', message: 'probe' }, okFetch);
+  assert.equal(ok.ok, true);
+  assert.equal(ok.receipt.length, 64);
+  assert.deepEqual(sent.body, { kind: 'feedback', category: 'idea', message: 'probe' }, 'exactly this is sent — nothing else');
+  await sendSave({ format: 'truth-onion-sandbox-save', version: 1, record: {} }, okFetch);
+  assert.equal(sent.body.kind, 'save');
+  // A refusal surfaces the named blocker.
+  const refusedFetch = async () => ({ ok: false, status: 422, json: async () => ({ error: 'Unknown category — nope.' }) });
+  const refused = await sendFeedback({ category: 'x', message: 'y' }, refusedFetch);
+  assert.equal(refused.ok, false);
+  assert.match(refused.message, /Unknown category/);
+  // Unreachable: said plainly, email fallback, never a fake success.
+  const downFetch = async () => {
+    throw new Error('network down');
+  };
+  const down = await sendSave({}, downFetch);
+  assert.equal(down.ok, false);
+  assert.equal(down.unreachable, true);
+  assert.equal(down.message, DROPBOX_UNREACHABLE_MESSAGE);
+  assert.match(down.message, /Nothing was sent/);
+  assert.match(down.message, /truth\.onionwright@gmail\.com/, 'email fallback named');
+  // Copy review: the anonymity claim never exceeds "not asked, not retained".
+  assert.equal(DROPBOX_ANONYMITY_LINE, "we don't ask who you are and don't retain anything that says");
+  for (const f of ['client/src/App.jsx', 'client/src/dropbox.js', 'server/claimpages.js']) {
+    const src = readFileSync(join(root, f), 'utf8');
+    assert.ok(!/untraceable|invisible|cannot be traced|no one can (see|know)/i.test(src), `${f}: no anonymity claim beyond what is true`);
+  }
+  const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(app, /contribute save/, 'the contribution affordance at the save surfaces');
+  assert.match(app, /download to review first/, 'read-the-file-first is an action, not just a line');
+});
+
+await test('I2 (rider C). vertical input the rules will not record is NAMED at submit; the field disables with its why', async () => {
+  const copy = await newCopy();
+  const s = sb(copy.session_id);
+  // Neutral direction + typed magnitude: created fine, axis empty, notice named.
+  const made = await s.post('/api/claims', { ...PROBE_CLAIM, text: 'Rider-C probe.', vertical: { direction: 'neutral', magnitude: 10000000, evidenced: false } }, 'curator');
+  assert.equal(made.status, 201, made.body?.error);
+  assert.equal(made.body.vertical.direction, 'neutral');
+  assert.equal(made.body.vertical.magnitude, 0, 'placement behavior unchanged — the axis stays empty');
+  assert.match(made.body.vertical_notice, /Outcome direction\/magnitude not recorded — no documented outcome evidence attached; the axis stays empty rather than guessed\./);
+  // Same manners on setVertical.
+  const sv = await s.post(`/api/claims/${made.body.id}/vertical`, { direction: 'neutral', magnitude: 5 }, 'curator');
+  assert.equal(sv.status, 404, 'PATCH route — post helper is POST; use the api shape below');
+  const svRes = await fetch(`${base}/sandbox/${copy.session_id}/api/claims/${made.body.id}/vertical`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'x-onion-actor': 'curator' },
+    body: JSON.stringify({ direction: 'neutral', magnitude: 5 })
+  });
+  const svBody = await svRes.json();
+  assert.equal(svRes.status, 200, svBody?.error);
+  assert.match(svBody.vertical_notice, /not recorded/);
+  // The directional refusals stay loud and unchanged (a weighty source
+  // attached so the magnitude check itself is what answers).
+  const loud = await s.post('/api/claims', {
+    ...PROBE_CLAIM,
+    text: 'Rider-C loud probe.',
+    vertical: { direction: 'harm', magnitude: 10000000, evidenced: true },
+    sources: [{ tier: 'reputable_secondary', citation: 'Rider-C loud source', relation: 'supports' }]
+  }, 'curator');
+  assert.equal(loud.status, 422);
+  assert.match(loud.body.error, /Vertical magnitude must be 1, 2, or 3\./);
+  // A clean neutral submission carries NO notice.
+  const clean = await s.post('/api/claims', { ...PROBE_CLAIM, text: 'Rider-C clean probe.' }, 'curator');
+  assert.equal(clean.status, 201);
+  assert.equal(clean.body.vertical_notice, undefined);
+  // The field disables (visible, with the why) instead of hiding — the old
+  // hide let a stale typed value ride a neutral submission silently.
+  const addClaim = readFileSync(join(root, 'client', 'src', 'AddClaim.jsx'), 'utf8');
+  assert.match(addClaim, /disabled=\{direction === 'neutral'\}/);
+  assert.match(addClaim, /Not recorded while direction is neutral — the axis stays empty rather than guessed\./);
+  const appSrc = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(appSrc, /vertical_notice/, 'the notice is surfaced, non-blocking');
+  manager.destroy(copy.session_id);
 });
 
 await test('H12 (punch 12). the refusals ledger: rules and client refusals land with correct source; rides the save; accumulates', async () => {
