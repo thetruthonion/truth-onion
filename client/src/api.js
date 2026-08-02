@@ -2,6 +2,8 @@
 // it carries a plain-language reason and, when known, the tier the evidence
 // actually earns.
 
+import { recordRefusal } from './refusalLog.js';
+
 export class RuleRejection extends Error {
   constructor(body) {
     super(body.error || 'Rejected by the rules layer.');
@@ -86,7 +88,21 @@ async function call(method, path, body) {
     body: body === undefined ? undefined : JSON.stringify(body)
   });
   const json = await res.json();
-  if (res.status === 422) throw new RuleRejection(json);
+  if (res.status === 422) {
+    // Punch 12: every rules refusal the visitor is shown lands in the
+    // client-side ledger — recorded here, at the one HTTP funnel, so no
+    // component can render a refusal the ledger missed.
+    recordRefusal({
+      action: method,
+      target: path,
+      persona: base ? sbx.actor : null,
+      source: 'rules',
+      blocker_code: json.rule ?? null,
+      blocker_text: json.error || 'Rejected by the rules layer.',
+      inputs_as_submitted: body ?? null
+    });
+    throw new RuleRejection(json);
+  }
   if (!res.ok) {
     const err = new Error(json.error || `Request failed (${res.status})`);
     err.rule = json.rule;

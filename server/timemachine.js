@@ -404,12 +404,26 @@ export function claimHistory(db, claimId) {
   );
 
   const entries = [];
+  // 2.99a punch 13: if the creation event recorded a proposed-vs-landed
+  // delta (author asked for a tier the floors refused), render it — the
+  // same house pattern as failed promotions, never flattened away.
+  let createdText = `Entered the record${claim.radial_tier ? '' : ' (off-axis)'}.`;
+  const createdEv = db
+    .prepare(`SELECT detail FROM events WHERE claim_id = ? AND action = 'claim_created' ORDER BY id LIMIT 1`)
+    .get(claimId);
+  const deltaMatch = /(\{"proposed_tier".*\})/.exec(createdEv?.detail || '');
+  if (deltaMatch) {
+    try {
+      const d = JSON.parse(deltaMatch[1]);
+      createdText += ` Author proposed ${d.proposed_tier}; floors placed ${d.landed_tier}.`;
+    } catch {}
+  }
   entries.push({
     at: claim.created_at,
     kind: 'created',
     origin: pre(claim.created_at) ? 'derived' : 'log',
     actor: actorFor.get(`claim_created@${claim.created_at}`) ?? null,
-    text: `Entered the record${claim.radial_tier ? '' : ' (off-axis)'}.`
+    text: createdText
   });
 
   const moves = tierMoves(db, claimId);

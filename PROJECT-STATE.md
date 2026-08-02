@@ -36,7 +36,7 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 271 tests passing across twenty suites. **Stage 2.99a
+(stage297 E7).** 276 tests passing across twenty suites. **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1342,6 +1342,72 @@ blocker-naming page (never the bare "No such claim." string) that says
 where a missing id could live. Pinned G1–G3; verified live on the built
 package.
 
+**10 — save preferences ride the file; resume re-prompts nothing the
+browser doesn't mandate.** The save gains an optional `preferences` block
+(`{autosave_mode: 'file'|'download'|'manual', setup_complete}`), composed
+client-side by `decorateSave` (the file, the mirror, and the manual
+download are ONE artifact); v1 files without it import unchanged. Resume:
+restore record AND preferences; the pure `resumePlan` decides the single
+browser-mandated prompt, if any — non-FSA modes restore fully silently;
+Chromium's file handle persists in IndexedDB beside the mirror (handles
+are structured-cloneable; localStorage can't hold them) and reconnects
+with at most the browser's one-tap permission confirm, surfaced with its
+one-line why; a missing handle asks exactly one "pick where" with the
+why (browsers cannot carry handles in files). A file-mode save opened on
+a non-FSA browser restores as 'manual' (same file kept current by
+one-click updates — recorded decision, no dead mode). Declining resume =
+fresh visitor. Pinned H10.
+
+**11 — the voluntary save-contribution ask.** One consistent line
+(operator's copy verbatim) at the save-setup prompt, the README, and the
+save moments — dismissible, once per session, never gating; no endpoint
+exists and nothing sends automatically; the README adds the true-scope
+caveat (read by the operator; no response guaranteed). Pinned H11.
+
+**12 — the refusals log rides the save.** A thin client-side recorder
+(`client/src/refusalLog.js`): rules refusals are recorded at the ONE HTTP
+funnel (api.js's 422 path — no component can render a refusal the ledger
+missed) with `{when, action, target, persona, source:'rules',
+blocker_code, blocker_text, inputs_as_submitted}`; client-side blocks
+(the scrubbed-view write guard) record with `source:'client'`. The ledger
+rides `decorateSave` and the mirror; import/resume seeds it and
+ACCUMULATES across sessions. Zero server involvement; the read-it-first
+line covers consent. Pinned H12.
+
+**13 — proposed-vs-landed in the creation event.** `createClaim` accepts
+the author's original `proposed_tier` (AddClaim carries it on earned-tier
+resubmits); when it differs from the landed tier, the rules compute
+`floors_failed` at submit and the claim_created event detail carries
+`{proposed_tier, landed_tier, floors_failed}`; claimHistory renders
+"Author proposed middle; floors placed outer." — the failed-promotions
+house pattern — so panel and page show it, and it rides every save for
+free. No-delta creations keep the plain detail unchanged. Pinned H13;
+verified live.
+
+**14 — session lineage.** The save's `session` block:
+`{started_at, resumed_from: {saved_at, fingerprint} | null}` — fresh
+copies start the arc, resume/import name the ancestor (FNV-1a fingerprint
+of the record). A contributed save reads as an arc, not a snapshot.
+Pinned H14. (Strain flags deliberately NOT built — recorded as
+proving-grounds kickoff input alongside the notes below.)
+
+**Verify-and-report (b — silent zero):** confirmed and reported, not
+fixed. With direction help/harm and `evidenced`, an out-of-range
+magnitude refuses loudly ("Vertical magnitude must be 1, 2, or 3."); a
+directional-but-unevidenced vertical refuses loudly too ("requires
+documented outcomes"). But with direction NEUTRAL, `normVertical` forces
+magnitude to 0 SILENTLY — the operator's harm/10000000 landing as
+neutral/0 means the submitted path was (or was normalized through) the
+neutral branch: a refusal without a named blocker, exactly as the punch
+suspected. The magnitude field also stays enabled while direction is
+neutral. Recorded for the 2.99b kickoff; nothing changed.
+
+**Verify-and-report (c — topic-shape gate scope):** confirmed —
+`topicShapeFailures(name)` checks the NAME only; `createTopic` never
+passes the description through any gate, so a claim-shaped description
+("The engine proves to be auditable…") passes untouched. The description
+loophole is recorded for the 2.99b kickoff, not fixed here.
+
 **Verify-and-report (magnitude, NOT fixed per instruction):** the rules
 layer DOES refuse out-of-range magnitude when the vertical is directional
 and evidenced — refusal text: "Vertical magnitude must be 1, 2, or 3."
@@ -1351,7 +1417,7 @@ accepted "10000000" but the record never did. If a directional submit
 appeared to accept it, that would be a bug; it could not be reproduced —
 the likely lived case was the neutral path. Reported; nothing changed.
 
-**Test suites (271 passing).**
+**Test suites (276 passing).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1374,7 +1440,7 @@ the likely lived case was the neutral path. Reported; nothing changed.
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
-| `stage299a` | 20 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
+| `stage299a` | 25 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1624,7 +1690,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty suites, 271 tests, against the real API with the real seed, in memory.
+Twenty suites, 276 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

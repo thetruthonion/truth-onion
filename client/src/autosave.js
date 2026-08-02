@@ -109,6 +109,65 @@ export function makeSaveEngine({ storage = null, download = null, onStatus = () 
   };
 }
 
+// ---- punch 10: the persisted file handle ---------------------------------
+// FileSystemFileHandle is structured-cloneable, so it can live in IndexedDB
+// alongside the mirror — a returning Chromium visitor reconnects to their
+// file with at most the browser's own one-tap permission confirm. localStorage
+// cannot hold handles; this tiny store exists only for that.
+const HANDLE_DB = 'onion.sandbox.handles';
+const HANDLE_KEY = 'autosave';
+
+function handleDb(idb = typeof indexedDB !== 'undefined' ? indexedDB : null) {
+  if (!idb) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const req = idb.open(HANDLE_DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
+
+export async function storeHandle(handle) {
+  const db = await handleDb();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, HANDLE_KEY);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => resolve(false);
+  });
+}
+
+export async function loadStoredHandle() {
+  const db = await handleDb();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    const tx = db.transaction('handles', 'readonly');
+    const req = tx.objectStore('handles').get(HANDLE_KEY);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror = () => resolve(null);
+  });
+}
+
+// 'granted' | 'prompt' | 'denied' | null (no handle / API absent).
+export async function handlePermissionState(handle) {
+  if (!handle?.queryPermission) return null;
+  try {
+    return await handle.queryPermission({ mode: 'readwrite' });
+  } catch {
+    return null;
+  }
+}
+
+export async function requestHandlePermission(handle) {
+  if (!handle?.requestPermission) return 'denied';
+  try {
+    return await handle.requestPermission({ mode: 'readwrite' });
+  } catch {
+    return 'denied';
+  }
+}
+
 export function readBrowserAutosave(storage = typeof localStorage !== 'undefined' ? localStorage : null) {
   if (!storage) return null;
   try {

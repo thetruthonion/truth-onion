@@ -316,12 +316,29 @@ export function createClaim(db, p) {
         `placed at ${tier}`
       );
     }
+    // 2.99a punch 13: record honesty — when the author PROPOSED a tier the
+    // floors refused (the client resubmits at the earned tier), the
+    // creation event carries the delta, computed by the rules at submit,
+    // same house pattern as failed promotions.
+    let createdDetail = `placed at ${tier ?? 'off-axis (metaphysical)'}`;
+    const proposed = p.proposed_tier && TIERS.includes(p.proposed_tier) ? p.proposed_tier : null;
+    if (proposed && tier && proposed !== tier) {
+      const floorsFailed = placementFailures({
+        kind: p.kind,
+        layer: p.layer,
+        targetTier: proposed,
+        sources,
+        db,
+        claimId: Number(id)
+      }).map((f) => f.reason);
+      createdDetail += ` · ${JSON.stringify({ proposed_tier: proposed, landed_tier: tier, floors_failed: floorsFailed })}`;
+    }
     logEvent(db, {
       actor: p.actor,
       action: 'claim_created',
       claim_id: Number(id),
       topic_id: p.topic_id,
-      detail: `placed at ${tier ?? 'off-axis (metaphysical)'}`,
+      detail: createdDetail,
       reason: String(p.placement_reason).trim()
     });
     return getClaim(db, id);

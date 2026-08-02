@@ -128,7 +128,13 @@ Other commands:
 
 The hosted demo is **read-only, enforced server-side** — every mutation answers 403,
 every route is rate-limited, and the database resets to the pristine curated seed on
-every restart. **The companion's fetch proxy (`/api/fetch`) is deliberately absent from
+every restart. Your first write creates a private sandbox copy; export a save file to
+keep your work.
+
+Voluntary: email your save file to truth.onionwright@gmail.com — it shows us where the
+rules and the vocabulary strain, which is exactly what improves the engine. You'd be
+sending your own drafts and reasons, so read the file first — it's yours. (Saves are
+read by the operator; no response is guaranteed, and nothing ever sends automatically.) **The companion's fetch proxy (`/api/fetch`) is deliberately absent from
 the showcase**: a keyless public fetcher would be an open relay, so `fetch_url` /
 `verify_source` surface an honest "not available in this demo" message instead. Clone
 this repo and run the full engine locally to use mechanical source verification — and

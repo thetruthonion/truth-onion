@@ -76,3 +76,72 @@ export const PERSONA_SWITCH_LABEL =
 // canonical record only, on a disposable host.
 export const PAGE_IMPERMANENCE_HINT =
   'Pages show the canonical record on this demo host — temporary by design. Your copy has no public page; links go live at multiplayer.';
+
+// ---- punch 10/12/14: what the save file carries beyond the record --------
+
+// Punch 11: the voluntary contribution ask — one consistent line, shown at
+// the save moments, dismissible, never repeated in-session, never gating.
+// No endpoint exists; nothing sends automatically.
+export const CONTRIBUTION_ASK =
+  "Voluntary: email your save file to truth.onionwright@gmail.com — it shows us where the rules and the vocabulary strain, which is exactly what improves the engine. You'd be sending your own drafts and reasons, so read the file first — it's yours.";
+
+// Punch 14: a cheap, stable fingerprint of a save's record (FNV-1a) so a
+// resumed session can name its ancestor — an arc, not a snapshot.
+export function saveFingerprint(save) {
+  const s = JSON.stringify(save?.record ?? save ?? '');
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+// Punch 10/12/14: decorate the server's save with the client-side blocks —
+// preferences (so resume re-prompts nothing the browser doesn't mandate),
+// the refusals ledger, and the session lineage. Pure; the caller supplies
+// current state. v1 consumers ignore unknown blocks; the import validator
+// reads `record` only, so every block survives round-trips untouched.
+export function decorateSave(save, { autosaveMode = null, refusals = [], session = null } = {}) {
+  return {
+    ...save,
+    preferences: { autosave_mode: autosaveMode, setup_complete: !!autosaveMode },
+    refusals,
+    session: session ?? { started_at: null, resumed_from: null }
+  };
+}
+
+// Punch 10: the resume plan — given a save's preferences and what this
+// browser can actually do, which prompts (if any) are mandated? Pure and
+// pinned: non-FSA modes restore silently; a stored, granted handle
+// reconnects silently; the browser's own permission confirm and the
+// missing-handle "pick where" are the ONLY prompts, each with its one-line
+// why. No preferences → the normal full setup.
+export const RECONNECT_WHY =
+  'Your save file is set to autosave — this browser asks once before writing to it again.';
+export const PICK_WHERE_WHY =
+  'Your save prefers file autosave, but browsers cannot carry file handles inside files — pick where once and autosave resumes.';
+
+export function resumePlan({ preferences = null, fsaSupported = false, handleStored = false, handlePermission = null } = {}) {
+  if (!preferences || !preferences.setup_complete || !preferences.autosave_mode) {
+    return { fileMode: null, prompt: 'full-setup', why: null };
+  }
+  const mode = preferences.autosave_mode;
+  if (mode === 'download' || mode === 'downloads' || mode === 'manual') {
+    return { fileMode: mode === 'downloads' ? 'download' : mode, prompt: null, why: null };
+  }
+  // mode === 'file'
+  if (!fsaSupported) {
+    // A file-mode save opened where silent file writes don't exist: the
+    // manual mode keeps the same file current by explicit one-click
+    // updates — the staleness badge says how far behind it is.
+    return { fileMode: 'manual', prompt: null, why: null };
+  }
+  if (handleStored && handlePermission === 'granted') {
+    return { fileMode: 'file', prompt: null, why: null };
+  }
+  if (handleStored) {
+    return { fileMode: 'file', prompt: 'reconnect', why: RECONNECT_WHY };
+  }
+  return { fileMode: 'file', prompt: 'pick-where', why: PICK_WHERE_WHY };
+}

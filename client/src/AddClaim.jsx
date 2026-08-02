@@ -73,6 +73,10 @@ export default function AddClaim({
         kind,
         layer,
         radial_tier: metaphysical ? undefined : (tierOverride ?? tier),
+        // Punch 13: when the floors refused the author's tier and this is
+        // the earned-tier resubmit, the ORIGINAL proposal rides along so
+        // the creation event records proposed-vs-landed honestly.
+        proposed_tier: metaphysical ? undefined : tier,
         placement_reason: reason,
         vertical: { direction, magnitude, evidenced },
         sources: sources

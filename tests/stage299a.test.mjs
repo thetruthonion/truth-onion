@@ -37,6 +37,15 @@ import {
   PERSONA_SWITCH_LABEL
 } from '../client/src/sandboxState.js';
 import { makeSaveEngine, readBrowserAutosave, AUTOSAVE_KEY } from '../client/src/autosave.js';
+import {
+  decorateSave,
+  saveFingerprint,
+  resumePlan,
+  CONTRIBUTION_ASK,
+  RECONNECT_WHY,
+  PICK_WHERE_WHY
+} from '../client/src/sandboxState.js';
+import { recordRefusal, refusalLedger, seedRefusals, resetRefusals } from '../client/src/refusalLog.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = JSON.parse(readFileSync(join(root, 'exports', 'curated-record.history.json'), 'utf8'));
@@ -633,6 +642,145 @@ await test('G3 (punch 9). the in-engine affordance routes every claim to a live 
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.match(app, /divergedIds\.has\(claimId\)/, 'diverged canonical claims route to the session page');
   assert.match(app, /claimId > canonicalMaxClaim\.current/, 'copy-only claims route to the session page');
+});
+
+await test('H10 (punch 10). preferences ride the save; resume re-prompts nothing the browser doesn\'t mandate', async () => {
+  // Decoration carries the preferences block; the import validator reads
+  // the record only, so a decorated save round-trips through a real import.
+  const copy = await newCopy();
+  const save = (await sb(copy.session_id).get('/save')).body;
+  const dec = decorateSave(save, { autosaveMode: 'file', refusals: [], session: { started_at: 't', resumed_from: null } });
+  assert.deepEqual(dec.preferences, { autosave_mode: 'file', setup_complete: true });
+  assert.equal(validateSave(dec).claims.length, save.record.claims.length, 'decorated saves still validate');
+  const imported = await req('POST', '/api/sandbox/copy', { save: dec });
+  assert.equal(imported.status, 201, 'the server imports a preference-carrying save unchanged');
+  // The resume plan, per browser class — the ONLY prompts are the two the
+  // browser itself mandates, each with its one-line why.
+  const prefs = (m) => ({ autosave_mode: m, setup_complete: true });
+  assert.deepEqual(resumePlan({ preferences: prefs('download'), fsaSupported: false }), { fileMode: 'download', prompt: null, why: null }, 'non-FSA: silent restore');
+  assert.deepEqual(resumePlan({ preferences: prefs('manual'), fsaSupported: false }), { fileMode: 'manual', prompt: null, why: null });
+  assert.deepEqual(resumePlan({ preferences: prefs('file'), fsaSupported: true, handleStored: true, handlePermission: 'granted' }), { fileMode: 'file', prompt: null, why: null }, 'stored granted handle: silent reconnect');
+  const reconnect = resumePlan({ preferences: prefs('file'), fsaSupported: true, handleStored: true, handlePermission: 'prompt' });
+  assert.equal(reconnect.prompt, 'reconnect');
+  assert.equal(reconnect.why, RECONNECT_WHY, 'the browser confirm carries its one-line why');
+  const pickWhere = resumePlan({ preferences: prefs('file'), fsaSupported: true, handleStored: false });
+  assert.equal(pickWhere.prompt, 'pick-where');
+  assert.equal(pickWhere.why, PICK_WHERE_WHY, 'browsers cannot carry handles in files — said plainly');
+  assert.equal(resumePlan({ preferences: prefs('file'), fsaSupported: false }).fileMode, 'manual', 'a file-mode save on a non-FSA browser degrades to manual, no dead mode');
+  // v1 saves without preferences: import clean, plan = the normal setup.
+  assert.equal(validateSave(save).claims.length, save.record.claims.length, 'no-preferences saves validate unchanged');
+  assert.equal(resumePlan({ preferences: null }).prompt, 'full-setup');
+  manager.destroy(copy.session_id);
+  manager.destroy(imported.body.session_id);
+});
+
+await test('H11 (punch 11). the voluntary contribution ask: one line, three places, nothing automatic, no endpoint', () => {
+  assert.match(CONTRIBUTION_ASK, /^Voluntary: email your save file to truth\.onionwright@gmail\.com/);
+  assert.match(CONTRIBUTION_ASK, /read the file first — it's yours\.$/);
+  const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.ok(app.includes('CONTRIBUTION_ASK'), 'shown at the save-setup prompt');
+  assert.ok(app.includes('onion.ui.contribAskSeen'), 'dismissible, never repeated in-session');
+  const readme = readFileSync(join(root, 'README.md'), 'utf8');
+  assert.ok(readme.includes('Voluntary: email your save file to truth.onionwright@gmail.com'), 'the README carries the same line');
+  assert.match(readme, /no response is guaranteed/, 'no promise beyond what is true');
+  // No endpoint exists: the server accepts saves ONLY as sandbox imports.
+  const idx = readFileSync(join(root, 'server', 'index.js'), 'utf8');
+  assert.ok(!/contribut|submit.*save|save.*upload/i.test(idx), 'no contribution endpoint anywhere');
+});
+
+await test('H12 (punch 12). the refusals ledger: rules and client refusals land with correct source; rides the save; accumulates', async () => {
+  resetRefusals();
+  // A RULES refusal, recorded at the one HTTP funnel — drive the real api
+  // module: first write creates the copy, then a persona gate refuses.
+  const apiMod = await import('../client/src/api.js');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (url, opts) => realFetch(typeof url === 'string' && url.startsWith('/') ? base + url : url, opts);
+  try {
+    apiMod.configureSandbox({ demo: true, sid: null, viewCanonical: false, actor: 'contributor' });
+    apiMod.setSandboxActor('contributor');
+    await assert.rejects(() => apiMod.api.promote(9, 'middle'), /Curator-seat machinery/);
+  } finally {
+    apiMod.configureSandbox({ demo: false, sid: null, viewCanonical: false, actor: 'curator' });
+    globalThis.fetch = realFetch;
+  }
+  const rules = refusalLedger().find((r) => r.source === 'rules');
+  assert.ok(rules, 'the rules refusal landed');
+  assert.equal(rules.blocker_code, 'persona_standing');
+  assert.equal(rules.persona, 'contributor');
+  assert.match(rules.blocker_text, /Curator-seat machinery/);
+  assert.deepEqual(rules.inputs_as_submitted, { target_tier: 'middle' }, 'inputs as submitted, verbatim');
+  assert.ok(rules.when && rules.action && rules.target, 'when/action/target present');
+  // A CLIENT-side block records with source 'client' (the scrubbed-view
+  // guard calls this same recorder — pinned by source scan).
+  recordRefusal({ action: 'write', target: '(scrubbed historical view)', source: 'client', blocker_code: 'historical_view_read_only', blocker_text: 'read-only view' });
+  assert.ok(refusalLedger().some((r) => r.source === 'client' && r.blocker_code === 'historical_view_read_only'));
+  const appSrc = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(appSrc, /source: 'client',\s*\n\s*blocker_code: 'historical_view_read_only'/, 'the scrubbed guard records');
+  // The ledger rides the save and ACCUMULATES across sessions.
+  const before = refusalLedger();
+  const dec = decorateSave({ format: SAVE_FORMAT, version: 1, record: { events: [] } }, { refusals: before });
+  assert.equal(dec.refusals.length, before.length, 'the save carries the ledger');
+  resetRefusals();
+  seedRefusals(dec.refusals);
+  recordRefusal({ action: 'x', target: 'y', source: 'client', blocker_text: 'z' });
+  assert.equal(refusalLedger().length, before.length + 1, 'import restores and accumulates');
+  resetRefusals();
+});
+
+await test('H13 (punch 13). proposed-vs-landed rides the creation event and renders in history', async () => {
+  const copy = await newCopy();
+  const s = sb(copy.session_id);
+  // The author proposed middle; the floors refuse it; the client resubmits
+  // at the earned tier carrying the original proposal.
+  const made = await s.post('/api/claims', { ...PROBE_CLAIM, radial_tier: 'outer', proposed_tier: 'middle' }, 'contributor');
+  assert.equal(made.status, 201, made.body?.error);
+  const ev = (await s.get(`/api/events?claim_id=${made.body.id}`)).body.find((e) => e.action === 'claim_created');
+  const delta = JSON.parse(/(\{"proposed_tier".*\})/.exec(ev.detail)[1]);
+  assert.equal(delta.proposed_tier, 'middle');
+  assert.equal(delta.landed_tier, 'outer');
+  assert.ok(delta.floors_failed.length > 0, 'the rules computed WHY at submit');
+  assert.match(delta.floors_failed.join(' '), /source|weight|document/i, 'floors named');
+  const hist = (await s.get(`/api/claims/${made.body.id}/history`)).body;
+  const created = hist.entries.find((e) => e.kind === 'created');
+  assert.match(created.text, /Author proposed middle; floors placed outer\./, 'rendered, house pattern of failed promotions');
+  // The client sends the original proposal on override resubmits.
+  const addClaim = readFileSync(join(root, 'client', 'src', 'AddClaim.jsx'), 'utf8');
+  assert.match(addClaim, /proposed_tier/, 'AddClaim carries the author\'s original proposal');
+  // No delta proposed → the plain detail, unchanged.
+  const plain = await s.post('/api/claims', { ...PROBE_CLAIM, text: 'H13 plain probe.' }, 'contributor');
+  const plainEv = (await s.get(`/api/events?claim_id=${plain.body.id}`)).body.find((e) => e.action === 'claim_created');
+  assert.equal(plainEv.detail, 'placed at outer');
+  manager.destroy(copy.session_id);
+});
+
+await test('H14 (punch 14). session lineage: fresh sessions null, resume names the ancestor, round-trip pinned', async () => {
+  const copy = await newCopy();
+  const save = (await sb(copy.session_id).get('/save')).body;
+  // Fresh: the decorated save carries started_at with a null ancestor.
+  const fresh = decorateSave(save, { session: { started_at: '2026-08-02T12:00:00Z', resumed_from: null } });
+  assert.equal(fresh.session.resumed_from, null);
+  // Resume: the ancestor is the prior save's saved_at + fingerprint —
+  // stable, cheap, and content-derived.
+  const fp = saveFingerprint(save);
+  assert.equal(fp, saveFingerprint(save), 'fingerprint is deterministic');
+  assert.match(fp, /^[0-9a-f]{8}$/);
+  const resumed = decorateSave(save, {
+    session: { started_at: '2026-08-02T13:00:00Z', resumed_from: { saved_at: save.saved_at, fingerprint: fp } }
+  });
+  assert.equal(resumed.session.resumed_from.fingerprint, fp);
+  // Round-trip: the block survives validation and a real import.
+  assert.ok(validateSave(resumed), 'session-carrying saves validate');
+  const imported = await req('POST', '/api/sandbox/copy', { save: resumed });
+  assert.equal(imported.status, 201);
+  // A different record fingerprints differently.
+  await sb(imported.body.session_id).post('/api/claims', { ...PROBE_CLAIM, text: 'H14 divergence.' }, 'curator');
+  const save2 = (await sb(imported.body.session_id).get('/save')).body;
+  assert.notEqual(saveFingerprint(save2), fp, 'the arc is distinguishable from the snapshot');
+  // The App populates lineage at adoption (source pin).
+  const appSrc = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(appSrc, /resumed_from: \{ saved_at: save\.saved_at \?\? null, fingerprint: saveFingerprint\(save\) \}/);
+  manager.destroy(copy.session_id);
+  manager.destroy(imported.body.session_id);
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

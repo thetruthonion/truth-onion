@@ -20,8 +20,19 @@ import {
   pickAutosaveFile,
   makeSaveEngine,
   readBrowserAutosave,
-  downloadSave
+  downloadSave,
+  storeHandle,
+  loadStoredHandle,
+  handlePermissionState,
+  requestHandlePermission
 } from './autosave.js';
+import {
+  decorateSave,
+  saveFingerprint,
+  resumePlan,
+  CONTRIBUTION_ASK
+} from './sandboxState.js';
+import { recordRefusal, refusalLedger, seedRefusals } from './refusalLog.js';
 import TabBar from './Tabs.jsx';
 import SearchBox from './SearchBox.jsx';
 import { loadPanelWidth, savePanelWidth, PANEL_BOUNDS } from './uiPrefs.js';
@@ -563,6 +574,9 @@ export default function App() {
     setSbx({ sid: made.session_id, expiresAt: made.expires_at, persona: 'curator', viewCanonical: false });
     configureSandbox({ sid: made.session_id, viewCanonical: false, actor: 'curator' });
     saveEngineRef.current = makeSaveEngine({ onStatus: (s) => setSaveStatus(s) });
+    // Punch 14: a fresh copy starts the arc; resume paths overwrite this
+    // with the ancestor via applyResumePreferences.
+    sessionMeta.current = { started_at: new Date().toISOString(), resumed_from: null };
     if (prompt) setSavePrompt('offer');
   };
 
@@ -578,6 +592,27 @@ export default function App() {
     setNotice(message);
   };
 
+  // Punch 14: session lineage — a contributed save reads as an arc, not a
+  // snapshot. Fresh copies start it; resume/import name the ancestor.
+  const sessionMeta = useRef({ started_at: null, resumed_from: null });
+
+  // Punch 10/12/14: everything the save carries beyond the record —
+  // preferences, the refusals ledger, the session lineage — is added HERE,
+  // once, so the file, the mirror, and the manual download are the same
+  // artifact. Pure composition lives in sandboxState.decorateSave.
+  const currentSaveText = async (prefetched = null) => {
+    const save = prefetched ?? (await api.fetchSandboxSave());
+    return JSON.stringify(
+      decorateSave(save, {
+        autosaveMode: saveEngineRef.current?.fileMode ?? null,
+        refusals: refusalLedger(),
+        session: sessionMeta.current
+      }),
+      null,
+      2
+    );
+  };
+
   // Every successful write (api.js 'wrote' event): JOB 1 mirrors the save
   // immediately in every browser; JOB 2 keeps the file current on its
   // mode's cadence — silent debounce for a picked file, batched so a burst
@@ -589,14 +624,12 @@ export default function App() {
     try {
       const save = await api.fetchSandboxSave();
       refreshDiverged(save); // punch 9: the page affordance follows divergence
-      const text = JSON.stringify(save, null, 2);
-      engine.recordChange(text);
+      engine.recordChange(await currentSaveText(save));
       if (engine.fileMode === 'file' || engine.fileMode === 'download') {
         clearTimeout(fileWriteTimer.current);
         fileWriteTimer.current = setTimeout(
           async () => {
-            const fresh = JSON.stringify(await api.fetchSandboxSave(), null, 2);
-            await engine.writeFile(fresh);
+            await engine.writeFile(await currentSaveText());
           },
           engine.fileMode === 'file' ? 1500 : 12_000
         );
@@ -612,11 +645,41 @@ export default function App() {
     const engine = saveEngineRef.current;
     if (!engine) return;
     try {
-      const text = JSON.stringify(await api.fetchSandboxSave(), null, 2);
-      await engine.writeFile(text);
+      await engine.writeFile(await currentSaveText());
     } catch (e) {
       setSaveStatus((s) => ({ ...s, fileError: e.message }));
     }
+  };
+
+  // Punch 10: apply a resumed save's preferences — resume re-prompts
+  // nothing the browser doesn't mandate. The pure plan (sandboxState) says
+  // which single prompt, if any, this browser requires; the popover shows
+  // it with its one-line why.
+  const applyResumePreferences = async (save) => {
+    seedRefusals(save.refusals); // punch 12: the ledger accumulates across sessions
+    sessionMeta.current = {
+      started_at: new Date().toISOString(),
+      resumed_from: { saved_at: save.saved_at ?? null, fingerprint: saveFingerprint(save) }
+    };
+    const stored = fileHandlesSupported() ? await loadStoredHandle() : null;
+    const plan = resumePlan({
+      preferences: save.preferences ?? null,
+      fsaSupported: fileHandlesSupported(),
+      handleStored: !!stored,
+      handlePermission: stored ? await handlePermissionState(stored) : null
+    });
+    if (plan.prompt === 'full-setup') {
+      setSavePrompt('offer'); // no preferences in the file — the normal setup
+      return;
+    }
+    if (plan.prompt === null) {
+      saveEngineRef.current?.configureFile(
+        plan.fileMode === 'file' ? { mode: 'file', handle: stored, filename: stored?.name } : { mode: plan.fileMode }
+      );
+      return;
+    }
+    // Exactly one browser-mandated prompt, with its one-line why.
+    setSavePrompt({ kind: plan.prompt, why: plan.why, handle: stored });
   };
 
   // The api funnel's events (punch 1): copy born → adopt it, one plain
@@ -646,6 +709,16 @@ export default function App() {
     // app funnels through here; while scrubbed it refuses with the reason.
     const blocked = writeBlockedReason(scrubTs);
     if (blocked) {
+      // Punch 12: a client-side block is a refusal too — it lands in the
+      // ledger with source 'client', distinct from the rules layer's own.
+      recordRefusal({
+        action: 'write',
+        target: '(scrubbed historical view)',
+        persona: sbx.sid ? sbx.persona : null,
+        source: 'client',
+        blocker_code: 'historical_view_read_only',
+        blocker_text: blocked
+      });
       setNotice(blocked);
       return;
     }
@@ -871,9 +944,11 @@ export default function App() {
             onClick={async () => {
               try {
                 const made = await api.createSandboxCopy(resumeOffer);
-                // The mirror resumes protecting immediately; the save-first
-                // offer reappears so the FILE becomes current again too.
-                adoptCopy(made, { prompt: true });
+                // Punch 10: preferences ride the save — resume restores the
+                // record AND the autosave mode; only a browser-mandated
+                // prompt (if any) appears, with its one-line why.
+                adoptCopy(made, { prompt: false });
+                await applyResumePreferences(resumeOffer);
                 refreshDiverged(resumeOffer);
                 setResumeOffer(null);
                 await reload();
@@ -994,7 +1069,8 @@ export default function App() {
                   try {
                     const save = JSON.parse(await file.text());
                     const made = await api.createSandboxCopy(save);
-                    adoptCopy(made, { prompt: true });
+                    adoptCopy(made, { prompt: false });
+                    await applyResumePreferences(save);
                     refreshDiverged(save);
                     await reload();
                     setNotice('Save imported into a fresh private copy.');
@@ -1151,12 +1227,15 @@ export default function App() {
                           const engine = saveEngineRef.current;
                           if (!engine) return;
                           try {
-                            const text = JSON.stringify(await api.fetchSandboxSave(), null, 2);
+                            const text = await currentSaveText();
                             if (fileHandlesSupported()) {
                               const picked = await pickAutosaveFile();
                               if (!picked) return;
                               engine.configureFile({ mode: 'file', handle: picked.handle, filename: picked.filename });
                               await engine.writeFile(text);
+                              // Punch 10: the handle persists beside the
+                              // mirror so a return visit reconnects.
+                              storeHandle(picked.handle);
                               setSavePrompt(false);
                             } else {
                               downloadSave(text);
@@ -1171,6 +1250,74 @@ export default function App() {
                       </button>
                       <button className="small" onClick={() => setSavePrompt(false)}>
                         skip — every change still protected in-browser
+                      </button>
+                      {/* Punch 11: the voluntary ask — shown at the save
+                          moments, dismissible, never repeated in-session,
+                          never gating. */}
+                      {!sessionStorage.getItem('onion.ui.contribAskSeen') && (
+                        <span className="pop-text muted" style={{ fontSize: 11 }}>
+                          {CONTRIBUTION_ASK}{' '}
+                          <button
+                            className="small"
+                            onClick={(e) => {
+                              sessionStorage.setItem('onion.ui.contribAskSeen', '1');
+                              e.target.closest('span').style.display = 'none';
+                            }}
+                          >
+                            dismiss
+                          </button>
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {savePrompt?.kind === 'reconnect' && (
+                    <>
+                      <span className="pop-text">{savePrompt.why}</span>
+                      <button
+                        className="small primary"
+                        onClick={async () => {
+                          const granted = (await requestHandlePermission(savePrompt.handle)) === 'granted';
+                          if (granted) {
+                            saveEngineRef.current?.configureFile({
+                              mode: 'file',
+                              handle: savePrompt.handle,
+                              filename: savePrompt.handle?.name
+                            });
+                            setSavePrompt(false);
+                          } else {
+                            setSavePrompt('offer'); // declined: the normal setup, mirror still protecting
+                          }
+                        }}
+                      >
+                        reconnect my save file
+                      </button>
+                      <button className="small" onClick={() => setSavePrompt('offer')}>
+                        use a different save setup
+                      </button>
+                    </>
+                  )}
+                  {savePrompt?.kind === 'pick-where' && (
+                    <>
+                      <span className="pop-text">{savePrompt.why}</span>
+                      <button
+                        className="small primary"
+                        onClick={async () => {
+                          try {
+                            const picked = await pickAutosaveFile();
+                            if (!picked) return;
+                            saveEngineRef.current?.configureFile({ mode: 'file', handle: picked.handle, filename: picked.filename });
+                            await saveEngineRef.current?.writeFile(await currentSaveText());
+                            storeHandle(picked.handle);
+                            setSavePrompt(false);
+                          } catch (e) {
+                            setSaveStatus((s) => ({ ...s, fileError: e.message }));
+                          }
+                        }}
+                      >
+                        pick where
+                      </button>
+                      <button className="small" onClick={() => setSavePrompt(false)}>
+                        not now — protected in-browser meanwhile
                       </button>
                     </>
                   )}
