@@ -1,14 +1,25 @@
-// Stage 2.99a Amendment B: autosave. One save format (the server's
-// sandbox-save JSON — no forks); two labeled persistence modes:
+// Stage 2.99a Amendment B, reworked per the punch list (item 8): autosave's
+// two jobs are SPLIT and each is equalized across browsers — parity, no
+// second-class mode.
 //
-//   'file'    — File System Access API (Chromium): the visitor picks a file
-//               once; every change writes it (debounced upstream).
-//   'browser' — everywhere else: continuous persistence to localStorage
-//               (survives refresh/reopen within its limits) plus an exit
-//               nudge to download.
+//   JOB 1 — never lose work (identical everywhere): the browser-storage
+//   MIRROR writes on every change in EVERY browser, Chromium included
+//   (protects against revoked handles). Crash, refresh, TTL wipe, dropped
+//   handle: nothing lost; resume is offered on return, never auto-imported.
+//   The mirror is never the resting place — a dead demo origin strands its
+//   browser storage — the FILE is.
 //
-// A failed write surfaces immediately through onStatus — never a silent
-// stop behind a stale indicator.
+//   JOB 2 — keep the file current: 'file' (File System Access, Chromium):
+//   silent debounced writes to the picked file. 'download' (non-FSA, chosen
+//   not imposed): programmatic downloads, debounced and batched upstream so
+//   a burst of edits yields one download. 'manual': the user updates the
+//   file themselves — a staleness counter tracks how many changes the file
+//   is behind, surfaced as a badge with one-click update.
+//
+// A failed write — mirror or file — surfaces immediately through onStatus;
+// never a silent stop behind a stale indicator. Setup order (all
+// browsers): the flow opens with a real save creating the initial file;
+// autosave maintains, it never originates.
 
 export const AUTOSAVE_KEY = 'onion.sandbox.autosave';
 
@@ -31,29 +42,70 @@ export async function pickAutosaveFile(w = window) {
   }
 }
 
-// makeAutosaver({mode, handle, storage, onStatus}) → async write(text).
-// onStatus receives {ok, error?, at} after every attempt — the indicator
-// renders from it, so the indicator can never silently go stale.
-export function makeAutosaver({ mode, handle = null, storage = null, onStatus = () => {} }) {
-  return async function write(text) {
-    try {
-      if (mode === 'file') {
-        const w = await handle.createWritable();
-        await w.write(text);
-        await w.close();
-      } else if (mode === 'browser') {
-        const store = storage || localStorage;
-        store.setItem(AUTOSAVE_KEY, text);
-      } else {
-        throw new Error(`unknown autosave mode "${mode}"`);
+// The save engine. `onStatus` receives the full state after every job —
+// {fileMode, filename, behind, mirrorError, fileError} — so the indicator
+// and the failure popover render from it and can never silently go stale.
+export function makeSaveEngine({ storage = null, download = null, onStatus = () => {} } = {}) {
+  let fileMode = null; // null | 'file' | 'download' | 'manual'
+  let handle = null;
+  let filename = null;
+  let behind = 0; // changes the FILE is behind (job 2's staleness counter)
+  const store = () => storage || localStorage;
+  const dl = download || downloadSave;
+  const status = (extra = {}) => ({ fileMode, filename, behind, mirrorError: null, fileError: null, ...extra });
+
+  return {
+    // Configure job 2 after the initial save exists.
+    configureFile({ mode, handle: h = null, filename: name = null }) {
+      fileMode = mode;
+      handle = h;
+      filename = name;
+      onStatus(status());
+    },
+    // JOB 1: called on every change, every browser. Mirror first, count second.
+    recordChange(text) {
+      let mirrorError = null;
+      try {
+        store().setItem(AUTOSAVE_KEY, text);
+      } catch (e) {
+        mirrorError = e.message || String(e);
       }
-      onStatus({ ok: true, at: Date.now() });
-      return true;
-    } catch (e) {
-      // Revoked handle, storage full, anything: surfaced, plainly.
-      onStatus({ ok: false, error: e.message || String(e), at: Date.now() });
-      return false;
-    }
+      behind++;
+      const s = status({ mirrorError });
+      onStatus(s);
+      return s;
+    },
+    // JOB 2: called debounced/batched by the owner (or by the one-click
+    // update in manual mode). Resets the staleness counter on success.
+    async writeFile(text) {
+      let fileError = null;
+      try {
+        if (fileMode === 'file') {
+          const w = await handle.createWritable();
+          await w.write(text);
+          await w.close();
+        } else if (fileMode === 'download' || fileMode === 'manual') {
+          dl(text);
+        } else {
+          return status(); // no file configured — the mirror already holds it
+        }
+        behind = 0;
+      } catch (e) {
+        // Revoked handle, blocked download, anything: surfaced; the mirror
+        // (job 1) already holds the latest state, so nothing is lost.
+        fileError = e.message || String(e);
+      }
+      const s = status({ fileError });
+      onStatus(s);
+      return s;
+    },
+    get behind() {
+      return behind;
+    },
+    get fileMode() {
+      return fileMode;
+    },
+    status: () => status()
   };
 }
 
@@ -75,8 +127,10 @@ export function clearBrowserAutosave(storage = typeof localStorage !== 'undefine
   } catch {}
 }
 
-// The manual download — same artifact as the autosave (one format).
-export function downloadSave(text, doc = document) {
+// The download path — the initial save on non-FSA browsers, the batched
+// auto-update, and the one-click manual update all use this one artifact:
+// the standard save format, no forks.
+export function downloadSave(text, doc = typeof document !== 'undefined' ? document : null) {
   const blob = new Blob([text], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = doc.createElement('a');

@@ -8,6 +8,15 @@
 // looking at; these functions are the single source of that answer.
 
 export const CANONICAL_LABEL = 'canonical record';
+
+// Punch 2: the one description of what a copy IS — concrete verbs, no fog.
+export const COPY_DESCRIPTION =
+  'your own private copy — add claims, attach sources, file challenges; the rules accept or refuse them, with reasons';
+
+// Punch 1: the one-time informational sentence at copy creation —
+// non-blocking, plain, shown adjacent to where the action happened.
+export const COPY_CREATED_NOTICE =
+  `Your change landed in ${COPY_DESCRIPTION}. The shared record is untouched; save controls are in the header.`;
 export const COPY_LABEL = 'your copy — diverged from the record';
 export const COPY_SAFE_LABEL = 'canonical record — your copy is safe; switch back any time';
 
@@ -32,18 +41,25 @@ export function needsCopy({ demo = false, sid = null } = {}) {
 
 // The save-prompt message — fires at first write, the moment losable work
 // begins existing (Amendment C timing): the issue and its solution before
-// the first change is old enough to miss.
+// the first change is old enough to miss. Setup order (punch 8): a REAL
+// save first — the file is the resting place; autosave maintains it.
 export const SAVE_PROMPT_MESSAGE =
-  'This copy is ephemeral — it lives on the server for 30 idle minutes and is wiped, and nothing in it is shared or saved server-side. Set up a save now and it stays current automatically as you work.';
+  'This copy is ephemeral — it lives on the server for 30 idle minutes and is wiped, and nothing in it is shared or saved server-side. Save your copy to a file now; autosave keeps it current as you work, and an in-browser mirror protects every change meanwhile.';
 
-// Autosave mode labels (Amendment B): the two modes are never presented
-// under one unlabeled checkmark, and a write failure is never a silent
-// stop with a stale indicator.
-export function autosaveLabel({ mode = null, filename = null, error = null } = {}) {
-  if (error) return `autosave FAILED — ${error}`;
-  if (mode === 'file') return `autosaving to ${filename || 'your file'}`;
-  if (mode === 'browser') return 'autosaving in this browser — download to keep it anywhere else';
-  return 'no save set up — work in this copy can be lost';
+// Autosave labels (punch 8): equal-dignity copy — modes are stated as
+// modes, never as deficiencies; the staleness counter is first-class; a
+// write failure is never a silent stop with a stale indicator.
+export function autosaveLabel({ fileMode = null, filename = null, behind = 0, mirrorError = null, fileError = null } = {}) {
+  if (mirrorError) return `in-browser protection FAILED — ${mirrorError}`;
+  if (fileError) return `file update FAILED — ${fileError}; every change is still protected in-browser`;
+  if (fileMode === 'file') return `autosaving to ${filename || 'your file'}`;
+  if (fileMode === 'download') return `autosaving to Downloads${behind > 0 ? ` — ${behind} change${behind === 1 ? '' : 's'} pending` : ''}`;
+  if (fileMode === 'manual') {
+    return behind > 0
+      ? `protected in-browser — file ${behind} change${behind === 1 ? '' : 's'} behind`
+      : 'protected in-browser — file current';
+  }
+  return 'protected in-browser — save your copy to keep it beyond this browser';
 }
 
 // Divergence: the copy's events past the canonical record's last event id

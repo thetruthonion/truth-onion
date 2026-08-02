@@ -861,3 +861,42 @@ details[open] summary { margin-bottom: 6px; }
   font-size: 12px;
 }
 .page-link:hover { color: var(--ink); }
+
+/* ---- 2.99a punch list: header clusters + anchored popovers ---- */
+/* Punch 7: related controls group visibly; punch 3/4/6b: confirmations,
+   results, and errors anchor to the control that raised them. */
+.hdr-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--panel, #171c2b);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 260px;
+  max-width: 340px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  font-size: 12px;
+  text-align: left;
+  white-space: normal;
+}
+.popover.warn { border-color: var(--critical, #d03b3b); }
+.popover .pop-text { line-height: 1.45; }
+.hdr-feedback .popover {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}

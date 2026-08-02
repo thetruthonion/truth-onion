@@ -478,6 +478,25 @@ export function claimHistory(db, claimId) {
       detail: e.detail
     });
   }
+  // 2.99a punch 5: LIBRARY-scope withdrawal proposals/rejections carry no
+  // claim_id (they target the library entity), so the per-claim query above
+  // misses them — every claim HOLDING the source lists them here. Display
+  // must never forget what the record remembers.
+  for (const e of db
+    .prepare(
+      `SELECT * FROM events WHERE claim_id IS NULL AND action IN
+       ('withdrawal_proposed','withdrawal_rejected') ORDER BY created_at, id`
+    )
+    .all()) {
+    const m = /^library source #(\d+)/.exec(e.detail || '');
+    if (!m) continue;
+    const held = db
+      .prepare('SELECT 1 FROM claim_sources WHERE claim_id = ? AND source_id = ?')
+      .get(claimId, Number(m[1]));
+    if (held) {
+      entries.push({ at: e.created_at, kind: e.action, origin: 'log', actor: e.actor, text: e.reason, detail: e.detail });
+    }
+  }
   for (const k of claim.kernel_links) {
     if (pre(k.created_at)) {
       entries.push({

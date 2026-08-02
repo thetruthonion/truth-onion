@@ -36,7 +36,7 @@ import {
   SAVE_PROMPT_MESSAGE,
   PERSONA_SWITCH_LABEL
 } from '../client/src/sandboxState.js';
-import { makeAutosaver, readBrowserAutosave, AUTOSAVE_KEY } from '../client/src/autosave.js';
+import { makeSaveEngine, readBrowserAutosave, AUTOSAVE_KEY } from '../client/src/autosave.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = JSON.parse(readFileSync(join(root, 'exports', 'curated-record.history.json'), 'utf8'));
@@ -359,37 +359,159 @@ await test('E1. client honesty organs (pure logic): indicator, first-write inter
   assert.equal(needsCopy({ demo: true, sid: null }), true, 'first write in demo needs the copy');
   assert.equal(needsCopy({ demo: true, sid: 'x' }), false);
   assert.equal(needsCopy({ demo: false, sid: null }), false, 'the full engine never copies');
-  // Two labeled modes, never one unlabeled checkmark; failure never silent.
-  assert.match(autosaveLabel({ mode: 'file', filename: 'a.json' }), /autosaving to a\.json/);
-  assert.match(autosaveLabel({ mode: 'browser' }), /autosaving in this browser — download to keep/);
-  assert.match(autosaveLabel({}), /no save set up/);
-  assert.match(autosaveLabel({ mode: 'file', error: 'handle revoked' }), /FAILED — handle revoked/);
+  // Punch 8: equal-dignity labels — modes stated as modes, staleness
+  // first-class, failure never silent, no deficiency framing anywhere.
+  assert.match(autosaveLabel({ fileMode: 'file', filename: 'a.json' }), /autosaving to a\.json/);
+  assert.match(autosaveLabel({ fileMode: 'download' }), /autosaving to Downloads/);
+  assert.match(autosaveLabel({ fileMode: 'download', behind: 3 }), /3 changes pending/);
+  assert.match(autosaveLabel({ fileMode: 'manual', behind: 2 }), /protected in-browser — file 2 changes behind/);
+  assert.match(autosaveLabel({ fileMode: 'manual', behind: 0 }), /protected in-browser — file current/);
+  assert.match(autosaveLabel({}), /protected in-browser — save your copy/);
+  assert.match(autosaveLabel({ fileMode: 'file', fileError: 'handle revoked' }), /file update FAILED — handle revoked; every change is still protected in-browser/);
+  assert.match(autosaveLabel({ mirrorError: 'storage full' }), /in-browser protection FAILED — storage full/);
+  const appSrc = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.ok(!/does not support persistent file handles/.test(appSrc), 'no deficiency framing (punch 8)');
   assert.match(SAVE_PROMPT_MESSAGE, /ephemeral/);
-  assert.match(SAVE_PROMPT_MESSAGE, /stays current automatically/);
+  assert.match(SAVE_PROMPT_MESSAGE, /Save your copy to a file now/);
+  assert.match(SAVE_PROMPT_MESSAGE, /mirror protects every change/);
   const evs = [{ id: 12 }, { id: 13 }, { id: 14 }, { id: 20 }];
   assert.deepEqual(divergenceEvents(evs, 13).map((e) => e.id), [14, 20], 'divergence = events past the canonical baseline');
 });
 
-await test('E2. autosave writes surface failure immediately; browser mode round-trips through the standard format', async () => {
-  // Browser mode: storage-backed, readable back as the SAME save format.
+await test('E2. the save engine (punch 6+8): mirror on every change everywhere, staleness counts, failures surface, nothing lost', async () => {
   const mem = new Map();
   const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
   const statuses = [];
-  const write = makeAutosaver({ mode: 'browser', storage, onStatus: (s) => statuses.push(s) });
   const save = makeSave(canonDb);
-  assert.equal(await write(JSON.stringify(save)), true);
-  assert.equal(statuses[0].ok, true);
+  const text = JSON.stringify(save);
+
+  // JOB 1 — the mirror writes on every change, in EVERY browser class
+  // (here: no file configured at all, the skip case).
+  const bare = makeSaveEngine({ storage, onStatus: (s) => statuses.push(s) });
+  bare.recordChange(text);
+  assert.equal(mem.get(AUTOSAVE_KEY), text, 'mirror written with no file configured');
   const back = readBrowserAutosave(storage);
-  assert.equal(back.format, SAVE_FORMAT, 'the autosaved artifact IS the standard save');
-  assert.equal(validateSave(back).claims.length, save.record.claims.length, 'and it passes the standard import validation');
-  // A full store (or revoked handle): surfaced, never silent.
-  const failing = { setItem: () => { throw new Error('QuotaExceededError: storage full'); }, getItem: () => null };
-  const failStatuses = [];
-  const failWrite = makeAutosaver({ mode: 'browser', storage: failing, onStatus: (s) => failStatuses.push(s) });
-  assert.equal(await failWrite('{}'), false);
-  assert.equal(failStatuses[0].ok, false);
-  assert.match(failStatuses[0].error, /storage full/);
+  assert.equal(back.format, SAVE_FORMAT, 'the mirrored artifact IS the standard save');
+  assert.equal(validateSave(back).claims.length, save.record.claims.length, 'and passes the standard import validation');
+  assert.equal(bare.behind, 1, 'the staleness counter counts from change one');
+
+  // Chromium class: file mode ALSO mirrors (revoked-handle protection),
+  // and a revoked handle falls back to the mirror WITHOUT loss.
+  const mem2 = new Map();
+  const st2 = [];
+  const goodHandle = { createWritable: async () => ({ written: '', async write(t) { this.written = t; goodHandle.last = t; }, async close() {} }) };
+  const eng = makeSaveEngine({
+    storage: { getItem: (k) => mem2.get(k) ?? null, setItem: (k, v) => mem2.set(k, v) },
+    onStatus: (s) => st2.push(s)
+  });
+  eng.configureFile({ mode: 'file', handle: goodHandle, filename: 'save.json' });
+  eng.recordChange(text);
+  assert.equal(mem2.get(AUTOSAVE_KEY), text, 'the mirror writes even in file mode — Chromium included');
+  await eng.writeFile(text);
+  assert.equal(goodHandle.last, text, 'the picked file receives the save');
+  assert.equal(eng.behind, 0, 'file current — staleness resets');
+  // Revoke the handle: the file write fails VISIBLY, the mirror still holds
+  // the newer state — nothing lost.
+  const newer = text.replace('"version": 1', '"version": 1 ');
+  eng.recordChange(newer);
+  goodHandle.createWritable = async () => { throw new Error('NotAllowedError: handle revoked'); };
+  const failed = await eng.writeFile(newer);
+  assert.match(failed.fileError, /handle revoked/);
+  assert.equal(mem2.get(AUTOSAVE_KEY), newer, 'the mirror kept the newer state through the revocation');
+  assert.equal(st2[st2.length - 1].fileError && true, true, 'failure surfaced through status — never silent');
+
+  // Non-FSA class: download mode — the batched writer resets staleness on
+  // each (batched) download; manual mode counts until the one-click update.
+  let downloads = 0;
+  const dl = makeSaveEngine({ storage, download: () => downloads++, onStatus: () => {} });
+  dl.configureFile({ mode: 'download' });
+  dl.recordChange(text);
+  dl.recordChange(text);
+  dl.recordChange(text);
+  assert.equal(downloads, 0, 'changes alone never download — batching is the caller\'s debounce');
+  await dl.writeFile(text);
+  assert.equal(downloads, 1, 'a burst of edits yields ONE download');
+  assert.equal(dl.behind, 0);
+  dl.configureFile({ mode: 'manual' });
+  dl.recordChange(text);
+  dl.recordChange(text);
+  assert.equal(dl.behind, 2, 'manual mode: the staleness badge counts accurately');
+  await dl.writeFile(text); // the one-click update
+  assert.equal(dl.behind, 0);
+  assert.equal(downloads, 2);
+
+  // A full store: surfaced immediately and plainly.
+  const failing = makeSaveEngine({
+    storage: { setItem: () => { throw new Error('QuotaExceededError: storage full'); }, getItem: () => null },
+    onStatus: (s) => statuses.push(s)
+  });
+  const r = failing.recordChange('{}');
+  assert.match(r.mirrorError, /storage full/);
   assert.equal(AUTOSAVE_KEY, 'onion.sandbox.autosave');
+
+  // Punch 6a regression: the engine's writers are METHODS used as methods —
+  // the old bug called .write on a bare function and died at first change.
+  const appJsx = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.ok(!/autosaverRef/.test(appJsx), 'the old single-function autosaver wiring is gone');
+  assert.match(appJsx, /saveEngineRef\.current/, 'the engine is the one save path');
+});
+
+await test('E3 (punch 1). the api funnel: add-claim AND add-topic from canonical view succeed end-to-end, uninterrupted', async () => {
+  // Drive the REAL client api module against the real demo server — the
+  // exact calls AddClaim.jsx and the topic form make, no run() wrapper.
+  const apiMod = await import('../client/src/api.js');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (url, opts) => realFetch(typeof url === 'string' && url.startsWith('/') ? base + url : url, opts);
+  const events = [];
+  const off = apiMod.onSandboxEvent((e) => events.push(e.type));
+  try {
+    apiMod.configureSandbox({ demo: true, sid: null, viewCanonical: false, actor: 'curator' });
+    const claim = await apiMod.api.createClaim(PROBE_CLAIM); // first write: no halt, no refusal banner
+    assert.ok(claim.id, 'the claim landed — one uninterrupted flow');
+    assert.ok(events.includes('copy-created'), 'the copy was created transparently at that instant');
+    const topic = await apiMod.api.createTopic({ name: 'Funnel Probe Topic', description: '' });
+    assert.ok(topic.id, 'add-topic flows end-to-end too');
+    assert.ok(events.filter((t) => t === 'copy-created').length === 1, 'exactly one copy — later writes reuse it');
+    assert.ok(events.includes('wrote'), 'every successful write emits the autosave hook');
+    // The shared record never moved.
+    const canon = await (await realFetch(`${base}/api/topics`)).json();
+    assert.ok(!canon.some((t) => t.name === 'Funnel Probe Topic'), 'the canonical record is untouched');
+  } finally {
+    off();
+    apiMod.configureSandbox({ demo: false, sid: null, viewCanonical: false });
+    globalThis.fetch = realFetch;
+  }
+});
+
+await test('E4 (punch 5). rejected withdrawals render permanently: payload, history, and library scope', async () => {
+  const copy = await newCopy();
+  const s = sb(copy.session_id);
+  // Attachment-scope: contributor files, reviewer rejects.
+  await s.post('/api/claims/1/sources/1/withdraw', { reason: 'Punch-5 probe: attachment-scope attempt.' }, 'contributor');
+  await s.post('/api/claims/1/sources/1/withdraw/adjudicate', { outcome: 'rejected' }, 'reviewer');
+  const claim = (await s.get('/api/claims/1')).body;
+  const src = claim.sources.find((x) => x.id === 1);
+  assert.ok(src.rejected_withdrawals?.length === 1, 'the source row carries the attempt');
+  assert.equal(src.rejected_withdrawals[0].proposer, 'contributor', 'with the proposer');
+  assert.equal(src.rejected_withdrawals[0].adjudicator, 'reviewer', 'and the adjudicator');
+  assert.match(src.rejected_withdrawals[0].reason, /Punch-5 probe/, 'and the reasons');
+  assert.ok(src.rejected_withdrawals[0].at, 'and the timestamp');
+  const hist = (await s.get('/api/claims/1/history')).body;
+  assert.ok(hist.entries.some((e) => e.kind === 'withdrawal_proposed' && e.actor === 'contributor'), 'history lists the proposal');
+  assert.ok(hist.entries.some((e) => e.kind === 'withdrawal_rejected' && e.actor === 'reviewer'), 'history lists the rejection');
+  // Library-scope: the event carries no claim_id — every HOLDING claim
+  // still lists it (the display never forgets what the record remembers).
+  await s.post('/api/sources/2/withdraw', { reason: 'Punch-5 probe: library-scope attempt.' }, 'contributor');
+  await s.post('/api/sources/2/withdraw/adjudicate', { outcome: 'rejected' }, 'reviewer');
+  const holder = (await s.get('/api/claims/1')).body;
+  const lib = holder.sources.find((x) => x.id === 2);
+  assert.ok(lib.rejected_withdrawals?.some((r) => r.scope === 'library'), 'library-scope attempt on the source row');
+  const hist2 = (await s.get('/api/claims/1/history')).body;
+  assert.ok(
+    hist2.entries.some((e) => e.kind === 'withdrawal_rejected' && /library source #2/.test(e.detail || '')),
+    'library-scope rejection in every holding claim\'s history'
+  );
+  manager.destroy(copy.session_id);
 });
 
 await test('F1. the entry card is doors, not teaching — and no first-run surface carries a guarantee-shaped sentence', () => {
@@ -397,7 +519,12 @@ await test('F1. the entry card is doors, not teaching — and no first-run surfa
   // The minimal copy, verbatim facts: curated record; read-only; the
   // sandbox's private copy; the two doors (Amendment C reduced them).
   assert.match(app, /The curated record of three documented topics/);
-  assert.match(app, /This shared record is\s+read-only; the\s+sandbox gives you a private copy where the rules answer to you/);
+  // Punch 2: concrete verbs, no fog — everywhere the copy is described.
+  assert.match(app, /add claims, attach sources, file\s+challenges; the rules accept or refuse them, with reasons/);
+  assert.ok(!/rules answer to you/.test(app), 'the fog sentence is gone from the app');
+  const idxSrc = readFileSync(join(root, 'server', 'index.js'), 'utf8');
+  assert.match(idxSrc, /add claims, attach sources, file challenges; the rules accept or refuse them, with reasons/);
+  assert.ok(!/rules answer to you/.test(idxSrc), 'the fog sentence is gone from the refusal message');
   assert.match(app, /Explore the record/);
   assert.match(app, /Take the tour/);
   assert.ok(!app.includes('Try the sandbox'), 'Amendment C: no sandbox door — copy-on-first-write superseded it');

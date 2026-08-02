@@ -48,7 +48,7 @@ import {
 import { renderClaimPage, reviewStatus } from './claimpages.js';
 
 const DEMO_MESSAGE = () =>
-  'This shared record is read-only — your first write creates a private copy where the rules answer to you' +
+  'This shared record is read-only — your first write creates your own private copy: add claims, attach sources, file challenges; the rules accept or refuse them, with reasons' +
   (process.env.DEMO_REPO_URL ? `; clone the repo to run the full engine: ${process.env.DEMO_REPO_URL}` : '.');
 
 // 2.99a Amendment B: the in-product feedback modal and its quarantine

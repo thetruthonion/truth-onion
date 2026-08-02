@@ -146,7 +146,12 @@ export default function ClaimPanel({
     return () => {
       live = false;
     };
-  }, [claim.id, claim.challenges.length]);
+    // Punch 5: depend on the claim OBJECT — every reload is a fresh one, so
+    // an adjudication on the same claim re-fetches history immediately.
+    // The old [claim.id, challenges.length] deps missed withdrawal
+    // rejections, which change no challenge row — a stale tab displayed
+    // nothing while the log remembered.
+  }, [claim]);
   // 2.9c tabs — presentation only. Every form's state lives HERE, not in
   // the tab panes, so switching tabs never loses half-typed input, and no
   // tab ever gates or reorders data.
@@ -249,7 +254,9 @@ export default function ClaimPanel({
           },
           { key: 'sources', label: `Sources (${claim.sources.length})` },
           ...(onRings ? [{ key: 'move', label: 'Move', pending: !!(chDesc.trim() || demoteReason.trim() || promoteTo) }] : []),
-          { key: 'history', label: `History (${claim.challenges.length})` }
+          // Punch 5: the count includes rejected withdrawal attempts — the
+          // record counts them, so the label does too.
+          { key: 'history', label: `History (${claim.challenges.length + claim.sources.reduce((n, s) => n + (s.rejected_withdrawals?.length || 0), 0)})` }
         ]}
       />
 
@@ -347,6 +354,24 @@ export default function ClaimPanel({
                 <br />
                 <span className="small muted">{DEMO_UNVERIFIED_LABEL}</span>
               </>
+            )}
+            {/* Punch 5 (2.98b DoD-8): rejected attempts stay ON the source —
+                compact, expandable, permanent. */}
+            {s.rejected_withdrawals?.length > 0 && (
+              <details className="small" style={{ marginTop: 3 }}>
+                <summary className="muted" style={{ cursor: 'pointer' }}>
+                  withdrawal rejected — attempt on record
+                  {s.rejected_withdrawals.length > 1 ? ` ×${s.rejected_withdrawals.length}` : ''}
+                </summary>
+                {s.rejected_withdrawals.map((r, i) => (
+                  <div className="muted" key={i} style={{ margin: '3px 0 0 10px' }}>
+                    {r.at} · proposed by {r.proposer ?? 'unknown'} · rejected by {r.adjudicator}
+                    {r.scope === 'library' ? ' (library-wide proposal)' : ''}
+                    <br />
+                    {r.reason}
+                  </div>
+                ))}
+              </details>
             )}
           </span>
           {!demo && !s.withdrawal_proposed && (

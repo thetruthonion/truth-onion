@@ -36,9 +36,14 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 267 tests passing across twenty suites. **Stage 2.99a
-(sandbox core & personas) built 2026-08-02 — see §3.2m; the demo now has
-its participation layer, awaiting operator verification.** The
+(stage297 E7).** 269 tests passing across twenty suites. **Stage 2.99a
+(sandbox core & personas) built 2026-08-02 — see §3.2m — and the
+operator-inspection punch list executed same day (§3.2m-i): api-level
+copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
+replaced, feedback copy-box, anchored confirms and save popovers,
+rejected withdrawals permanently rendered, and the save-parity engine
+(mirror everywhere + labeled file modes). Awaiting operator verification
+in the running build.** The
 taxonomy revision moved to Stage 2.99 (operator decision 2026-07-27,
 amendment appended to the 2.9 addendum). **Release prep executed
 2026-08-01 (§3.2k): checklist items 0a–3 verified, repo initialized with a
@@ -1235,7 +1240,94 @@ multiplayer.
   (2.97 settled, poisoned-proxy pinned): parking has no epistemic
   standing, so it is not record-shaped work and never creates a copy.
 
-**Test suites (267 passing).**
+### 3.2m-i — 2.99a punch list (operator inspection, 2026-08-02)
+
+**1 — first write halted (DIAGNOSIS, as required).** The gap between the
+pinned test and the lived flow: the stage299a suite pinned the SERVER
+routes and the pure interception logic, and `run()` did intercept — but
+the add-topic and add-claim forms predate `run()` and call the api module
+directly, so they hit the shared record's 403, and AddClaim renders any
+non-422 error in the refusal-banner styling. The pin never covered "every
+client write path uses the funnel" — a UI-wrapper funnel cannot make that
+guarantee. **Fix, structural:** copy-on-first-write moved INTO api.js —
+the one client HTTP funnel — so no component can bypass it: any mutating
+/api call in demo mode creates the copy transparently (single in-flight
+guard), the write proceeds, events notify the app (copy-created /
+write-rerouted / wrote). Pinned E3 by driving the REAL api module through
+add-claim AND add-topic from canonical view, end-to-end, one copy,
+canonical untouched. Verified live in the running build: submit → claim
+placed → indicator flips → save popover + one-time plain birth notice
+adjacent to the action; no halt, no banner.
+
+**2 — fog sentence replaced** everywhere it surfaced (card, 403 refusal,
+indicator title, birth notice): "your own private copy — add claims,
+attach sources, file challenges; the rules accept or refuse them, with
+reasons." Pinned (F1: new copy present, old phrase absent).
+
+**3 — feedback is a copy box:** the header button opens an anchored
+popover — selectable address + copy button, mailto as secondary inside
+it; claim pages (pinned script-free) use a pure `<details>` popover with
+a select-all address and the mailto secondary. Nothing auto-launches.
+
+**4 — proximity:** confirms now render ANCHORED to the asking control
+(rect captured from the focused button at ask time; the old panel slot is
+the no-rect fallback); autosave failure surfaces in a popover AT the save
+cluster with the download action. **Audit of remaining distant surfaces
+(reported, not silently fixed):** run()'s success notices and the
+rules-refusal banner still render at the sidebar top — for Move-tab
+actions that is above the trigger; AddClaim's own refusals are already
+inline under its form; parking import results render in the topic panel.
+Operator call on whether the sidebar-top notice/rejection area moves too.
+
+**5 — rejected withdrawals render permanently (2.98b DoD-8).** Root
+causes found: the History tab fetched once per claim id and never
+re-fetched after an adjudication (stale display while the log
+remembered), and LIBRARY-scope withdrawal events carry no claim_id so no
+claim's history ever listed them. Fixed: history re-fetches on every
+claim reload; claimHistory folds library-scope proposals/rejections into
+every holding claim; hydrate() derives per-source `rejected_withdrawals`
+(proposer from the filing event, adjudicator from the rejection event,
+reasons, timestamps) from the event log; the source row carries the
+compact expandable "withdrawal rejected — attempt on record" marker; the
+History count includes attempts. Pinned E4, both scopes.
+
+**6 — autosave bug + surfacing.** The crash ("dt.current.write is not a
+function") was the app calling `.write()` on the autosaver, which was a
+bare function — the browser-fallback path died on its first change and
+only the corner banner knew. Superseded by the punch-8 engine (below);
+regression pinned: the old wiring is gone, the engine is the one save
+path, and the fallback write path has its own test now.
+
+**7 — header layout:** clustered — [indicator · what differs · view
+canonical], [depth · time], [persona + caption], [save status + actions +
+both save popovers], feedback at the right edge. No control removed.
+
+**8 — save first, parity split.** `makeSaveEngine` splits autosave's two
+jobs: JOB 1, the browser-storage mirror, writes on EVERY change in EVERY
+browser (Chromium included — revoked-handle protection; resume offered on
+return, never auto-imported; the mirror is never the resting place — the
+file is). JOB 2 keeps the file current per mode: 'file' (FSA, silent
+debounced 1.5s), 'download' (chosen not imposed; batched ~12s so a burst
+yields one download; numbered-copies trade-off disclosed at the choice),
+'manual' (staleness badge "file N changes behind", one-click update, exit
+nudge when behind). Setup opens with a REAL save — picker or download —
+autosave maintains, never originates; skip stays available with the
+mirror still protecting. Equal-dignity labels ("autosaving to
+{filename}" / "autosaving to Downloads" / "protected in-browser — file N
+changes behind"); deficiency framing removed and pinned absent. Pinned
+E2: mirror both classes, batching, staleness accuracy, revoked-handle
+fallback without loss, visible failure.
+
+**Verify-and-report (magnitude, NOT fixed per instruction):** the rules
+layer DOES refuse out-of-range magnitude when the vertical is directional
+and evidenced — refusal text: "Vertical magnitude must be 1, 2, or 3."
+(both at claim creation and setVertical). With direction NEUTRAL, the
+typed magnitude is normalized to 0 and never persists — the FIELD
+accepted "10000000" but the record never did. If a directional submit
+appeared to accept it, that would be a bug; it could not be reproduced —
+the likely lived case was the neutral path. Reported; nothing changed.
+
+**Test suites (269 passing).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1258,7 +1350,7 @@ multiplayer.
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
-| `stage299a` | 16 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/autosave pure logic + visible write failure, doors-not-teaching card + no guarantee-shaped copy, canonical-only pages + impermanence line |
+| `stage299a` | 18 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1508,7 +1600,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty suites, 267 tests, against the real API with the real seed, in memory.
+Twenty suites, 269 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

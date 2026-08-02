@@ -10,32 +10,78 @@ export class RuleRejection extends Error {
   }
 }
 
-// 2.99a: one switch for which record this client reads and writes — '' is
-// the canonical (read-only) record; '/sandbox/<sid>' is the visitor's
-// private copy. Writes also carry the acting persona; the server clamps it
-// to the known set and the rules layer holds the gates.
-let sandboxBase = '';
-let sandboxActor = 'curator';
-export function setSandboxBase(base) {
-  sandboxBase = base || '';
+// 2.99a (punch item 1): copy-on-first-write lives HERE, in the one client
+// HTTP funnel, so no component can bypass it — the first inspection build
+// intercepted in a UI wrapper (`run()`) that the add-topic and add-claim
+// forms never passed through, and the operator was halted by the shared
+// record's 403 wearing the refusal banner. Structural fix: every mutating
+// /api call through this module transparently creates the private copy
+// first when demo mode has none, then proceeds — one uninterrupted flow.
+//
+// State: which record this client reads and writes. '' base = the
+// canonical (read-only) record; '/sandbox/<sid>' = the visitor's private
+// copy. Writes carry the acting persona; the server clamps it to the known
+// set and the rules layer holds the gates.
+const sbx = { demo: false, sid: null, viewCanonical: false, actor: 'curator' };
+let listeners = [];
+let copyInFlight = null;
+
+export function configureSandbox({ demo, sid, viewCanonical, actor } = {}) {
+  if (demo !== undefined) sbx.demo = !!demo;
+  if (sid !== undefined) sbx.sid = sid;
+  if (viewCanonical !== undefined) sbx.viewCanonical = !!viewCanonical;
+  if (actor !== undefined) sbx.actor = actor || 'curator';
+}
+export function onSandboxEvent(fn) {
+  listeners.push(fn);
+  return () => {
+    listeners = listeners.filter((l) => l !== fn);
+  };
+}
+const emit = (e) => {
+  for (const fn of listeners) {
+    try {
+      fn(e);
+    } catch {}
+  }
+};
+// Back-compat setters (tests + call sites).
+export function setSandboxActor(actor) {
+  configureSandbox({ actor });
 }
 export function getSandboxBase() {
-  return sandboxBase;
-}
-export function setSandboxActor(actor) {
-  sandboxActor = actor || 'curator';
-}
-export function getSandboxActor() {
-  return sandboxActor;
+  return sbx.sid && !sbx.viewCanonical ? `/sandbox/${sbx.sid}` : '';
 }
 
 async function call(method, path, body) {
-  const routed = sandboxBase && path.startsWith('/api') ? `${sandboxBase}${path}` : path;
+  const mutating = method !== 'GET';
+  // Copy-on-first-write: a mutating call in demo mode with no copy makes
+  // one, transparently, and the write lands in it (Amendment C). A write
+  // while viewing canonical rejoins the copy — writes always belong to it.
+  if (mutating && sbx.demo && path.startsWith('/api') && !path.startsWith('/api/sandbox')) {
+    if (!sbx.sid) {
+      copyInFlight ??= api
+        .createSandboxCopy()
+        .finally(() => {
+          copyInFlight = null;
+        });
+      const made = await copyInFlight; // a full sandbox (503) surfaces to the caller honestly
+      if (!sbx.sid) {
+        configureSandbox({ sid: made.session_id, viewCanonical: false });
+        emit({ type: 'copy-created', made });
+      }
+    } else if (sbx.viewCanonical) {
+      configureSandbox({ viewCanonical: false });
+      emit({ type: 'write-rerouted' });
+    }
+  }
+  const base = getSandboxBase();
+  const routed = base && path.startsWith('/api') ? `${base}${path}` : path;
   const res = await fetch(routed, {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(sandboxBase ? { 'x-onion-actor': sandboxActor } : {})
+      ...(base ? { 'x-onion-actor': sbx.actor } : {})
     },
     body: body === undefined ? undefined : JSON.stringify(body)
   });
@@ -47,6 +93,7 @@ async function call(method, path, body) {
     err.status = res.status;
     throw err;
   }
+  if (mutating && base) emit({ type: 'wrote' }); // one hook for autosave: every successful change
   return json;
 }
 
@@ -101,8 +148,9 @@ export const api = {
       }
       return json;
     }),
-  // The copy's save file (path is outside /api, so no base prefixing).
-  fetchSandboxSave: () => call('GET', `${sandboxBase}/save`),
+  // The copy's save file — addressed by sid directly (outside /api, and
+  // valid even while the visitor is viewing the canonical record).
+  fetchSandboxSave: () => call('GET', `/sandbox/${sbx.sid}/save`),
   timeline: (topicId) => call('GET', `/api/topics/${topicId}/timeline`),
   topicAt: (topicId, ts) => call('GET', `/api/topics/${topicId}/at?ts=${encodeURIComponent(ts)}`),
   claimAt: (id, ts) => call('GET', `/api/claims/${id}/at?ts=${encodeURIComponent(ts)}`),

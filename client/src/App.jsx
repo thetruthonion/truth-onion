@@ -5,20 +5,20 @@ import ClaimPanel from './ClaimPanel.jsx';
 import AddClaim from './AddClaim.jsx';
 import DepthDial from './DepthDial.jsx';
 import Companion from './Companion.jsx';
-import { api, RuleRejection, setSandboxBase, setSandboxActor } from './api.js';
+import { api, RuleRejection, configureSandbox, onSandboxEvent, setSandboxActor } from './api.js';
 import {
   indicatorText,
   apiBase as sbxApiBase,
-  needsCopy,
   divergenceEvents,
   autosaveLabel,
   SAVE_PROMPT_MESSAGE,
-  PERSONA_SWITCH_LABEL
+  PERSONA_SWITCH_LABEL,
+  COPY_CREATED_NOTICE
 } from './sandboxState.js';
 import {
   fileHandlesSupported,
   pickAutosaveFile,
-  makeAutosaver,
+  makeSaveEngine,
   readBrowserAutosave,
   downloadSave
 } from './autosave.js';
@@ -85,14 +85,21 @@ export default function App() {
   const [topicTab, setTopicTab] = useState('about');
   // 2.99a (Amendment C): copy-on-first-write. The visitor browses the
   // canonical record until their first attempted write transparently
-  // creates a private session copy; the indicator is the honesty organ.
+  // creates a private session copy (interception lives in api.js — the one
+  // client HTTP funnel, punch 1); the indicator is the honesty organ.
   const [sbx, setSbx] = useState({ sid: null, expiresAt: null, persona: 'curator', viewCanonical: false });
-  const [savePrompt, setSavePrompt] = useState(false); // fires at first write
-  const [saveStatus, setSaveStatus] = useState({ mode: null, filename: null, error: null }); // autosave indicator state
-  const autosaverRef = useRef(null); // {write} — set by save setup
-  const autosaveTimer = useRef(null);
+  // Save machinery (punch 8): savePrompt is a non-blocking anchored
+  // popover — false | 'offer' | 'choose-update-mode'. saveStatus mirrors
+  // the engine's status verbatim; the label derives from it.
+  const [savePrompt, setSavePrompt] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ fileMode: null, filename: null, behind: 0, mirrorError: null, fileError: null });
+  const saveEngineRef = useRef(null); // makeSaveEngine — created with the copy; mirror runs from change one
+  const fileWriteTimer = useRef(null);
   const [diffView, setDiffView] = useState(null); // null | {events: [...]} | {loading:true}
   const canonicalMaxEvent = useRef(null); // last canonical event id, for divergence
+  const [feedbackPop, setFeedbackPop] = useState(false); // punch 3: copy box, not an app launch
+  const [feedbackCopied, setFeedbackCopied] = useState(false);
+  const [copyBirthNote, setCopyBirthNote] = useState(false); // punch 1: shown once, non-blocking
   // 2.95: topic-health readouts (aggregates only, never leaderboards).
   const [health, setHealth] = useState(null);
   // 2.96: the tour. Invite offered once (flag in onion.ui.*), re-launchable
@@ -176,6 +183,7 @@ export default function App() {
       .meta()
       .then((m) => {
         setDemo(!!m.demo_mode);
+        configureSandbox({ demo: !!m.demo_mode }); // arm the api-level first-write funnel
         if (m.demo_mode && !sessionStorage.getItem('onion.intro.seen')) {
           setShowIntro(true);
         }
@@ -196,17 +204,20 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // Amendment B: the exit nudge — browser-storage autosave is real but
-  // browser-bound; leaving is the moment to say "download to keep it".
+  // Punch 8: the exit nudge — fires when the FILE is behind the copy and
+  // no silent writer will catch it up (manual mode, no file yet, or a
+  // failing file writer). The mirror protects, but it is never the
+  // resting place — the file is.
   useEffect(() => {
-    if (saveStatus.mode !== 'browser' || !sbx.sid) return;
+    const behindAndUncaught = sbx.sid && saveStatus.behind > 0 && saveStatus.fileMode !== 'file';
+    if (!behindAndUncaught) return;
     const nudge = (e) => {
       e.preventDefault();
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', nudge);
     return () => window.removeEventListener('beforeunload', nudge);
-  }, [saveStatus.mode, sbx.sid]);
+  }, [saveStatus.behind, saveStatus.fileMode, sbx.sid]);
   const dismissIntro = () => {
     sessionStorage.setItem('onion.intro.seen', '1');
     setShowIntro(false);
@@ -502,42 +513,102 @@ export default function App() {
   // entity — link, claim, topic, source — asks first, in one consistent
   // inline bar. The confirm never bypasses anything: the frozen guard runs
   // before it, and the rules layer still decides after it.
-  const [confirmReq, setConfirmReq] = useState(null); // {message, proceed}
-  const askConfirm = (message, proceed) => setConfirmReq({ message, proceed });
+  const [confirmReq, setConfirmReq] = useState(null); // {message, proceed, rect}
+  // Punch 4 (proximity): the confirm renders ANCHORED to the control that
+  // asked. The clicked button is the focused element at ask time; its rect
+  // positions the popover. No rect (keyboard path, odd browser) → the bar
+  // falls back to its old panel slot rather than vanishing.
+  const askConfirm = (message, proceed) => {
+    let rect = null;
+    try {
+      const el = document.activeElement;
+      if (el && el.tagName === 'BUTTON') rect = el.getBoundingClientRect();
+    } catch {}
+    setConfirmReq({ message, proceed, rect });
+  };
 
   // ---- 2.99a sandbox helpers ---------------------------------------------
-  // Adopt a created/imported copy: route the api at it, default persona,
-  // fire the save prompt (first-write timing — losable work now exists).
+  // Adopt a created/imported copy: default persona, mirror active from
+  // change one (job 1 runs in EVERY browser, setup or not), and the
+  // save-first offer as a non-blocking anchored popover (punch 1/8).
   const adoptCopy = (made, { prompt = true } = {}) => {
     setSbx({ sid: made.session_id, expiresAt: made.expires_at, persona: 'curator', viewCanonical: false });
-    setSandboxBase(`/sandbox/${made.session_id}`);
-    setSandboxActor('curator');
-    if (prompt) setSavePrompt(true);
+    configureSandbox({ sid: made.session_id, viewCanonical: false, actor: 'curator' });
+    saveEngineRef.current = makeSaveEngine({ onStatus: (s) => setSaveStatus(s) });
+    if (prompt) setSavePrompt('offer');
   };
 
   // The copy expired (or the save import target vanished): say so plainly,
-  // return to the canonical record — autosaves mean the work survives.
+  // return to the canonical record — the mirror and file hold the work.
   const copyGone = (message) => {
     setSbx({ sid: null, expiresAt: null, persona: 'curator', viewCanonical: false });
-    setSandboxBase('');
-    autosaverRef.current = null;
-    setSaveStatus({ mode: null, filename: null, error: null });
+    configureSandbox({ sid: null, viewCanonical: false });
+    saveEngineRef.current = null;
+    setSaveStatus({ fileMode: null, filename: null, behind: 0, mirrorError: null, fileError: null });
+    setSavePrompt(false);
     setNotice(message);
   };
 
-  // Debounced autosave — every change writes the ONE standard save format.
-  const scheduleAutosave = () => {
-    if (!autosaverRef.current || !sbx.sid) return;
-    clearTimeout(autosaveTimer.current);
-    autosaveTimer.current = setTimeout(async () => {
-      try {
-        const save = await api.fetchSandboxSave();
-        await autosaverRef.current.write(JSON.stringify(save, null, 2));
-      } catch (e) {
-        setSaveStatus((s) => ({ ...s, error: e.message }));
+  // Every successful write (api.js 'wrote' event): JOB 1 mirrors the save
+  // immediately in every browser; JOB 2 keeps the file current on its
+  // mode's cadence — silent debounce for a picked file, batched so a burst
+  // of edits yields ONE download in download mode, nothing in manual mode
+  // (the staleness badge counts instead).
+  const onRecordChanged = async () => {
+    const engine = saveEngineRef.current;
+    if (!engine) return;
+    try {
+      const text = JSON.stringify(await api.fetchSandboxSave(), null, 2);
+      engine.recordChange(text);
+      if (engine.fileMode === 'file' || engine.fileMode === 'download') {
+        clearTimeout(fileWriteTimer.current);
+        fileWriteTimer.current = setTimeout(
+          async () => {
+            const fresh = JSON.stringify(await api.fetchSandboxSave(), null, 2);
+            await engine.writeFile(fresh);
+          },
+          engine.fileMode === 'file' ? 1500 : 12_000
+        );
       }
-    }, 1200);
+    } catch (e) {
+      setSaveStatus((s) => ({ ...s, mirrorError: e.message }));
+    }
   };
+
+  // One-click "update my file now" (manual mode's staleness badge, and the
+  // failure popover's recovery action) — the same standard artifact.
+  const updateFileNow = async () => {
+    const engine = saveEngineRef.current;
+    if (!engine) return;
+    try {
+      const text = JSON.stringify(await api.fetchSandboxSave(), null, 2);
+      await engine.writeFile(text);
+    } catch (e) {
+      setSaveStatus((s) => ({ ...s, fileError: e.message }));
+    }
+  };
+
+  // The api funnel's events (punch 1): copy born → adopt it, one plain
+  // non-blocking sentence, the save offer; write rerouted → leave canonical
+  // view; every write → the save jobs above.
+  const sbxHandlers = useRef({});
+  sbxHandlers.current = {
+    created: (made) => {
+      adoptCopy(made);
+      setCopyBirthNote(true);
+    },
+    rerouted: () => setSbx((s) => ({ ...s, viewCanonical: false })),
+    wrote: () => onRecordChanged()
+  };
+  useEffect(
+    () =>
+      onSandboxEvent((e) => {
+        if (e.type === 'copy-created') sbxHandlers.current.created(e.made);
+        else if (e.type === 'write-rerouted') sbxHandlers.current.rerouted();
+        else if (e.type === 'wrote') sbxHandlers.current.wrote();
+      }),
+    []
+  );
 
   const run = async (fn, successMsg, opts = {}) => {
     // 2.95 (pinned): a historical view NEVER writes. Every mutation in the
@@ -554,25 +625,9 @@ export default function App() {
     setRejection(null);
     setNotice(null);
     setBusy(true);
-    // Copy-on-first-write (2.99a Amendment C): in demo, the first attempted
-    // write transparently creates the private copy and the write lands in
-    // it. The cap refusal gates THIS moment — reading never consumes a
-    // session — and a full sandbox leaves reading fully available.
-    if (needsCopy({ demo, sid: sbx.sid })) {
-      try {
-        const made = await api.createSandboxCopy();
-        adoptCopy(made);
-      } catch (e) {
-        setError(e.message);
-        setBusy(false);
-        return;
-      }
-    } else if (demo && sbx.sid && sbx.viewCanonical) {
-      // Writes always belong to the copy — leave canonical viewing mode
-      // rather than letting the shared record 403 a write the copy owns.
-      setSbx((s) => ({ ...s, viewCanonical: false }));
-      setSandboxBase(sbxApiBase({ sid: sbx.sid, viewCanonical: false }));
-    }
+    // Copy-on-first-write happens INSIDE api.js (punch 1) — every mutating
+    // call through the one HTTP funnel creates the copy transparently, so
+    // nothing here (or in any other component) can halt the first write.
     try {
       const result = await fn();
       await reload();
@@ -597,7 +652,6 @@ export default function App() {
         msg += ` It now sits beyond your depth view — dial to ${depthNeededFor(moved)} to see it.`;
       }
       setNotice(msg);
-      scheduleAutosave();
     } catch (e) {
       if (e instanceof RuleRejection) setRejection(e);
       else if (e.rule === 'sandbox_gone') {
@@ -606,7 +660,6 @@ export default function App() {
         return;
       } else setError(e.message);
       await reload();
-      scheduleAutosave();
     } finally {
       setBusy(false);
     }
@@ -756,7 +809,8 @@ export default function App() {
             <p>
               The curated record of three documented topics — every claim placed by its
               evidence, debunked claims kept visible. This shared record is read-only; the
-              sandbox gives you a private copy where the rules answer to you.
+              sandbox gives you your own private copy — add claims, attach sources, file
+              challenges; the rules accept or refuse them, with reasons.
             </p>
             <div className="row">
               <button className="primary" onClick={dismissIntro}>
@@ -786,15 +840,12 @@ export default function App() {
             onClick={async () => {
               try {
                 const made = await api.createSandboxCopy(resumeOffer);
-                adoptCopy(made, { prompt: false });
-                autosaverRef.current = makeAutosaver({
-                  mode: 'browser',
-                  onStatus: (st) => setSaveStatus((s) => ({ ...s, mode: 'browser', error: st.ok ? null : st.error }))
-                });
-                setSaveStatus({ mode: 'browser', filename: null, error: null });
+                // The mirror resumes protecting immediately; the save-first
+                // offer reappears so the FILE becomes current again too.
+                adoptCopy(made, { prompt: true });
                 setResumeOffer(null);
                 await reload();
-                setNotice('Resumed from your autosave — this copy is the save, restored.');
+                setNotice('Resumed from the in-browser mirror — this copy is that save, restored.');
               } catch (e) {
                 setError(e.message);
               }
@@ -838,61 +889,63 @@ export default function App() {
             }}
             onFullSearch={runFullSearch}
           />
-          {/* 2.99a Amendment C: the indicator is the honesty organ — the
-              visitor must always know which record they are looking at. */}
+          {/* Punch 7: one cluster for which-record-am-I-seeing — the
+              indicator (the honesty organ) with its two related actions. */}
           {demo && (
-            <span
-              className="demo-badge"
-              title={
-                sbx.sid
-                  ? 'Your private copy — the same rules answer here; the shared record is untouched'
-                  : 'The shared record is read-only, refused by the server — your first write creates a private copy'
-              }
-            >
-              {indicatorText(sbx)}
+            <span className="hdr-cluster" aria-label="Record indicator">
+              <span
+                className="demo-badge"
+                title={
+                  sbx.sid
+                    ? 'Your private copy — the same rules accept or refuse your changes here; the shared record is untouched'
+                    : 'The shared record is read-only, refused by the server — your first write creates a private copy'
+                }
+              >
+                {indicatorText(sbx)}
+              </span>
+              {sbx.sid && !sbx.viewCanonical && (
+                <>
+                  <button
+                    className="small"
+                    title="What your copy changed, event by event"
+                    onClick={async () => {
+                      setDiffView({ loading: true });
+                      try {
+                        const evs = await api.events();
+                        setDiffView({ events: divergenceEvents(evs, canonicalMaxEvent.current ?? 0) });
+                      } catch (e) {
+                        setDiffView({ events: [], error: e.message });
+                      }
+                    }}
+                  >
+                    what differs
+                  </button>
+                  <button
+                    className="small"
+                    title="Browse the canonical record again — your copy stays intact"
+                    onClick={async () => {
+                      setSbx((s) => ({ ...s, viewCanonical: true }));
+                      configureSandbox({ viewCanonical: true });
+                      await reload();
+                    }}
+                  >
+                    view canonical
+                  </button>
+                </>
+              )}
+              {sbx.sid && sbx.viewCanonical && (
+                <button
+                  className="small"
+                  onClick={async () => {
+                    setSbx((s) => ({ ...s, viewCanonical: false }));
+                    configureSandbox({ viewCanonical: false });
+                    await reload();
+                  }}
+                >
+                  back to your copy
+                </button>
+              )}
             </span>
-          )}
-          {demo && sbx.sid && !sbx.viewCanonical && (
-            <>
-              <button
-                className="small"
-                title="What your copy changed, event by event"
-                onClick={async () => {
-                  setDiffView({ loading: true });
-                  try {
-                    const evs = await api.events();
-                    setDiffView({ events: divergenceEvents(evs, canonicalMaxEvent.current ?? 0) });
-                  } catch (e) {
-                    setDiffView({ events: [], error: e.message });
-                  }
-                }}
-              >
-                what differs
-              </button>
-              <button
-                className="small"
-                title="Browse the canonical record again — your copy stays intact"
-                onClick={async () => {
-                  setSbx((s) => ({ ...s, viewCanonical: true }));
-                  setSandboxBase('');
-                  await reload();
-                }}
-              >
-                view canonical
-              </button>
-            </>
-          )}
-          {demo && sbx.sid && sbx.viewCanonical && (
-            <button
-              className="small"
-              onClick={async () => {
-                setSbx((s) => ({ ...s, viewCanonical: false }));
-                setSandboxBase(sbxApiBase({ sid: sbx.sid, viewCanonical: false }));
-                await reload();
-              }}
-            >
-              back to your copy
-            </button>
           )}
           {/* Import a save into a fresh copy (round-trip pinned server-side). */}
           {demo && !sbx.sid && (
@@ -919,25 +972,59 @@ export default function App() {
               />
             </label>
           )}
-          {/* 2.99a Amendment B: feedback is a mailto — the durable in-product
-              pipe is 2.99b scope; an ephemeral DB keeps no inbox promises. */}
-          <a
-            className="primary"
-            style={{ marginLeft: !demo ? 'auto' : undefined, textDecoration: 'none' }}
-            href={`mailto:truth.onionwright@gmail.com?subject=${encodeURIComponent('[feedback] Truth Onion demo')}`}
-            title="Email the operator — opens your mail app; nothing is collected in-product"
-          >
-            ✉ feedback
-          </a>
+          {/* Punch 3: feedback is a COPY BOX, not an app launch — an
+              anchored popover with the address and a copy button; the
+              mailto stays as a secondary option inside it. Punch 7: pinned
+              to a consistent right edge. */}
+          <span className="hdr-feedback" style={{ marginLeft: 'auto', position: 'relative' }}>
+            <button
+              className="primary"
+              onClick={() => {
+                setFeedbackPop((v) => !v);
+                setFeedbackCopied(false);
+              }}
+              title="Feedback goes by email — this shows the address; nothing is collected in-product"
+            >
+              ✉ feedback
+            </button>
+            {feedbackPop && (
+              <span className="popover" role="dialog" aria-label="Feedback address">
+                <code style={{ userSelect: 'all' }}>truth.onionwright@gmail.com</code>
+                <button
+                  className="small"
+                  onClick={() =>
+                    navigator.clipboard?.writeText('truth.onionwright@gmail.com').then(
+                      () => setFeedbackCopied(true),
+                      () => setFeedbackCopied(false)
+                    )
+                  }
+                >
+                  {feedbackCopied ? '✓ copied' : 'copy'}
+                </button>
+                <a
+                  className="small"
+                  href={`mailto:truth.onionwright@gmail.com?subject=${encodeURIComponent('[feedback] Truth Onion demo')}`}
+                >
+                  open mail app
+                </a>
+                <button className="small" onClick={() => setFeedbackPop(false)}>
+                  close
+                </button>
+              </span>
+            )}
+          </span>
         </div>
         <div className="topbar-row">
-          <DepthDial depth={depth} setDepth={setDepth} />
-          <TimeScrubber
-            epoch={topicTimelineMeta?.epoch}
-            earliest={topicTimelineMeta?.earliest}
-            value={scrubTs}
-            onChange={scrubTo}
-          />
+          {/* Punch 7: depth and time travel together — one viewing cluster. */}
+          <span className="hdr-cluster" aria-label="View depth and time">
+            <DepthDial depth={depth} setDepth={setDepth} />
+            <TimeScrubber
+              epoch={topicTimelineMeta?.epoch}
+              earliest={topicTimelineMeta?.earliest}
+              value={scrubTs}
+              onChange={scrubTo}
+            />
+          </span>
           <div className="view-toggle" role="group" aria-label="View">
             <button className={view === '2d' ? 'active' : ''} onClick={() => setView('2d')}>
               2D rings
@@ -967,7 +1054,7 @@ export default function App() {
               simulated standing — the honesty label is the title AND the
               visible legend below. Gates live in the rules layer. */}
           {demo && sbx.sid && (
-            <span className="persona-switch" title={PERSONA_SWITCH_LABEL}>
+            <span className="hdr-cluster persona-switch" title={PERSONA_SWITCH_LABEL}>
               <label style={{ fontSize: 11.5, marginRight: 4 }}>acting as</label>
               <select
                 value={sbx.persona}
@@ -986,30 +1073,103 @@ export default function App() {
               </span>
             </span>
           )}
+          {/* Punch 7/8: the SAVE cluster — status label, its actions, and
+              both save popovers (setup + failure) anchored right here. */}
           {demo && sbx.sid && (
-            <span className="autosave-status" style={{ fontSize: 11.5 }} title="One save format — the autosaved file IS the standard save">
-              {saveStatus.error ? '⚠ ' : ''}
+            <span className="hdr-cluster autosave-status" style={{ fontSize: 11.5, position: 'relative' }} title="One save format — the autosaved file IS the standard save">
+              {(saveStatus.mirrorError || saveStatus.fileError) ? '⚠ ' : ''}
               {autosaveLabel(saveStatus)}
-              {!saveStatus.mode && (
-                <button className="small" style={{ marginLeft: 6 }} onClick={() => setSavePrompt(true)}>
-                  set up a save
+              {!saveStatus.fileMode && (
+                <button className="small" onClick={() => setSavePrompt('offer')}>
+                  save your copy
                 </button>
               )}
-              {saveStatus.mode === 'browser' && (
-                <button
-                  className="small"
-                  style={{ marginLeft: 6 }}
-                  title="Download the save to keep it anywhere else"
-                  onClick={async () => {
-                    try {
-                      downloadSave(JSON.stringify(await api.fetchSandboxSave(), null, 2));
-                    } catch (e) {
-                      setSaveStatus((s) => ({ ...s, error: e.message }));
-                    }
-                  }}
-                >
-                  download
+              {(saveStatus.fileMode === 'manual' || saveStatus.fileMode === 'download') && saveStatus.behind > 0 && (
+                <button className="small" title="Write the current copy to your file now (one download)" onClick={updateFileNow}>
+                  update file now
                 </button>
+              )}
+              {/* Punch 6b: failure surfaces AT the save control, with the
+                  recovery action — never a distant corner banner. */}
+              {(saveStatus.mirrorError || saveStatus.fileError) && (
+                <span className="popover warn" role="alert">
+                  {autosaveLabel(saveStatus)}
+                  <button className="small" onClick={updateFileNow}>
+                    download save now
+                  </button>
+                  <button
+                    className="small"
+                    onClick={() => setSaveStatus((s) => ({ ...s, mirrorError: null, fileError: null }))}
+                  >
+                    dismiss
+                  </button>
+                </span>
+              )}
+              {/* Punch 8: save-first setup — a real save creates the file;
+                  autosave maintains it. Non-blocking, skippable, anchored. */}
+              {savePrompt && (
+                <span className="popover" role="dialog" aria-label="Save your copy">
+                  {savePrompt === 'offer' && (
+                    <>
+                      <span className="pop-text">{SAVE_PROMPT_MESSAGE}</span>
+                      <button
+                        className="small primary"
+                        onClick={async () => {
+                          const engine = saveEngineRef.current;
+                          if (!engine) return;
+                          try {
+                            const text = JSON.stringify(await api.fetchSandboxSave(), null, 2);
+                            if (fileHandlesSupported()) {
+                              const picked = await pickAutosaveFile();
+                              if (!picked) return;
+                              engine.configureFile({ mode: 'file', handle: picked.handle, filename: picked.filename });
+                              await engine.writeFile(text);
+                              setSavePrompt(false);
+                            } else {
+                              downloadSave(text);
+                              setSavePrompt('choose-update-mode');
+                            }
+                          } catch (e) {
+                            setSaveStatus((s) => ({ ...s, fileError: e.message }));
+                          }
+                        }}
+                      >
+                        Save your copy
+                      </button>
+                      <button className="small" onClick={() => setSavePrompt(false)}>
+                        skip — every change still protected in-browser
+                      </button>
+                    </>
+                  )}
+                  {savePrompt === 'choose-update-mode' && (
+                    <>
+                      <span className="pop-text">
+                        Saved to your Downloads. Keep the file current how? Automatic updates are
+                        batched — a burst of edits yields one download — and may create numbered
+                        copies in Downloads; updating yourself keeps one file and a visible
+                        “file is N changes behind” badge with one-click update.
+                      </span>
+                      <button
+                        className="small primary"
+                        onClick={() => {
+                          saveEngineRef.current?.configureFile({ mode: 'download' });
+                          setSavePrompt(false);
+                        }}
+                      >
+                        update my file automatically
+                      </button>
+                      <button
+                        className="small"
+                        onClick={() => {
+                          saveEngineRef.current?.configureFile({ mode: 'manual' });
+                          setSavePrompt(false);
+                        }}
+                      >
+                        I’ll update it myself
+                      </button>
+                    </>
+                  )}
+                </span>
               )}
             </span>
           )}
@@ -1069,69 +1229,8 @@ export default function App() {
         </div>
       )}
 
-      {/* 2.99a Amendment B/C: the save prompt — fires at first write, the
-          moment losable work begins existing. Skippable; reachable any time
-          from the header. Two labeled modes, never one unlabeled checkmark. */}
-      {savePrompt && (
-        <div className="fullsearch-overlay" role="dialog" aria-label="Set up a save file">
-          <div className="fullsearch-panel" style={{ maxWidth: 520 }}>
-            <div className="fullsearch-head">
-              <strong>Your copy exists — set up its save</strong>
-              <button className="small" style={{ marginLeft: 'auto' }} onClick={() => setSavePrompt(false)}>
-                skip for now
-              </button>
-            </div>
-            <p className="empty" style={{ marginTop: 0 }}>{SAVE_PROMPT_MESSAGE}</p>
-            <div className="row">
-              {fileHandlesSupported() && (
-                <button
-                  className="primary"
-                  onClick={async () => {
-                    try {
-                      const picked = await pickAutosaveFile();
-                      if (!picked) return;
-                      autosaverRef.current = makeAutosaver({
-                        mode: 'file',
-                        handle: picked.handle,
-                        onStatus: (st) =>
-                          setSaveStatus((s) => ({ ...s, mode: 'file', filename: picked.filename, error: st.ok ? null : st.error }))
-                      });
-                      setSaveStatus({ mode: 'file', filename: picked.filename, error: null });
-                      setSavePrompt(false);
-                      scheduleAutosave();
-                    } catch (e) {
-                      setSaveStatus((s) => ({ ...s, error: e.message }));
-                    }
-                  }}
-                >
-                  autosave to a file (pick once)
-                </button>
-              )}
-              <button
-                className={fileHandlesSupported() ? undefined : 'primary'}
-                onClick={() => {
-                  autosaverRef.current = makeAutosaver({
-                    mode: 'browser',
-                    onStatus: (st) =>
-                      setSaveStatus((s) => ({ ...s, mode: 'browser', error: st.ok ? null : st.error }))
-                  });
-                  setSaveStatus({ mode: 'browser', filename: null, error: null });
-                  setSavePrompt(false);
-                  scheduleAutosave();
-                }}
-              >
-                autosave in this browser
-              </button>
-            </div>
-            <p className="muted" style={{ fontSize: 11.5 }}>
-              {fileHandlesSupported()
-                ? 'File autosave writes your chosen file on every change. Browser autosave survives refresh and reopen within this browser’s limits — download to keep it anywhere else.'
-                : 'This browser does not support persistent file handles, so autosave lives in browser storage — it survives refresh and reopen within its limits; download any time to keep it anywhere else.'}
-              {' '}Manual export stays available; the autosaved file IS the standard save format.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* The save prompt now lives as an anchored popover in the header's
+          save cluster (punch 1/4/8) — no modal overlay interrupts a write. */}
 
       {/* 2.99a Amendment C: the divergence view — what your copy changed. */}
       {diffView && (
@@ -1395,8 +1494,25 @@ export default function App() {
           onPointerDown={(e) => startResize('sidebar', e)}
         />
         <aside className="sidebar" style={{ width: sidebarW }}>
+          {/* Punch 4: the confirm anchors to the asking control (fixed at
+              its rect); the in-panel slot is only the no-rect fallback. */}
           {confirmReq && (
-            <div className="confirm-bar" role="alertdialog" aria-label="Confirm action">
+            <div
+              className="confirm-bar"
+              role="alertdialog"
+              aria-label="Confirm action"
+              style={
+                confirmReq.rect
+                  ? {
+                      position: 'fixed',
+                      zIndex: 60,
+                      top: Math.min(confirmReq.rect.bottom + 6, window.innerHeight - 120),
+                      left: Math.max(8, Math.min(confirmReq.rect.left, window.innerWidth - 340)),
+                      maxWidth: 330
+                    }
+                  : undefined
+              }
+            >
               <span>{confirmReq.message}</span>
               <div className="row" style={{ marginTop: 6 }}>
                 <button
@@ -1425,6 +1541,13 @@ export default function App() {
                   Its evidence currently earns: <strong>{rejection.earned_tier}</strong>.
                 </div>
               )}
+            </div>
+          )}
+          {/* Punch 1: the one-time copy-birth sentence — informational,
+              plain, non-blocking, adjacent to where actions happen. */}
+          {copyBirthNote && (
+            <div className="notice" role="status" onClick={() => setCopyBirthNote(false)}>
+              {COPY_CREATED_NOTICE}
             </div>
           )}
           {notice && <div className="notice" onClick={() => setNotice(null)}>{notice}</div>}

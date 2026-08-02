@@ -338,11 +338,17 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
     ${historyHtml}
   </section>`;
 
-  // 2.99a Amendment B: the in-product feedback pipe is gone until 2.99b
-  // can make it durable — a mailto keeps the channel open without an
-  // accept-then-lose inbox on an ephemeral database.
+  // 2.99a Amendment B + punch 3: feedback is a COPY BOX, not an app launch.
+  // Claim pages are pinned script-free, so the anchored popover is a pure
+  // <details> element: the address shown as selectable text (select-all on
+  // click via CSS user-select), the mailto kept as a secondary option
+  // inside it — nothing auto-launches a mail app.
   const feedbackMailto = `mailto:${FEEDBACK_ADDRESS}?subject=${encodeURIComponent(`[dispute] claim #${liveClaim.id} — ${truncate(liveClaim.text, 60)}`)}`;
-  const feedbackHtml = `<p class="note" id="feedback">Dispute this placement, or report a problem: <a href="${esc(feedbackMailto)}">email ${esc(FEEDBACK_ADDRESS)}</a>${process.env.DEMO_REPO_URL ? ` or open an issue on <a href="${esc(process.env.DEMO_REPO_URL)}">the public repo</a>` : ''}.</p>`;
+  const feedbackHtml = `<details class="note fb-pop" id="feedback">
+    <summary>Dispute this placement, or report a problem — feedback goes by email</summary>
+    <p style="margin:6px 0 0"><code style="user-select:all">${esc(FEEDBACK_ADDRESS)}</code> <span class="muted small">(click to select, then copy)</span></p>
+    <p class="small" style="margin:4px 0 0"><a href="${esc(feedbackMailto)}">or open your mail app</a>${process.env.DEMO_REPO_URL ? ` · <a href="${esc(process.env.DEMO_REPO_URL)}">or open an issue on the public repo</a>` : ''}</p>
+  </details>`;
 
   return `<!DOCTYPE html>
 <html lang="en">

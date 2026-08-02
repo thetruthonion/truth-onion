@@ -606,6 +606,48 @@ function hydrate(db, claim) {
         ...(proposal ? { withdrawal_proposed: proposal } : {})
       };
     });
+  // 2.99a punch 5 (2.98b DoD-8 enforcement): REJECTED withdrawal attempts
+  // are permanent record — the display must never forget what the record
+  // remembers. Derived per source from the event log: the rejection event
+  // carries the adjudicator; the latest prior proposal event for the same
+  // target carries the proposer.
+  const rejectionEvents = db
+    .prepare(
+      `SELECT id, actor, detail, reason, created_at FROM events
+       WHERE action = 'withdrawal_rejected' AND (claim_id = ? OR claim_id IS NULL)
+       ORDER BY id`
+    )
+    .all(claim.id);
+  const proposerBefore = db.prepare(
+    `SELECT actor FROM events
+     WHERE action = 'withdrawal_proposed' AND id < ?
+       AND ((claim_id = ? AND detail LIKE ?) OR (claim_id IS NULL AND detail LIKE ?))
+     ORDER BY id DESC LIMIT 1`
+  );
+  const rejectedBySource = new Map();
+  for (const e of rejectionEvents) {
+    const m = /^(library )?source #(\d+)/.exec(e.detail || '');
+    if (!m) continue;
+    const sourceId = Number(m[2]);
+    const scope = m[1] ? 'library' : 'claim';
+    if (scope === 'library') {
+      // Library-scope rejections attach to every claim holding the source;
+      // claim-scope ones carry this claim's id already (filtered above).
+      const held = db
+        .prepare('SELECT 1 FROM claim_sources WHERE claim_id = ? AND source_id = ?')
+        .get(claim.id, sourceId);
+      if (!held) continue;
+    }
+    const proposer = proposerBefore.get(e.id, claim.id, `source #${sourceId} %`, `library source #${sourceId} %`)?.actor ?? null;
+    const list = rejectedBySource.get(sourceId) ?? [];
+    list.push({ at: e.created_at, scope, adjudicator: e.actor, proposer, reason: e.reason });
+    rejectedBySource.set(sourceId, list);
+  }
+  for (const s of sources) {
+    const r = rejectedBySource.get(s.id);
+    if (r) s.rejected_withdrawals = r;
+  }
+
   // 2.98b: what left, why, and when — diminished but visible, so someone
   // can still stand up for withdrawn evidence they can see.
   const withdrawn_sources = db
