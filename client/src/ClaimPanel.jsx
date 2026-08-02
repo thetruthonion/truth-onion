@@ -93,7 +93,8 @@ export default function ClaimPanel({
   onScrubTo,
   onCompare,
   onPark, // 2.97A: (entry) => void — freeze a draft or pointer into the lot
-  resume = null // 2.97A: {form: 'challenge'|'source-attach', fields, nonce}
+  resume = null, // 2.97A: {form: 'challenge'|'source-attach', fields, nonce}
+  pageHref = (id) => `/claim/${id}` // punch 9: App routes canonical vs session pages
 }) {
   // 2.97 Amendment A: resuming a parked draft rehydrates the form exactly
   // as left — the DRAFT is frozen; the claim around it is today's record
@@ -266,24 +267,36 @@ export default function ClaimPanel({
       <p className="claim-text">{claim.text}</p>
       {reviewLine && <p className="review-line">{reviewLine}</p>}
       <div className="row" style={{ marginBottom: 6 }}>
-        {/* 2.99a Amendment C: pages render the CANONICAL record on a
-            disposable host — the affordance says so instead of implying a
-            permanence the demo can't keep. */}
-        <a className="small page-link" href={`/claim/${claim.id}`} target="_blank" rel="noreferrer" title={`This claim's shareable page — generated entirely from the record. ${PAGE_IMPERMANENCE_HINT}`}>
-          page ↗
-        </a>
-        <button
-          className="small"
-          title={PAGE_IMPERMANENCE_HINT}
-          onClick={() => {
-            navigator.clipboard?.writeText(`${window.location.origin}/claim/${claim.id}`).then(() => {
-              setLinkCopied(true);
-              setTimeout(() => setLinkCopied(false), 2500);
-            });
-          }}
-        >
-          {linkCopied ? '✓ copied' : 'copy link'}
-        </button>
+        {/* Punch 9: the affordance works for EVERY claim — canonical,
+            undiverged claims open the public page (impermanence line);
+            copy-only and diverged claims open the SESSION page, which
+            carries the not-shareable banner. Never a dead link. */}
+        {(() => {
+          const href = pageHref(claim.id);
+          const session = href.startsWith('/sandbox/');
+          const hint = session
+            ? 'Session page — renders your private copy, this browser session only, not shareable; a public address arrives when this claim is imported at multiplayer.'
+            : `This claim's shareable page — generated entirely from the record. ${PAGE_IMPERMANENCE_HINT}`;
+          return (
+            <>
+              <a className="small page-link" href={href} target="_blank" rel="noreferrer" title={hint}>
+                {session ? 'session page ↗' : 'page ↗'}
+              </a>
+              <button
+                className="small"
+                title={session ? 'Copies the session URL — it works in this browser while the copy lives; it is not shareable.' : PAGE_IMPERMANENCE_HINT}
+                onClick={() => {
+                  navigator.clipboard?.writeText(`${window.location.origin}${href}`).then(() => {
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2500);
+                  });
+                }}
+              >
+                {linkCopied ? '✓ copied' : 'copy link'}
+              </button>
+            </>
+          );
+        })()}
       </div>
       <div className="reason">
         <strong>Why it sits here:</strong> {claim.placement_reason}

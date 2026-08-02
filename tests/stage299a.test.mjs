@@ -553,20 +553,86 @@ await test('F2. the tour\'s first-write stop exists with its grounding doc, in t
   assert.match(stop.tryIt, /add claim|add a claim/i, 'the guide has the visitor attempt the write themselves');
 });
 
-await test('G1. claim pages render the canonical record only, and say what the host cannot promise', async () => {
-  // A claim that exists only in a copy has no public page.
+await test('G1. public claim pages stay canon: no copy content, impermanence line, styled blocker-naming 404', async () => {
   const copy = await newCopy();
   const made = await sb(copy.session_id).post('/api/claims', PROBE_CLAIM, 'curator');
   assert.equal(made.status, 201);
-  assert.equal((await req('GET', `/claim/${made.body.id}`)).status, 404, 'copy-only claims have no public page — links go live at multiplayer');
-  // The copy's own app never serves pages through the parent.
-  const pageViaSandbox = await fetch(`${base}/sandbox/${copy.session_id}/claim/1`);
-  assert.equal(pageViaSandbox.status, 404, 'no page route is reachable through a sandbox path');
-  // The canonical page carries the impermanence line.
+  // A copy-only claim has no PUBLIC page — and the 404 is a styled page
+  // that names the blocker, never the bare "No such claim." string.
+  const missing = await fetch(`${base}/claim/${made.body.id}`);
+  assert.equal(missing.status, 404);
+  const missingHtml = await missing.text();
+  assert.notEqual(missingHtml.trim(), 'No such claim.', 'never the bare string');
+  assert.match(missingHtml, /<html/i, 'styled page');
+  assert.match(missingHtml, /no public address until.*multiplayer|imported at multiplayer/i, 'the blocker is named');
+  assert.match(missingHtml, /Open the record/, 'a way back');
+  // The canonical page carries the impermanence line and none of the copy.
   const page = await (await fetch(`${base}/claim/1`)).text();
   assert.match(page, /temporary by design/);
   assert.match(page, /permanent claim addresses arrive with multiplayer/);
   manager.destroy(copy.session_id);
+});
+
+await test('G2 (punch 9). session claim pages: copy-only and diverged canonical claims render, honestly unshareable', async () => {
+  const copy = await newCopy();
+  const s = sb(copy.session_id);
+  const sid = copy.session_id;
+  // Diverge canonical claim 1: a rejected withdrawal (the punch's example).
+  await s.post('/api/claims/1/sources/1/withdraw', { reason: 'Punch-9 probe: divergence.' }, 'contributor');
+  await s.post('/api/claims/1/sources/1/withdraw/adjudicate', { outcome: 'rejected' }, 'reviewer');
+  // And a copy-only claim.
+  const made = await s.post('/api/claims', PROBE_CLAIM, 'curator');
+  const newId = made.body.id;
+
+  // The copy-only claim gets a session page — the standard article.
+  const copyPageRes = await fetch(`${base}/sandbox/${sid}/claim/${newId}`);
+  assert.equal(copyPageRes.status, 200);
+  assert.equal(copyPageRes.headers.get('cache-control'), 'no-store', 'session pages are never cached');
+  const copyPage = await copyPageRes.text();
+  assert.ok(copyPage.includes(PROBE_CLAIM.text), 'the copy claim renders as an article');
+  assert.match(copyPage, /This page renders your private copy — visible in this browser session only, not shareable/, 'the honest banner');
+  assert.match(copyPage, /public address arrives when this claim is imported at multiplayer/);
+  assert.ok(!/<script/i.test(copyPage), 'still a script-free document');
+  // Share/OG affordances suppressed — nothing implies a usable public link.
+  assert.ok(!copyPage.includes('og:title') && !copyPage.includes('twitter:card') && !copyPage.includes('rel="canonical"'), 'no share metadata on copy pages');
+  assert.match(copyPage, /name="robots" content="noindex"/);
+  // Internal links stay inside the session.
+  assert.ok(copyPage.includes(`/sandbox/${sid}/claim/`), 'internal links are session-scoped');
+
+  // The diverged canonical claim's SESSION page shows the copy's version…
+  const diverged = await (await fetch(`${base}/sandbox/${sid}/claim/1`)).text();
+  assert.match(diverged, /Punch-9 probe: divergence/, 'the visitor\'s rejected withdrawal renders on the session page');
+  // …while the PUBLIC page stays canon.
+  const canon = await (await fetch(`${base}/claim/1`)).text();
+  assert.ok(!canon.includes('Punch-9 probe'), 'public /claim/1 stays canon');
+
+  // Unknown id on a live session: styled, explanatory.
+  const unknown = await fetch(`${base}/sandbox/${sid}/claim/999999`);
+  assert.equal(unknown.status, 404);
+  assert.match(await unknown.text(), /No claim #999999 in your copy/);
+
+  // After expiry, the session page 404s (410) with the explanation and a
+  // way back — copies are wiped per TTL, which is why it was never
+  // shareable.
+  manager.destroy(sid);
+  const gone = await fetch(`${base}/sandbox/${sid}/claim/${newId}`);
+  assert.equal(gone.status, 410);
+  const goneHtml = await gone.text();
+  assert.match(goneHtml, /private copy that no longer exists/);
+  assert.match(goneHtml, /wiped after 30 idle minutes/);
+  assert.match(goneHtml, /Open the record/, 'a way back');
+});
+
+await test('G3 (punch 9). the in-engine affordance routes every claim to a live page — canonical vs session', async () => {
+  // The pure client routing (App passes pageHref to the panel): canonical
+  // undiverged → public; copy-only or diverged → session. No dead links.
+  const panel = readFileSync(join(root, 'client', 'src', 'ClaimPanel.jsx'), 'utf8');
+  assert.match(panel, /pageHref\(claim\.id\)/, 'the panel asks the router, never hardcodes /claim');
+  assert.match(panel, /session page ↗/, 'session pages are labeled as such');
+  assert.match(panel, /not shareable/, 'the affordance says what a session link is');
+  const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(app, /divergedIds\.has\(claimId\)/, 'diverged canonical claims route to the session page');
+  assert.match(app, /claimId > canonicalMaxClaim\.current/, 'copy-only claims route to the session page');
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

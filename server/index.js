@@ -45,7 +45,7 @@ import {
   topicStats,
   logEpoch
 } from './timemachine.js';
-import { renderClaimPage, reviewStatus } from './claimpages.js';
+import { renderClaimPage, renderNoticePage, reviewStatus, SANDBOX_PAGE_BANNER } from './claimpages.js';
 
 const DEMO_MESSAGE = () =>
   'This shared record is read-only — your first write creates your own private copy: add claims, attach sources, file challenges; the rules accept or refuse them, with reasons' +
@@ -109,6 +109,56 @@ export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, san
       if (!s) return res.status(410).json({ error: SANDBOX_GONE_MESSAGE, rule: 'sandbox_gone' });
       sandboxManager.touch(s.id);
       res.json(makeSave(s.db));
+    });
+
+    // Punch 9: session claim pages — the standard article page, rendered
+    // from the COPY's data, honestly unshareable (banner, no share
+    // metadata, links session-scoped, never cached). Every claim in the
+    // copy gets one; the public /claim route stays canon.
+    app.get('/sandbox/:sid/claim/:id', (req, res) => {
+      const s = sandboxManager.get(req.params.sid);
+      if (!s) {
+        return res.status(410).type('html').send(
+          renderNoticePage({
+            title: 'This copy has expired',
+            heading: 'This page rendered a private copy that no longer exists',
+            body:
+              'Private copies are wiped after 30 idle minutes (and on server restart) — that is the sandbox’s design, and it is why this page was never shareable. Reading the shared record is unaffected; import your save file to resume your copy.',
+            links: [
+              { href: '/', label: 'Open the record' },
+              { href: `/claim/${encodeURIComponent(req.params.id)}`, label: 'Try the public page for this id' }
+            ]
+          })
+        );
+      }
+      sandboxManager.touch(s.id);
+      const id = Number(req.params.id);
+      res.set('Cache-Control', 'no-store');
+      try {
+        if (!Number.isInteger(id)) throw new RuleError('No such claim.', { rule: 'invalid_input' });
+        const origin = process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`;
+        res.type('html').send(
+          renderClaimPage(s.db, id, {
+            origin,
+            at: req.query.at || null,
+            sandbox: { base: `/sandbox/${s.id}` }
+          })
+        );
+      } catch (e) {
+        if (e instanceof RuleError) {
+          return /timestamp/i.test(e.message)
+            ? res.status(400).send(e.message)
+            : res.status(404).type('html').send(
+                renderNoticePage({
+                  title: 'No such claim',
+                  heading: `No claim #${req.params.id} in your copy`,
+                  body: `${SANDBOX_PAGE_BANNER} This copy has no claim with that id — it may have been created in a different session, whose copy is gone.`,
+                  links: [{ href: '/', label: 'Back to the record' }]
+                })
+              );
+        }
+        throw e;
+      }
     });
 
     // Delegate the copy's API to the copy's own app — built by the SAME
@@ -343,9 +393,23 @@ export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, san
   // against page routes are refused flatly. ?at=<timestamp> renders the
   // page as it stood then — the on-page time machine, still server-side,
   // still script-free.
+  // Punch 9: the public not-found is a styled, blocker-naming page — never
+  // the bare string. It also says the one place a missing id COULD live:
+  // a private copy, which has no public address until multiplayer.
+  const missingClaimPage = (res, id) =>
+    res.status(404).type('html').send(
+      renderNoticePage({
+        title: 'No such claim',
+        heading: `No claim #${id} in this record`,
+        body:
+          'The shared record has no claim with this id. If it was created in a private sandbox copy, it exists only there — private copies have no public address until their claims are imported at multiplayer.',
+        links: [{ href: '/', label: 'Open the record' }]
+      })
+    );
+
   app.get('/claim/:id', wrap((req, res) => {
     const id = Number(req.params.id);
-    if (!Number.isInteger(id)) return res.status(404).send('No such claim.');
+    if (!Number.isInteger(id)) return missingClaimPage(res, req.params.id);
     try {
       const origin = process.env.PUBLIC_ORIGIN || `${req.protocol}://${req.get('host')}`;
       res.set('Cache-Control', 'public, max-age=60');
@@ -355,7 +419,7 @@ export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, san
         // An unreadable ?at is a bad request, not a missing claim.
         return /timestamp/i.test(e.message)
           ? res.status(400).send(e.message)
-          : res.status(404).send('No such claim.');
+          : missingClaimPage(res, id);
       }
       throw e;
     }

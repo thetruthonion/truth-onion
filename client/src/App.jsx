@@ -442,6 +442,34 @@ export default function App() {
     return idx;
   }, [topics]);
 
+  // Punch 9: which page does a claim's affordance open? Canonical,
+  // undiverged claims → the public page; copy-only claims and canonical
+  // claims the copy changed → the SESSION page (banner, unshareable —
+  // honest, and never a dead link). The baselines are captured from the
+  // first canonical load; divergence tracks the copy's own events.
+  const canonicalMaxClaim = useRef(null);
+  useEffect(() => {
+    if (demo && topics && canonicalMaxClaim.current == null && !sbx.sid) {
+      canonicalMaxClaim.current = Math.max(0, ...claimIndex.keys());
+    }
+  }, [demo, topics, claimIndex, sbx.sid]);
+  const [divergedIds, setDivergedIds] = useState(() => new Set());
+  const refreshDiverged = (save) => {
+    if (!save?.record) return;
+    const base = canonicalMaxEvent.current ?? 0;
+    const ids = new Set();
+    for (const e of save.record.events) {
+      if (e.id > base && e.claim_id != null) ids.add(e.claim_id);
+    }
+    setDivergedIds(ids);
+  };
+  const pageHref = (claimId) =>
+    sbx.sid &&
+    (divergedIds.has(claimId) ||
+      (canonicalMaxClaim.current != null && claimId > canonicalMaxClaim.current))
+      ? `/sandbox/${sbx.sid}/claim/${claimId}`
+      : `/claim/${claimId}`;
+
   // 2.95: when scrubbed, the map's claims come from the reconstructed
   // snapshot; the dial then filters THAT view — the two controls compose
   // ("Depth 3, as of last March"). Both live in App state, so the 2D/3D
@@ -546,6 +574,7 @@ export default function App() {
     saveEngineRef.current = null;
     setSaveStatus({ fileMode: null, filename: null, behind: 0, mirrorError: null, fileError: null });
     setSavePrompt(false);
+    setDivergedIds(new Set());
     setNotice(message);
   };
 
@@ -558,7 +587,9 @@ export default function App() {
     const engine = saveEngineRef.current;
     if (!engine) return;
     try {
-      const text = JSON.stringify(await api.fetchSandboxSave(), null, 2);
+      const save = await api.fetchSandboxSave();
+      refreshDiverged(save); // punch 9: the page affordance follows divergence
+      const text = JSON.stringify(save, null, 2);
       engine.recordChange(text);
       if (engine.fileMode === 'file' || engine.fileMode === 'download') {
         clearTimeout(fileWriteTimer.current);
@@ -843,6 +874,7 @@ export default function App() {
                 // The mirror resumes protecting immediately; the save-first
                 // offer reappears so the FILE becomes current again too.
                 adoptCopy(made, { prompt: true });
+                refreshDiverged(resumeOffer);
                 setResumeOffer(null);
                 await reload();
                 setNotice('Resumed from the in-browser mirror — this copy is that save, restored.');
@@ -963,6 +995,7 @@ export default function App() {
                     const save = JSON.parse(await file.text());
                     const made = await api.createSandboxCopy(save);
                     adoptCopy(made, { prompt: true });
+                    refreshDiverged(save);
                     await reload();
                     setNotice('Save imported into a fresh private copy.');
                   } catch (err) {
@@ -1636,6 +1669,7 @@ export default function App() {
               // the rules answer there. Read-only is the server's posture
               // on the shared record, no longer the panel's.
               demo={false}
+              pageHref={pageHref}
               frozen={frozen}
               onPark={parkEntry}
               resume={panelResume}

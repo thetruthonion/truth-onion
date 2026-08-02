@@ -36,7 +36,7 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 269 tests passing across twenty suites. **Stage 2.99a
+(stage297 E7).** 271 tests passing across twenty suites. **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1318,6 +1318,30 @@ changes behind"); deficiency framing removed and pinned absent. Pinned
 E2: mirror both classes, batching, staleness accuracy, revoked-handle
 fallback without loss, visible failure.
 
+**9 — sandbox claim pages: generated, session-scoped, honestly
+unshareable** (corrects the prior misreading — the page exists as part of
+the sandbox experience; only the PUBLIC address waits for multiplayer).
+`GET /sandbox/:sid/claim/:id` renders the standard article page from the
+COPY's data — every claim in the copy gets one, including the copy's
+versions of canonical claims (a diverged #1 shows the visitor's rejected
+withdrawal; public /claim/1 stays canon). All existing page rules apply
+(light/pastel, record-only, script-free, status-inseparable header) plus:
+the honest banner ("This page renders your private copy — visible in this
+browser session only, not shareable. A public address arrives when this
+claim is imported at multiplayer."), NO share metadata (no canonical/OG/
+twitter — nothing implies a usable public link; robots noindex), every
+internal link (related claims, time-machine stops, back-to-now)
+session-scoped via a basePath thread through the renderer, and
+Cache-Control no-store. The in-engine affordance routes EVERY claim to a
+live page: canonical undiverged → public page; copy-only (id past the
+canonical baseline) or diverged (claim ids on the copy's post-baseline
+events) → the session page, labeled "session page ↗" with the honest
+hint. Expired/unknown sessions answer a styled 410 naming the TTL wipe
+with a way back; the public /claim not-found is now a styled,
+blocker-naming page (never the bare "No such claim." string) that says
+where a missing id could live. Pinned G1–G3; verified live on the built
+package.
+
 **Verify-and-report (magnitude, NOT fixed per instruction):** the rules
 layer DOES refuse out-of-range magnitude when the vertical is directional
 and evidenced — refusal text: "Vertical magnitude must be 1, 2, or 3."
@@ -1327,7 +1351,7 @@ accepted "10000000" but the record never did. If a directional submit
 appeared to accept it, that would be a bug; it could not be reproduced —
 the likely lived case was the neutral path. Reported; nothing changed.
 
-**Test suites (269 passing).**
+**Test suites (271 passing).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1350,7 +1374,7 @@ the likely lived case was the neutral path. Reported; nothing changed.
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
-| `stage299a` | 18 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
+| `stage299a` | 20 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1600,7 +1624,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty suites, 269 tests, against the real API with the real seed, in memory.
+Twenty suites, 271 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

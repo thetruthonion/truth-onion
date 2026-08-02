@@ -175,7 +175,7 @@ function statusPhrase(claim) {
 // The scrubber: every recorded moment of the claim as a link. Timestamps are
 // deduped (several record rows can share one moment); each stop's ?at view
 // INCLUDES that moment's effect (claimAtTime keeps records at <= ts).
-function scrubberHtml(history, claimId, activeTs) {
+function scrubberHtml(history, claimId, activeTs, basePath = '/claim') {
   const seen = new Map(); // ts -> label of the first entry at that moment
   for (const e of history.entries) {
     if (!seen.has(e.at)) seen.set(e.at, e.kind.replace(/_/g, ' '));
@@ -183,17 +183,51 @@ function scrubberHtml(history, claimId, activeTs) {
   const stops = [...seen.entries()]
     .map(
       ([at, kind]) =>
-        `<a class="stop${at === activeTs ? ' active' : ''}" href="/claim/${claimId}?at=${encodeURIComponent(at)}"><span class="d">${esc(at)}</span><span class="k">${esc(kind)}</span></a>`
+        `<a class="stop${at === activeTs ? ' active' : ''}" href="${basePath}/${claimId}?at=${encodeURIComponent(at)}"><span class="d">${esc(at)}</span><span class="k">${esc(kind)}</span></a>`
     )
     .join('');
   return `<section class="tm">
     <h2>Time machine</h2>
     <p class="small muted" style="margin:0">Every recorded moment of this claim. Open one to read this page as it stood then — reconstructed from the record, read-only.</p>
-    <div class="tm-track">${stops}<a class="stop now${activeTs ? '' : ' active'}" href="/claim/${claimId}"><span class="d">present</span><span class="k">now</span></a></div>
+    <div class="tm-track">${stops}<a class="stop now${activeTs ? '' : ' active'}" href="${basePath}/${claimId}"><span class="d">present</span><span class="k">now</span></a></div>
   </section>`;
 }
 
-export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
+// 2.99a punch 9: the copy-page banner — the page exists as part of the
+// sandbox experience; only the PUBLIC address waits for multiplayer.
+export const SANDBOX_PAGE_BANNER =
+  'This page renders your private copy — visible in this browser session only, not shareable. A public address arrives when this claim is imported at multiplayer.';
+
+// A styled, blocker-naming notice page in the article palette — the public
+// not-found, the expired-session page, and kin. Script-free like every
+// page; never the bare "No such claim." string.
+export function renderNoticePage({ title, heading, body, links = [] }) {
+  const linkHtml = links
+    .map((l) => `<a class="cta" style="margin-right:10px" href="${esc(l.href)}">${esc(l.label)}</a>`)
+    .join('');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${esc(title)} — Truth Onion</title>
+<style>${pageCss()}</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <a class="mark" href="https://thetruthonion.org/">${logoMark()}<span class="word">Truth Onion</span></a>
+</div></header>
+<main class="wrap" style="padding-top:28px">
+  <h1 style="font-size:26px">${esc(heading)}</h1>
+  <p class="reason">${esc(body)}</p>
+  <p style="margin-top:18px">${linkHtml}</p>
+</main>
+</body>
+</html>`;
+}
+
+export function renderClaimPage(db, claimId, { origin = '', at = null, sandbox = null } = {}) {
   const liveClaim = getClaim(db, claimId);
   if (!liveClaim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
   const ts = at ? normTs(at) : null;
@@ -209,13 +243,17 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
   const review = reviewStatus(db, claimId, historical ? { upTo: ts } : {});
   const offAxis = claim.radial_tier == null;
   const phrase = statusPhrase(claim);
-  const pageUrl = `${origin}/claim/${liveClaim.id}`;
+  // Punch 9: a sandbox copy's pages live under the session path — every
+  // internal link stays inside the session, and nothing implies a usable
+  // public address.
+  const basePath = sandbox ? `${sandbox.base}/claim` : '/claim';
+  const pageUrl = `${origin}${basePath}/${liveClaim.id}`;
   const engineUrl = `${origin}/`;
 
   const relatedLink = (id) => {
     const c = getClaim(db, id);
     return c
-      ? `<a href="/claim/${c.id}">#${c.id} ${esc(truncate(c.text, 80))}</a> <span class="muted small">[${esc(c.radial_tier ?? 'off-axis')}]</span>`
+      ? `<a href="${basePath}/${c.id}">#${c.id} ${esc(truncate(c.text, 80))}</a> <span class="muted small">[${esc(c.radial_tier ?? 'off-axis')}]</span>`
       : `<span class="muted">#${id} (not in this record)</span>`;
   };
 
@@ -280,7 +318,7 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
   const historyHtml = history.entries
     .map(
       (e) =>
-        `<div class="event"><a class="ts" href="/claim/${liveClaim.id}?at=${encodeURIComponent(e.at)}">${esc(e.at)}</a> · ${esc(e.kind.replace(/_/g, ' '))}${e.from ? ` · ${esc(e.from)} → ${esc(e.to)}` : ''}${e.classification === 'superseded' ? ' · <strong>superseded by later evidence</strong>' : ''}${e.classification === 'corrected' ? ' · <strong>corrected placement</strong>' : ''}${e.origin === 'derived' ? ' · <span class="muted">derived from record, actor unknown</span>' : ''}<br><span class="small">${esc(truncate(e.text || '', 220))}</span></div>`
+        `<div class="event"><a class="ts" href="${basePath}/${liveClaim.id}?at=${encodeURIComponent(e.at)}">${esc(e.at)}</a> · ${esc(e.kind.replace(/_/g, ' '))}${e.from ? ` · ${esc(e.from)} → ${esc(e.to)}` : ''}${e.classification === 'superseded' ? ' · <strong>superseded by later evidence</strong>' : ''}${e.classification === 'corrected' ? ' · <strong>corrected placement</strong>' : ''}${e.origin === 'derived' ? ' · <span class="muted">derived from record, actor unknown</span>' : ''}<br><span class="small">${esc(truncate(e.text || '', 220))}</span></div>`
     )
     .join('');
 
@@ -295,8 +333,8 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
     ? ''
     : `<div class="hist">${
         existed
-          ? `Viewing this claim as it stood on <strong>${esc(ts)}</strong> — a reconstruction from the record, read-only. <a href="/claim/${liveClaim.id}">Return to the present</a>.`
-          : `On <strong>${esc(ts)}</strong> this claim had not yet entered the record. <a href="/claim/${liveClaim.id}">Return to the present</a>.`
+          ? `Viewing this claim as it stood on <strong>${esc(ts)}</strong> — a reconstruction from the record, read-only. <a href="${basePath}/${liveClaim.id}">Return to the present</a>.`
+          : `On <strong>${esc(ts)}</strong> this claim had not yet entered the record. <a href="${basePath}/${liveClaim.id}">Return to the present</a>.`
       }</div>${
         snap && snap.pre_epoch
           ? `<div class="hist note-incomplete">This moment predates recorded history (the log begins ${esc(snap.epoch)}). What is shown is derived from records that carry their own timestamps; this view is incomplete and says so rather than guessing.</div>`
@@ -308,7 +346,7 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
 
   const bodySections = !existed
     ? `<section><p class="muted">Nothing to show at this moment — the claim entered the record later. Use the time machine below, or return to the present.</p></section>
-       ${scrubberHtml(history, liveClaim.id, ts)}`
+       ${scrubberHtml(history, liveClaim.id, ts, basePath)}`
     : `
   <section>
     <h2>Why it sits here</h2>
@@ -316,7 +354,7 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
     ${historical ? '<p class="small muted">The record keeps only the current wording of the placement reason — the reasons that held at this moment live in the history below.</p>' : ''}
   </section>
 
-  ${scrubberHtml(history, liveClaim.id, ts)}
+  ${scrubberHtml(history, liveClaim.id, ts, basePath)}
 
   <section>
     <h2>Evidence — the case as recorded${historical ? ' at this moment' : ''}</h2>
@@ -356,7 +394,12 @@ export function renderClaimPage(db, claimId, { origin = '', at = null } = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(ogTitle)} — Truth Onion</title>
-<link rel="canonical" href="${esc(pageUrl)}">
+${
+  // Punch 9: copy pages carry NO share metadata — no canonical, no
+  // OpenGraph, no card — because nothing may imply a usable public link.
+  sandbox
+    ? '<meta name="robots" content="noindex">'
+    : `<link rel="canonical" href="${esc(pageUrl)}">
 ${historical ? '<meta name="robots" content="noindex">' : ''}
 <meta property="og:title" content="${esc(ogTitle)}">
 <meta property="og:description" content="${esc(ogDesc)}">
@@ -364,13 +407,14 @@ ${historical ? '<meta name="robots" content="noindex">' : ''}
 <meta property="og:url" content="${esc(pageUrl)}">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="${esc(ogTitle)}">
-<meta name="twitter:description" content="${esc(ogDesc)}">
+<meta name="twitter:description" content="${esc(ogDesc)}">`
+}
 <style>${pageCss()}</style>
 </head>
 <body>
 <header class="masthead"><div class="wrap">
   <a class="mark" href="https://thetruthonion.org/">${logoMark()}<span class="word">Truth Onion</span></a>
-  <nav><a href="${esc(engineUrl)}?claim=${liveClaim.id}">open the engine</a>${historical ? `<a href="/claim/${liveClaim.id}">back to now</a>` : '<a href="#feedback">feedback</a>'}</nav>
+  <nav><a href="${esc(engineUrl)}?claim=${liveClaim.id}">open the engine</a>${historical ? `<a href="${basePath}/${liveClaim.id}">back to now</a>` : '<a href="#feedback">feedback</a>'}</nav>
 </div></header>
 
 <div class="hero">
@@ -394,6 +438,7 @@ ${historical ? '<meta name="robots" content="noindex">' : ''}
 </div>
 
 <main class="wrap">
+  ${sandbox ? `<div class="hist" style="border-color:var(--indigo)">${esc(SANDBOX_PAGE_BANNER)}</div>` : ''}
   ${histBanner}
   ${existed && offAxis ? '<p class="muted">This claim cannot be resolved by documents or observation in either direction. It is never ranked proven or unproven — it sits off the evidence rings entirely.</p>' : ''}
   ${existed ? `<div class="review">${esc(review.line)}</div>` : ''}
