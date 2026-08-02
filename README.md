@@ -111,12 +111,13 @@ npm run dev     # app at http://localhost:5173, API on 3111
 The database lives at `server/data/truth-onion.db`, seeded on first run.
 Other commands:
 
-- `npm test` — the full suite: 18 files, 243 tests, run against the real API with the
+- `npm test` — the full suite: 19 files, 251 tests, run against the real API with the
   real seed, in memory. Definition-of-done, adversarial pressure, every stage's pins
   (kernel grammar, time machine, tour, parking, claim pages, record permanence), demo
   read-only enforcement, companion grounding/key privacy, the SSRF-guarded fetch proxy,
-  and the release checklist (seed curation, encoding, showcase boundary, rate limits,
-  deploy gate).
+  the release checklist (seed curation, encoding, showcase boundary, rate limits,
+  deploy gate), and the history fixture (the demo ships the real curated record with
+  its recorded timestamps — nothing re-stamped at build time).
 - `npm run build-demo` — build the read-only showcase package into `demo/`
   (hosted image: `docker build -f deploy/Dockerfile .` — see `deploy/README.md`).
 - `npm run export -- "<topic>"` / `npm run import -- <file>` — move topics through the

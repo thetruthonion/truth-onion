@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { openDb } from '../server/db.js';
 import { seed } from '../server/seed.js';
-import { importTopic } from '../server/service.js';
+import { restoreHistory } from '../server/history.js';
 import { buildApp } from '../server/index.js';
 import { SOURCE_LINKS, curatorVerified, CURATOR_VERIFIED_LABEL } from '../server/sourcelinks.js';
 import {
@@ -44,13 +44,11 @@ async function test(name, fn) {
 console.log('\nRelease checklist — curation, encoding, showcase boundary, labels, limits, deploy\n');
 
 // The shipped seed, built exactly the way scripts/build-demo.mjs builds the
-// pristine database: seed() + the versioned Replication Crisis fixture
-// imported through the rules layer, parked notes stripped.
+// pristine database: a RESTORE of the exported curated-record history
+// fixture — original timestamps, reasons, and actors verbatim (fix session
+// 2026-08-01; the restore-specific pins live in tests/history.test.mjs).
 const db = openDb(':memory:');
-seed(db);
-const rc = JSON.parse(readFileSync(join(root, 'exports', 'the-replication-crisis.json'), 'utf8'));
-rc.parked = [];
-importTopic(db, rc);
+restoreHistory(db, JSON.parse(readFileSync(join(root, 'exports', 'curated-record.history.json'), 'utf8')));
 
 const server = buildApp(db, { demo: true, rateLimit: 0 }).listen(0);
 const base = `http://localhost:${server.address().port}`;

@@ -36,7 +36,7 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 243 tests passing across eighteen suites. The
+(stage297 E7).** 251 tests passing across nineteen suites. The
 taxonomy revision moved to Stage 2.99 (operator decision 2026-07-27,
 amendment appended to the 2.9 addendum). **Release prep executed
 2026-08-01 (§3.2k): checklist items 0a–3 verified, repo initialized with a
@@ -1056,7 +1056,67 @@ database never holds strain submissions — ephemeral hosting makes that
 silent data loss. Ship-out-on-write to operator-controlled durable storage,
 or refuse honestly.
 
-**Test suites (243 passing).**
+## 3.2l Fixture history export (2026-08-01, fix session pre-2.99a)
+
+**The demo's pristine DB is now a RESTORE of the exported curated record,
+not a build-time re-seed.** The old build (seed.js + RC import at build
+time) stamped build-day timestamps over everything, so the demo's time
+machine showed a fake single-day history. Now:
+
+- **Export** (`scripts/export-history.mjs`): given topic names (default the
+  curated three), extracts the COMPLETE record from the live DB — claims,
+  sources, attachments with withdrawal state, support links, kernel links,
+  challenges, adjudications, and the full event log with original
+  timestamps, reasons, and actors — into
+  `exports/curated-record.history.json` (format `truth-onion-history`,
+  version 1). Everything else (other topics, parked notes, feedback) is
+  excluded by construction; a support link or event crossing the curation
+  boundary aborts the export rather than silently cutting. The script runs
+  the same identity bar as the repo scrub (name/email/paths — refuses on
+  hit) and reports actor values for review.
+- **Encoding corrections, disclosed:** the curl-era U+FFFD (4 kernel rows +
+  5 event reasons) is repaired at export by three deterministic context
+  rules (digit–digit → en-dash, letter's → apostrophe, space-flanked →
+  em-dash); every repaired field is listed in the fixture's `corrections`
+  array (14 fields); an unplaceable U+FFFD aborts — reported, never
+  guessed. The LIVE DB rows remain untouched (record intact).
+- **Restore** (`server/history.js` `restoreHistory`): inserts verbatim —
+  ids, timestamps, actors — inside one transaction, into an empty DB only.
+  Not a rules-layer replay (the rules already ruled on each row when it
+  happened); the schema CHECKs and triggers still stand under every
+  insert. Withdrawal state applies in two phases (attach active, then
+  update to the recorded withdrawal) so the FTS maintenance triggers see
+  the live record's own sequence. Post-restore verification: per-table
+  counts match the fixture, zero U+FFFD anywhere.
+- **Honesty preserved, verified live on the rebuilt package:** epoch
+  2026-07-27 22:19:01 (the recorded first event, as on the live DB);
+  pre-epoch entries render origin `derived` with actor null (22 derived +
+  6 logged on MKUltra); logged events keep recorded actors (`local`,
+  `claude (2.9b seeding)`); RC's pre-creation window shows the epoch
+  treatment (pre_epoch, complete:false, zero claims, the predates-recorded-
+  history note) — never blank; the operator's 2026-08-01 withdrawal of the
+  claim-20 Church Committee attachment restores withdrawn with its reason
+  verbatim, out of search, propose+adjudicate both on the record.
+- **Recorded spans** (earliest → latest per topic): MKUltra 2026-07-11
+  22:41:52 → 2026-07-28 00:54:27 · COINTELPRO 2026-07-11 22:41:52 →
+  2026-08-01 21:00:42 · The Replication Crisis 2026-07-12 02:45:11 →
+  2026-07-30 22:53:47.
+- **Judgment reported, not decided:** events 1–4 (the Stage 2.9 build-
+  verification kernel links on claim #9, created and removed 2026-07-27)
+  are INCLUDED — they are self-describing record history and they anchor
+  the epoch exactly where PROJECT-STATE records it. If the operator rules
+  them test residue, re-export excluding them moves the epoch to
+  2026-07-28 00:54:27. Event id 10 (the excluded test topic's creation)
+  leaves its id gap in the fixture — ids verbatim, never compacted.
+- Pinned in `tests/history.test.mjs` (H1–H7): double-restore identity with
+  the fixture, no build-day stamping, epoch + derived/actor-null markers,
+  per-topic scrubber spans, FFFD-free fixture with disclosed corrections,
+  withdrawal restoration, identity bar, curation boundary. Release suite
+  R1–R4/R8 now build the pristine DB the new way. seed.js is unchanged and
+  remains the fresh-engine/local-dev seed (fresh timestamps are honest
+  there — the record genuinely begins at first boot).
+
+**Test suites (251 passing).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1078,6 +1138,7 @@ or refuse honestly.
 | `companion` | 40 | Grounding, isolation, fidelity, keys, tools, search, storage |
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
+| `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1327,7 +1388,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Eighteen suites, 243 tests, against the real API with the real seed, in memory.
+Nineteen suites, 251 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

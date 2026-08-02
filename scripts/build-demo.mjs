@@ -49,29 +49,33 @@ writeFileSync(
   )
 );
 
-console.log('3/5 Building the pristine database (imports run through the rules layer)…');
+console.log('3/5 Restoring the pristine database from the curated history fixture…');
+// The pristine DB is a RESTORE of the exported curated record — original
+// timestamps, reasons, and actors preserved verbatim (fix session
+// 2026-08-01). Nothing is stamped at build time: the time machine, epoch
+// banner, and derived/log honesty markers all read real recorded time.
 const pristine = join(demo, 'data', 'pristine.db');
 rmSync(pristine, { force: true });
 process.env.ONION_DB = pristine;
 const { openDb } = await import(`file://${join(root, 'server', 'db.js').replace(/\\/g, '/')}`);
-const { importTopic } = await import(
-  `file://${join(root, 'server', 'service.js').replace(/\\/g, '/')}`
+const { restoreHistory } = await import(
+  `file://${join(root, 'server', 'history.js').replace(/\\/g, '/')}`
 );
-const { seed } = await import(`file://${join(root, 'server', 'seed.js').replace(/\\/g, '/')}`);
-const db = openDb(pristine);
-seed(db);
-const rcPath = join(root, 'exports', 'the-replication-crisis.json');
-if (!existsSync(rcPath)) {
-  console.error('exports/the-replication-crisis.json not found — export it first.');
+const fixturePath = join(root, 'exports', 'curated-record.history.json');
+if (!existsSync(fixturePath)) {
+  console.error(
+    'exports/curated-record.history.json not found — run scripts/export-history.mjs against the live DB first.'
+  );
   process.exit(1);
 }
-const rc = JSON.parse(readFileSync(rcPath, 'utf8'));
-// Parked notes are private workspace; they do not ship in a public demo.
-rc.parked = [];
-const imported = importTopic(db, rc);
+const db = openDb(pristine);
+const restored = restoreHistory(db, JSON.parse(readFileSync(fixturePath, 'utf8')));
 console.log(
-  `   Imported "${imported.topic.name}" through the rules layer: ${imported.claims} claims, ${imported.sources} sources.`
+  `   Restored ${restored.claims} claims, ${restored.sources} sources, ${restored.events} events (${restored.corrections} disclosed encoding corrections).`
 );
+for (const t of restored.topics) {
+  console.log(`   ${t.name}: recorded history ${t.lo} → ${t.hi}`);
+}
 db.close();
 
 console.log('4/5 Writing README, QUICKSTART, and run scripts…');

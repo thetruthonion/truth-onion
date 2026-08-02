@@ -12,9 +12,9 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": [
         "/c",
-        "set PATH=C:\\Program Files\\nodejs;%PATH%&& set DEMO_MODE=true&& set ONION_DB=%CD%\\demo\\data\\runtime.db&& set DEMO_PRISTINE=%CD%\\demo\\data\\pristine.db&& node demo\\app\\server\\index.js"
+        "set PATH=C:\\Program Files\\nodejs;%PATH%&& set DEMO_MODE=true&& set ONION_PORT=3199&& set ONION_DB=%CD%\\demo\\data\\runtime.db&& set DEMO_PRISTINE=%CD%\\demo\\data\\pristine.db&& node demo\\app\\server\\index.js"
       ],
-      "port": 3111
+      "port": 3199
     }
   ]
 }
