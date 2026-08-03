@@ -18,6 +18,8 @@ import {
   kernelLinkFailures,
   topicShapeFailures,
   personaGateFailures,
+  KIND_ADJUDICATION_STANDARD,
+  KIND_IMMUTABLE_MESSAGE,
   statusFor,
   truncate,
   RuleError
@@ -292,13 +294,38 @@ export function createClaim(db, p) {
   const vErr = verticalFailure(vertical, sources);
   if (vErr) throw new RuleError(vErr, { rule: 'vertical_requires_evidence' });
 
+  // 2.99b recast_of: a deliberate evidence-eligible rewording of an
+  // OFF-AXIS claim, set at creation only. Zero weight in both directions —
+  // provenance displayed honestly, contributing nothing. Distinct from a
+  // kind challenge: the challenge says this sentence was miscategorized AS
+  // WRITTEN; the recast is a different sentence. The recast never
+  // recategorizes; the challenge never rewords.
+  let recastOf = null;
+  if (p.recast_of != null) {
+    const original = getClaim(db, Number(p.recast_of));
+    if (!original) throw new RuleError('recast_of names a claim that does not exist.', { rule: 'invalid_input' });
+    if (original.kind !== 'metaphysical') {
+      throw new RuleError(
+        `recast_of names the OFF-AXIS claim this one deliberately rewords — claim #${original.id} is ${original.kind} and sits on the rings. If its kind is wrong as written, that is a kind_mismatch challenge, not a recast.`,
+        { rule: 'recast_requires_off_axis' }
+      );
+    }
+    if (p.kind === 'metaphysical') {
+      throw new RuleError(
+        'A recast is the evidence-eligible rewording — it must itself be empirical or historical, or it has recast nothing.',
+        { rule: 'recast_requires_on_axis' }
+      );
+    }
+    recastOf = original.id;
+  }
+
   return tx(db, () => {
     const { lastInsertRowid: id } = db
       .prepare(
         `INSERT INTO claims
          (topic_id, text, kind, layer, radial_tier, vertical_direction,
-          vertical_magnitude, vertical_evidenced, status, placement_reason)
-         VALUES (?,?,?,?,?,?,?,?,?,?)`
+          vertical_magnitude, vertical_evidenced, status, placement_reason, recast_of)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`
       )
       .run(
         p.topic_id,
@@ -310,7 +337,8 @@ export function createClaim(db, p) {
         vertical.magnitude,
         vertical.evidenced ? 1 : 0,
         statusFor(tier),
-        String(p.placement_reason).trim()
+        String(p.placement_reason).trim(),
+        recastOf
       );
     for (const s of sources) {
       const sourceId = s.source_id ?? findOrCreateSource(db, p.topic_id, s);
@@ -334,7 +362,7 @@ export function createClaim(db, p) {
     // floors refused (the client resubmits at the earned tier), the
     // creation event carries the delta, computed by the rules at submit,
     // same house pattern as failed promotions.
-    let createdDetail = `placed at ${tier ?? 'off-axis (metaphysical)'}`;
+    let createdDetail = `placed at ${tier ?? 'off-axis (metaphysical)'}${recastOf ? ` · recast of #${recastOf}` : ''}`;
     const proposed = p.proposed_tier && TIERS.includes(p.proposed_tier) ? p.proposed_tier : null;
     if (proposed && tier && proposed !== tier) {
       const floorsFailed = placementFailures({
@@ -660,6 +688,14 @@ export function challengeClaim(
     throw new RuleError(`Challenge type must be one of: ${CHALLENGE_TYPES.join(', ')}.`, {
       rule: 'invalid_input'
     });
+  }
+  // 2.99b: kind is upstream of tier and at least as consequential — its
+  // challenge is TWO-PHASE only, never the single-shot path.
+  if (type === 'kind_mismatch') {
+    throw new RuleError(
+      'kind_mismatch is a two-phase challenge: file a proposal (POST /api/claims/:id/kind-challenge) stating which evidence type could bear on this sentence, then adjudicate it. The single-shot challenge path never moves kind.',
+      { rule: 'kind_two_phase' }
+    );
   }
   if (!description || !String(description).trim()) {
     throw new RuleError('A challenge needs a description of what is wrong.', {
@@ -1100,6 +1136,219 @@ export function adjudicateLibraryWithdrawal(db, sourceId, { outcome, note, actor
       };
     });
     return { withdrawn_source: source.citation, affected, outcome: 'upheld' };
+  });
+}
+
+// ---- 2.99b: kind adjudication ---------------------------------------------
+// The routing decision (on-axis/off-axis) is upstream of tier and at least
+// as consequential — and until now it was fixed at write time. kind_mismatch
+// makes it contestable through the same two-phase discipline as withdrawal:
+// file with a mandatory reason (the resolvability argument), zero effect
+// until adjudication, rejected attempts permanent. Kind is otherwise as
+// immutable as claim text; there is no other mover.
+
+function kindChallengeProposer(db, claimId) {
+  const row = db
+    .prepare(
+      `SELECT actor FROM events WHERE action = 'kind_challenge_proposed' AND claim_id = ?
+       ORDER BY id DESC LIMIT 1`
+    )
+    .get(claimId);
+  return row?.actor ?? null;
+}
+
+export function proposeKindChallenge(db, claimId, { to_kind, reason, actor } = {}) {
+  const claim = getClaim(db, claimId);
+  if (!claim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
+  if (!KINDS.includes(to_kind)) {
+    throw new RuleError(`The proposed kind must be one of: ${KINDS.join(', ')}.`, { rule: 'invalid_input' });
+  }
+  if (to_kind === claim.kind) {
+    throw new RuleError(`This claim is already "${claim.kind}" — a kind challenge names a DIFFERENT kind and argues the resolvability test for it.`, { rule: 'invalid_input' });
+  }
+  if (!reason || !String(reason).trim()) {
+    throw new RuleError(
+      `A kind challenge needs its resolvability argument. ${KIND_ADJUDICATION_STANDARD}`,
+      { rule: 'kind_reason_required' }
+    );
+  }
+  if (claim.kind_proposed_at != null) {
+    throw new RuleError('A kind challenge is already pending on this claim — adjudicate it first.', { rule: 'invalid_input' });
+  }
+  return tx(db, () => {
+    db.prepare(
+      `UPDATE claims SET kind_proposed_at = datetime('now'), kind_proposed_to = ?, kind_proposed_reason = ? WHERE id = ?`
+    ).run(to_kind, String(reason).trim(), claimId);
+    logEvent(db, {
+      actor,
+      action: 'kind_challenge_proposed',
+      claim_id: claimId,
+      topic_id: claim.topic_id,
+      detail: `${claim.kind} → ${to_kind} — no effect until adjudication`,
+      reason: String(reason).trim()
+    });
+    return { claim: getClaim(db, claimId), proposed: true };
+  });
+}
+
+export function adjudicateKindChallenge(db, claimId, { outcome, note, actor } = {}) {
+  gatePersona({
+    actor,
+    operation: 'adjudicate',
+    proposer: kindChallengeProposer(db, claimId),
+    outcome
+  });
+  const claim = getClaim(db, claimId);
+  if (!claim) throw new RuleError('No such claim.', { rule: 'invalid_input' });
+  if (!['upheld', 'rejected'].includes(outcome)) {
+    throw new RuleError(`Adjudication outcome must be "upheld" or "rejected".`, { rule: 'invalid_input' });
+  }
+  if (claim.kind_proposed_at == null) {
+    throw new RuleError('No kind challenge is pending on this claim.', { rule: 'invalid_input' });
+  }
+  const from = claim.kind;
+  const to = claim.kind_proposed_to;
+  const filedReason = claim.kind_proposed_reason;
+  const extra = note && String(note).trim() ? ` — ${String(note).trim()}` : '';
+
+  return tx(db, () => {
+    const clearPending = () =>
+      db.prepare('UPDATE claims SET kind_proposed_at = NULL, kind_proposed_to = NULL, kind_proposed_reason = NULL WHERE id = ?').run(claimId);
+
+    if (outcome === 'rejected') {
+      clearPending();
+      // Permanent challenge row, like any other rejected attempt.
+      db.prepare(
+        `INSERT INTO challenges (claim_id, type, description, outcome, resulting_tier_change)
+         VALUES (?,?,?,?,?)`
+      ).run(claimId, 'kind_mismatch', `Kind challenge (${from} → ${to}) rejected: ${filedReason}`, 'rejected', `stays ${from}`);
+      logEvent(db, {
+        actor,
+        action: 'kind_challenge_rejected',
+        claim_id: claimId,
+        topic_id: claim.topic_id,
+        detail: `stays ${from}; proposed ${to}`,
+        reason: `Kind challenge ("${truncate(filedReason, 120)}") rejected by curator${extra}.`
+      });
+      return { claim: getClaim(db, claimId), outcome: 'rejected' };
+    }
+
+    // ---- upheld: the ONLY mover of kind ----
+    const severedSupports = [];
+    let affected = [];
+    let severedKernels = [];
+    let newTier = claim.radial_tier;
+
+    if (to === 'metaphysical') {
+      // On-axis → off-axis: every link touching this claim is now invalid
+      // (an off-axis claim feeds nothing and receives nothing). Kernel
+      // links first (their tier triggers would abort the update), each with
+      // its gap statement retained in the event; then support links through
+      // the recorded severance path; then dependents re-evaluate in this
+      // same transaction — the source-ripple discipline applied to kind.
+      const kernelRows = db
+        .prepare(
+          `SELECT ck.id, ck.claim_id, ck.kernel_id, ck.gap_establishes, ck.gap_asserts_beyond, ck.gap_path_inward
+           FROM claim_kernels ck WHERE ck.claim_id = ? OR ck.kernel_id = ?`
+        )
+        .all(claimId, claimId);
+      for (const l of kernelRows) {
+        db.prepare('DELETE FROM claim_kernels WHERE id = ?').run(l.id);
+        logEvent(db, {
+          actor,
+          action: 'kernel_link_removed',
+          claim_id: l.claim_id,
+          topic_id: claim.topic_id,
+          detail: `kernel was #${l.kernel_id} — establishes: ${l.gap_establishes} — asserts beyond: ${l.gap_asserts_beyond} — path inward: ${l.gap_path_inward}`,
+          reason: `Severed by upheld kind challenge on claim #${claimId} (${from} → metaphysical): an off-axis claim takes no place in any lineage.`
+        });
+        severedKernels.push({ id: l.id, claim_id: l.claim_id, kernel_id: l.kernel_id });
+      }
+      const links = db
+        .prepare('SELECT supporter_id, supported_id FROM claim_supports WHERE supporter_id = ? OR supported_id = ?')
+        .all(claimId, claimId);
+      for (const l of links) {
+        removeSupport(db, l.supporter_id, l.supported_id, {
+          reason: `Severed by upheld kind challenge on claim #${claimId} (${from} → metaphysical): off-axis claims neither give nor receive evidentiary support.`,
+          actor
+        });
+        severedSupports.push(l);
+      }
+      db.prepare(
+        `UPDATE claims SET kind = 'metaphysical', radial_tier = NULL, status = 'contested',
+           vertical_direction = 'neutral', vertical_magnitude = 0, vertical_evidenced = 0,
+           placement_reason = ? WHERE id = ?`
+      ).run(
+        `Recategorized ${from} → metaphysical via upheld kind challenge: ${filedReason} Routed off the radial axis — never ranked, rendered with this explanation.`,
+        claimId
+      );
+      clearPending();
+      newTier = null;
+      // Dependents (claims this one supported) re-evaluate NOW, in this
+      // transaction. Support links carry zero placement weight by design,
+      // so severance alone cannot demote them — the re-evaluation is the
+      // discipline, and it demotes exactly what no longer earns its tier.
+      affected = links
+        .filter((l) => l.supporter_id === claimId)
+        .map((l) => {
+          const r = reevaluateClaim(db, l.supported_id, `A supporting claim (#${claimId}) was recategorized off-axis`);
+          return { claim_id: l.supported_id, demoted: r.demoted, ...(r.demoted ? { from: r.from, to: r.to } : {}) };
+        });
+    } else if (from === 'metaphysical') {
+      // Off-axis → on-axis: ring-eligible at exactly what its attached
+      // evidence earns — no free inward movement, usually Outer/Outermost.
+      newTier = earnedTier({ kind: to, layer: claim.layer, sources: claim.sources, db, claimId });
+      db.prepare(
+        `UPDATE claims SET kind = ?, radial_tier = ?, status = ?, placement_reason = ? WHERE id = ?`
+      ).run(
+        to,
+        newTier,
+        statusFor(newTier),
+        `Arrived on-axis via upheld kind challenge (${from} → ${to}): ${filedReason} Its attached evidence currently earns ${newTier}; anything inward must survive the promotion battery like every claim.`,
+        claimId
+      );
+      clearPending();
+    } else {
+      // empirical ↔ historical: no routing change, kind corrected in place.
+      db.prepare('UPDATE claims SET kind = ?, placement_reason = ? WHERE id = ?').run(
+        to,
+        `${claim.placement_reason} [Kind corrected ${from} → ${to} via upheld kind challenge: ${filedReason}]`,
+        claimId
+      );
+      clearPending();
+    }
+
+    // The permanent challenge row + the kind_changed event (new event type,
+    // stated in the build report) — replay reconstructs the full lifecycle.
+    db.prepare(
+      `INSERT INTO challenges (claim_id, type, description, outcome, resulting_tier_change)
+       VALUES (?,?,?,?,?)`
+    ).run(
+      claimId,
+      'kind_mismatch',
+      `Kind challenge upheld (${from} → ${to}): ${filedReason}`,
+      'upheld',
+      to === 'metaphysical' ? `${claim.radial_tier} → off-axis` : from === 'metaphysical' ? `off-axis → ${newTier}` : `stays ${claim.radial_tier}`
+    );
+    logEvent(db, {
+      actor,
+      action: 'kind_changed',
+      claim_id: claimId,
+      topic_id: claim.topic_id,
+      detail: `${from} → ${to}${to === 'metaphysical' ? ` (was ${claim.radial_tier}; off-axis now)` : from === 'metaphysical' ? ` (enters at ${newTier})` : ''}`,
+      reason: `Upheld kind challenge${extra}: ${filedReason}`
+    });
+
+    const result = getClaim(db, claimId);
+    return {
+      claim: result,
+      outcome: 'upheld',
+      from_kind: from,
+      to_kind: to,
+      ...(severedKernels.length ? { severed_kernel_links: severedKernels } : {}),
+      ...(severedSupports.length ? { severed_supports: severedSupports } : {}),
+      ...(affected.length ? { affected } : {})
+    };
   });
 }
 

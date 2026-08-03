@@ -1909,6 +1909,7 @@ export default function App() {
               key={prefill?.noteId ?? 'blank'}
               topicId={topic.id}
               librarySources={topic.sources || []}
+              offAxisClaims={(topic.claims || []).filter((c) => c.radial_tier == null)}
               initialText={prefill?.text ?? ''}
               initialDraft={prefill?.draft ?? null}
               askConfirm={askConfirm}
@@ -2307,7 +2308,51 @@ export default function App() {
                         >
                           <span className={`badge layer-${c.layer}`}>{c.layer}</span>
                           <span className="badge">metaphysical</span>
+                          {c.kind_proposal && <span className="badge contested">kind challenge pending</span>}
                           <div className="claim-text">{c.text}</div>
+                          {/* 2.99b: the recast map — who reworded this into
+                              what, and where the evidence actually put it.
+                              Zero weight both ways: none of their fates
+                              moves this claim. */}
+                          {c.recasts?.length > 0 && (
+                            <div className="small muted" style={{ marginTop: 4 }}>
+                              {c.recasts.map((r) => (
+                                <div key={r.id}>
+                                  recast → #{r.id} “{r.text.slice(0, 60)}…”{' '}
+                                  <span className={`badge tier tier-${r.radial_tier ?? 'offaxis'}`}>{r.radial_tier}</span>{' '}
+                                  <span className={`badge status-${r.status}`}>{r.status}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* Contest the category from here too — the form
+                              lives in the claim panel (Move machinery), so
+                              file directly with a prompt-sized reason. */}
+                          {!demo || sbx.sid ? (
+                            <div className="small" style={{ marginTop: 4 }}>
+                              {c.kind_proposal ? (
+                                <span className="muted">pending: → {c.kind_proposal.to} — adjudicate in the record's flow</span>
+                              ) : (
+                                <button
+                                  className="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const reason = window.prompt(
+                                      'Contest this claim as EMPIRICAL. The resolvability argument: which evidence type — documents, court records, reporting, data — could bear on this exact sentence, and how?'
+                                    );
+                                    if (reason && reason.trim()) {
+                                      run(
+                                        () => api.proposeKindChallenge(c.id, 'empirical', reason.trim()),
+                                        'Kind challenge filed — zero effect until adjudication.'
+                                      );
+                                    }
+                                  }}
+                                >
+                                  contest kind → empirical
+                                </button>
+                              )}
+                            </div>
+                          ) : null}
                         </div>
                       ))}
                     </div>

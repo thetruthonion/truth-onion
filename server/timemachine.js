@@ -479,7 +479,8 @@ export function claimHistory(db, claimId) {
       `SELECT * FROM events WHERE claim_id = ? AND action IN
        ('source_attached','source_detached','kernel_link_created','kernel_link_removed',
         'support_link_added','support_link_removed','vertical_set',
-        'withdrawal_proposed','withdrawal_rejected')
+        'withdrawal_proposed','withdrawal_rejected',
+        'kind_challenge_proposed','kind_challenge_rejected','kind_changed')
        ORDER BY created_at, id`
     )
     .all(claimId)) {

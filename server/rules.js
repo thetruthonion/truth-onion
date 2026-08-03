@@ -27,9 +27,23 @@ export const CHALLENGE_TYPES = [
   'contradicting_evidence',
   'equivocation',
   'mis_tiered',
-  'layer_mismatch'
+  'layer_mismatch',
+  // 2.99b: the claim's KIND is wrong as written (empirical ↔ metaphysical
+  // ↔ historical). Two-phase only — the single-shot challenge path refuses
+  // it; see proposeKindChallenge/adjudicateKindChallenge.
+  'kind_mismatch'
 ];
 export const CHALLENGE_OUTCOMES = ['upheld', 'rejected'];
+
+// 2.99b: the adjudication standard for kind_mismatch — the gate's own
+// resolvability test, restated wherever the challenge surfaces. Not "is
+// the topic respectable," not "does evidence currently exist" — could it.
+export const KIND_ADJUDICATION_STANDARD =
+  'The resolvability test: could the tool\'s evidence types — documents, court records, reporting, data — bear on this exact sentence, in either direction? Not whether such evidence currently exists; whether it could.';
+
+// The one honest path when any other write tries to move kind.
+export const KIND_IMMUTABLE_MESSAGE =
+  'Kind changes only through an upheld kind_mismatch challenge — raise one and state which evidence type could bear on this sentence.';
 export const DIRECTIONS = ['help', 'harm', 'neutral'];
 
 export function rank(tier) {

@@ -122,6 +122,12 @@ export const api = {
   promote: (id, target_tier) => call('POST', `/api/claims/${id}/promote`, { target_tier }),
   demote: (id, payload) => call('POST', `/api/claims/${id}/demote`, payload),
   challenge: (id, payload) => call('POST', `/api/claims/${id}/challenges`, payload),
+  // 2.99b: kind adjudication — two-phase, the only mover of kind. The UI
+  // renders refusals; it never pre-decides them.
+  proposeKindChallenge: (id, to_kind, reason) =>
+    call('POST', `/api/claims/${id}/kind-challenge`, { to_kind, reason }),
+  adjudicateKindChallenge: (id, outcome) =>
+    call('POST', `/api/claims/${id}/kind-challenge/adjudicate`, { outcome }),
   addSource: (id, src) => call('POST', `/api/claims/${id}/sources`, src),
   // 2.98b Amendment A: withdrawal is two-phase — filing proposes (mandatory
   // reason, zero rule effect until adjudication), adjudication upholds or

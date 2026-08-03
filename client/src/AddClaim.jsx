@@ -25,6 +25,7 @@ const blankSource = () => ({
 export default function AddClaim({
   topicId,
   librarySources = [],
+  offAxisClaims = [], // 2.99b: recast candidates — the topic's off-axis claims
   initialText = '',
   initialDraft = null, // 2.97 Amendment A: a parked draft, rehydrated as left
   onDone,
@@ -36,6 +37,7 @@ export default function AddClaim({
   const d = initialDraft || {};
   const [text, setText] = useState(d.text ?? initialText);
   const [kind, setKind] = useState(d.kind ?? 'empirical');
+  const [recastOf, setRecastOf] = useState(d.recastOf ?? '');
   const [layer, setLayer] = useState(d.layer ?? 'factual');
   const [tier, setTier] = useState(d.tier ?? 'outer');
   const [reason, setReason] = useState(d.reason ?? '');
@@ -57,7 +59,8 @@ export default function AddClaim({
     direction,
     magnitude,
     evidenced,
-    sources
+    sources,
+    recastOf
   });
 
   const metaphysical = kind === 'metaphysical';
@@ -77,6 +80,9 @@ export default function AddClaim({
         // the earned-tier resubmit, the ORIGINAL proposal rides along so
         // the creation event records proposed-vs-landed honestly.
         proposed_tier: metaphysical ? undefined : tier,
+        // 2.99b: the recast relation — a deliberate evidence-eligible
+        // rewording of an off-axis claim. Zero weight in both directions.
+        recast_of: !metaphysical && recastOf ? Number(recastOf) : undefined,
         placement_reason: reason,
         vertical: { direction, magnitude, evidenced },
         sources: sources
@@ -112,6 +118,31 @@ export default function AddClaim({
 
       <label>Claim text — stated faithfully, as its proponents state it</label>
       <textarea value={text} onChange={(e) => setText(e.target.value)} />
+
+      {/* 2.99b: the recast relation — this claim is a DELIBERATE
+          evidence-eligible rewording of an off-axis claim. Distinct from a
+          kind challenge: the challenge says a sentence was miscategorized
+          as written; the recast is a different sentence. Zero weight both
+          ways — the original never moves with this claim's fate. */}
+      {!metaphysical && offAxisClaims.length > 0 && (
+        <>
+          <label>Recast of (optional — an off-axis claim this one deliberately rewords)</label>
+          <select value={recastOf} onChange={(e) => setRecastOf(e.target.value)}>
+            <option value="">not a recast</option>
+            {offAxisClaims.map((c) => (
+              <option key={c.id} value={c.id}>
+                #{c.id} — {c.text.slice(0, 80)}
+              </option>
+            ))}
+          </select>
+          {recastOf && (
+            <p className="muted" style={{ fontSize: 11.5 }}>
+              Provenance displayed on both pages, weight carried by neither: this claim answers to
+              the evidence axis alone, and the original's standing never moves with it.
+            </p>
+          )}
+        </>
+      )}
 
       <div className="row">
         <div>

@@ -52,16 +52,21 @@ export function restoreHistory(db, fixture) {
     const topicIns = ins('INSERT INTO topics (id, name, description) VALUES (?,?,?)');
     for (const t of fixture.topics) topicIns.run(t.id, t.name, t.description);
 
+    // 2.99b columns (pending kind challenge, recast provenance) restore
+    // verbatim; pre-2.99b fixtures simply carry nulls.
     const claimIns = ins(
       `INSERT INTO claims (id, topic_id, text, kind, layer, radial_tier, vertical_direction,
-         vertical_magnitude, vertical_evidenced, status, placement_reason, created_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+         vertical_magnitude, vertical_evidenced, status, placement_reason, created_at,
+         kind_proposed_at, kind_proposed_to, kind_proposed_reason, recast_of)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     );
     for (const c of fixture.claims) {
       claimIns.run(
         c.id, c.topic_id, c.text, c.kind, c.layer, c.radial_tier,
         c.vertical_direction, c.vertical_magnitude, c.vertical_evidenced,
-        c.status, c.placement_reason, c.created_at
+        c.status, c.placement_reason, c.created_at,
+        c.kind_proposed_at ?? null, c.kind_proposed_to ?? null, c.kind_proposed_reason ?? null,
+        c.recast_of ?? null
       );
     }
 

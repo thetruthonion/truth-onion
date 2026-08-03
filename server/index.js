@@ -15,6 +15,8 @@ import {
   adjudicateWithdrawal,
   proposeLibraryWithdrawal,
   adjudicateLibraryWithdrawal,
+  proposeKindChallenge,
+  adjudicateKindChallenge,
   addSupport,
   addKernelLink,
   getLineages,
@@ -28,7 +30,7 @@ import {
   exportTopic,
   importTopic
 } from './service.js';
-import { RuleError, TIERS, PERSONAS } from './rules.js';
+import { RuleError, TIERS, PERSONAS, KIND_IMMUTABLE_MESSAGE } from './rules.js';
 import {
   makeSave,
   SaveFormatError,
@@ -337,6 +339,17 @@ export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, san
     res.json(challengeClaim(db, Number(req.params.id), req.body));
   }));
 
+  // 2.99b: kind adjudication — two-phase, the ONLY mover of kind. File
+  // with the resolvability argument; adjudicate upheld (routing effects
+  // fire now, recorded) or rejected (permanent challenge row).
+  app.post('/api/claims/:id/kind-challenge', wrap((req, res) => {
+    res.json(proposeKindChallenge(db, Number(req.params.id), req.body || {}));
+  }));
+
+  app.post('/api/claims/:id/kind-challenge/adjudicate', wrap((req, res) => {
+    res.json(adjudicateKindChallenge(db, Number(req.params.id), req.body || {}));
+  }));
+
   app.post('/api/claims/:id/sources', wrap((req, res) => {
     res.status(201).json(addSource(db, Number(req.params.id), req.body));
   }));
@@ -483,7 +496,12 @@ export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, san
   // Claim text is immutable, and explicitly so: a tier is earned by the exact
   // sentence that survived review. If text could drift after placement, a
   // claim could earn Core saying one thing and quietly come to say another.
-  const immutable = wrap(() => {
+  // 2.99b: kind is exactly as immutable — its only mover is an upheld
+  // kind_mismatch challenge; a direct edit is refused with the honest path.
+  const immutable = wrap((req) => {
+    if (req.body && req.body.kind !== undefined) {
+      throw new RuleError(KIND_IMMUTABLE_MESSAGE, { rule: 'kind_immutable' });
+    }
     throw new RuleError(
       'Claim text is immutable — the tier was earned by this exact sentence. State the revised version as a new claim and let it earn its own placement.',
       { rule: 'text_immutable' }

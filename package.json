@@ -13,7 +13,7 @@
     "import": "node server/import-cli.js",
     "build": "vite build",
     "build-demo": "node scripts/build-demo.mjs",
-    "test": "node tests/dod.test.mjs && node tests/pressure.test.mjs && node tests/stage2.test.mjs && node tests/stage25.test.mjs && node tests/stage29.test.mjs && node tests/stage29b.test.mjs && node tests/stage29c.test.mjs && node tests/stage29d.test.mjs && node tests/stage29e.test.mjs && node tests/stage295.test.mjs && node tests/stage296.test.mjs && node tests/stage297.test.mjs && node tests/stage298.test.mjs && node tests/stage298b.test.mjs && node tests/demo.test.mjs && node tests/companion.test.mjs && node tests/fetchproxy.test.mjs && node tests/release.test.mjs && node tests/history.test.mjs && node tests/stage299a.test.mjs"
+    "test": "node tests/dod.test.mjs && node tests/pressure.test.mjs && node tests/stage2.test.mjs && node tests/stage25.test.mjs && node tests/stage29.test.mjs && node tests/stage29b.test.mjs && node tests/stage29c.test.mjs && node tests/stage29d.test.mjs && node tests/stage29e.test.mjs && node tests/stage295.test.mjs && node tests/stage296.test.mjs && node tests/stage297.test.mjs && node tests/stage298.test.mjs && node tests/stage298b.test.mjs && node tests/demo.test.mjs && node tests/companion.test.mjs && node tests/fetchproxy.test.mjs && node tests/release.test.mjs && node tests/history.test.mjs && node tests/stage299a.test.mjs && node tests/stage299b.test.mjs"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",

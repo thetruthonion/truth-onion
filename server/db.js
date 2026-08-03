@@ -34,6 +34,15 @@ CREATE TABLE IF NOT EXISTS claims (
   status TEXT NOT NULL CHECK (status IN ('confirmed','contested','refuted')),
   placement_reason TEXT NOT NULL CHECK (length(trim(placement_reason)) > 0),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- 2.99b: a PENDING kind_mismatch challenge (two-phase, zero effect until
+  -- adjudication — the rules read the kind column alone, never these).
+  kind_proposed_at TEXT,
+  kind_proposed_to TEXT,
+  kind_proposed_reason TEXT,
+  -- 2.99b: the recast relation — this claim is a deliberate evidence-
+  -- eligible rewording of an off-axis claim. Zero weight in both
+  -- directions; provenance displayed honestly, contributing nothing.
+  recast_of INTEGER REFERENCES claims(id),
   -- Rule: metaphysical claims cannot take a radial tier; everything else must.
   CHECK ((kind = 'metaphysical') = (radial_tier IS NULL)),
   -- Rule: moral & framing claims cannot occupy Core.
@@ -96,7 +105,7 @@ CREATE TABLE IF NOT EXISTS challenges (
   id INTEGER PRIMARY KEY,
   claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN
-    ('bad_source','contradicting_evidence','equivocation','mis_tiered','layer_mismatch')),
+    ('bad_source','contradicting_evidence','equivocation','mis_tiered','layer_mismatch','kind_mismatch')),
   description TEXT NOT NULL DEFAULT '',
   outcome TEXT NOT NULL CHECK (outcome IN ('upheld','rejected')),
   resulting_tier_change TEXT NOT NULL DEFAULT '',
@@ -497,6 +506,55 @@ function migrateV1toV2(db) {
   db.exec('PRAGMA user_version = 2');
 }
 
+// 2.99b (v6): kind adjudication + the recast relation. Claims gain the
+// pending-proposal columns and recast_of (plain adds, nullable, no rule
+// reads the pending state); challenges' type CHECK gains 'kind_mismatch',
+// which SQLite cannot ALTER — the table is rebuilt in place, rows copied
+// verbatim (ids preserved; the renamed table carries its triggers away and
+// the SCHEMA exec recreates them on the new one, so nothing double-fires
+// into the search index).
+function migrateV5toV6(db) {
+  const hasCol = db
+    .prepare(`SELECT 1 FROM pragma_table_info('claims') WHERE name = 'kind_proposed_at' LIMIT 1`)
+    .get();
+  if (!hasCol) {
+    db.exec('BEGIN');
+    try {
+      db.exec(`
+        ALTER TABLE claims ADD COLUMN kind_proposed_at TEXT;
+        ALTER TABLE claims ADD COLUMN kind_proposed_to TEXT;
+        ALTER TABLE claims ADD COLUMN kind_proposed_reason TEXT;
+        ALTER TABLE claims ADD COLUMN recast_of INTEGER REFERENCES claims(id);
+        ALTER TABLE challenges RENAME TO challenges_legacy_v5;
+        CREATE TABLE challenges (
+          id INTEGER PRIMARY KEY,
+          claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+          type TEXT NOT NULL CHECK (type IN
+            ('bad_source','contradicting_evidence','equivocation','mis_tiered','layer_mismatch','kind_mismatch')),
+          description TEXT NOT NULL DEFAULT '',
+          outcome TEXT NOT NULL CHECK (outcome IN ('upheld','rejected')),
+          resulting_tier_change TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          kernel_link_id INTEGER REFERENCES claim_kernels(id) ON DELETE SET NULL,
+          hop_supporter_id INTEGER,
+          hop_supported_id INTEGER
+        );
+        INSERT INTO challenges (id, claim_id, type, description, outcome, resulting_tier_change,
+                                created_at, kernel_link_id, hop_supporter_id, hop_supported_id)
+          SELECT id, claim_id, type, description, outcome, resulting_tier_change,
+                 created_at, kernel_link_id, hop_supporter_id, hop_supported_id
+          FROM challenges_legacy_v5;
+        DROP TABLE challenges_legacy_v5;
+      `);
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+  db.exec('PRAGMA user_version = 6');
+}
+
 export function openDb(path = process.env.ONION_DB || DEFAULT_DB_PATH) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
@@ -511,6 +569,7 @@ export function openDb(path = process.env.ONION_DB || DEFAULT_DB_PATH) {
   // column.
   if (hasTables && user_version < 4) migrateV3toV4(db);
   if (hasTables && user_version < 5) migrateV4toV5(db);
+  if (hasTables && user_version < 6) migrateV5toV6(db);
   db.exec(SCHEMA);
   if (user_version < 1) db.exec('PRAGMA user_version = 1');
   if (hasTables && user_version < 2) migrateV1toV2(db);
@@ -537,8 +596,8 @@ export function openDb(path = process.env.ONION_DB || DEFAULT_DB_PATH) {
         FROM claim_sources cs JOIN sources s ON s.id = cs.source_id JOIN claims c ON c.id = cs.claim_id;
     `);
   }
-  if (db.prepare('PRAGMA user_version').get().user_version < 5) {
-    db.exec('PRAGMA user_version = 5');
+  if (db.prepare('PRAGMA user_version').get().user_version < 6) {
+    db.exec('PRAGMA user_version = 6');
   }
   return db;
 }
@@ -700,6 +759,24 @@ function hydrate(db, claim) {
     )
     .all(claim.id)
     .map((l) => ({ ...l, contested: contestedFor.get(l.id).n > 0 }));
+  // 2.99b: kind adjudication + recast provenance, both display-only facts
+  // of the record. The pending proposal has ZERO rule effect (the rules
+  // read `kind` alone); the recast relation carries zero weight in both
+  // directions and is rendered on both ends.
+  const kind_proposal =
+    claim.kind_proposed_at != null
+      ? { at: claim.kind_proposed_at, to: claim.kind_proposed_to, reason: claim.kind_proposed_reason }
+      : null;
+  const recastOriginal = claim.recast_of
+    ? db.prepare('SELECT id, text, kind FROM claims WHERE id = ?').get(claim.recast_of)
+    : null;
+  const recasts =
+    claim.kind === 'metaphysical'
+      ? db
+          .prepare('SELECT id, text, radial_tier, status FROM claims WHERE recast_of = ? ORDER BY id')
+          .all(claim.id)
+      : [];
+
   return {
     ...claim,
     vertical: {
@@ -707,6 +784,9 @@ function hydrate(db, claim) {
       magnitude: claim.vertical_magnitude,
       evidenced: !!claim.vertical_evidenced
     },
+    ...(kind_proposal ? { kind_proposal } : {}),
+    ...(recastOriginal ? { recast_of_claim: recastOriginal } : {}),
+    ...(recasts.length ? { recasts } : {}),
     sources,
     withdrawn_sources,
     challenges,

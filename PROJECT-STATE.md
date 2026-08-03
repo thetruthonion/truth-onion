@@ -36,7 +36,7 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 278 tests passing across twenty suites. **Stage 2.99a
+(stage297 E7).** 286 tests passing across twenty-one suites. **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1489,7 +1489,87 @@ gate; if the site Function isn't deployed by launch, the demo panels
 already say so honestly and fall back to email, and the drop box follows
 by site redeploy — the two deploys are independent by design.
 
-**Test suites (278 passing; + 6 drop-box pins in the site repo).**
+## 3.2o Stage 2.99b — kind adjudication & the recast relation (2026-08-02)
+
+**Decision re-recorded (operator, 2026-08-02, so it isn't relitigated):
+the metaphysical gate stands unchanged.** The kind gate is a resolvability
+test on individual claims, not a topic ban — disclosure-era claims are
+almost entirely empirical under the existing definition and route on-axis
+already. A "metaphysical-with-evidence" ring category was considered and
+DECLINED: any claim the tool's evidence types can touch is by definition
+empirical, so the category admits nothing new — and it would re-open the
+asymmetry the gate exists to prevent.
+
+**Part 1 — kind_mismatch (built, pinned).** The routing decision becomes
+contestable; nothing else can move kind. Schema v6: claims gain
+`kind_proposed_at/to/reason` + `recast_of`; the challenges type CHECK
+gains 'kind_mismatch' via an in-place table rebuild (rows verbatim, ids
+preserved; migration idempotent — the live DB migrates at its next boot).
+Two-phase like withdrawal: file with the mandatory resolvability argument
+(the standard is IN the refusal and the UI copy: could the tool's
+evidence types bear on this exact sentence, in either direction — not
+whether such evidence exists, whether it could); zero effect pending;
+rejected → permanent challenge row + events. Upheld:
+- off-axis → on-axis: enters at exactly `earnedTier()` over its attached
+  evidence — no free inward movement; the placement reason states the
+  route and that the battery still rules (launder pinned K1: the pushed
+  recategorized claim refuses core/inner/middle on zero-weight sources).
+- on-axis → off-axis: tier/vertical cleared; kernel links severed FIRST
+  (tier triggers would abort the update; gap statements retained in
+  events), support links end through removeSupport with logged
+  `support_link_removed` per link; dependents re-evaluate in the SAME
+  transaction via reevaluateClaim (K2). **Reported nuance, not fudged:**
+  support links carry zero placement weight by design, so severance alone
+  cannot demote a dependent whose own sources earn its tier — the
+  transactional re-evaluation is the discipline, and it demotes exactly
+  what genuinely fails (the kickoff's "assert it demoted" is unreachable
+  by construction because no claim can ever sit where its own sources
+  don't put it; stated here rather than manufactured in a test).
+- empirical ↔ historical: kind corrects in place, tier untouched.
+- **New event type `kind_changed`** (from/to + adjudication reason) —
+  stated per the kickoff's latitude; proposal/rejection get
+  `kind_challenge_proposed`/`kind_challenge_rejected`; claimHistory and
+  pages render the lifecycle; replay reconstructs it (K5).
+- No other mover: direct PATCH/PUT with kind → `kind_immutable` refusal
+  naming the honest path; the single-shot challenge path refuses the type
+  with the two-phase pointer (K3). Persona gates + proposer-never-upholds
+  apply to kind adjudication; retraction of one's own permitted (K6).
+  Honest cost stated: adjudication quality is now epistemically
+  load-bearing; the single-curator line renders on kind adjudications.
+
+**Part 2 — recast_of (built, pinned).** A zero-weight claim→claim
+relation set at creation only: an on-axis claim naming the OFF-AXIS claim
+it deliberately rewords. Validated (original must be off-axis; the recast
+must not be metaphysical); zero weight both directions pinned (R1): the
+recast cannot cite the original as support, and the original's standing
+never moves with the recast's fate — a recast landing Core does not
+vindicate it, one landing Outermost does not refute it (the strawman
+shield, demoted-recast test). Displayed on both pages ("Empirical recast
+of: …" / "Evidence-eligible rewordings of this off-axis claim: … →
+tier/status") and in the off-axis tab; AddClaim gains the optional
+picker; UI copy states the Part 1/Part 2 distinction (the challenge never
+rewords; the recast never recategorizes). Honest cost accepted and
+stated: a visible revival template, fully accountable to the evidence
+axis — strictly better than unrecorded recasting. Saves round-trip both
+new columns (R2).
+
+**Part 3 — UAP topic: DRAFTED, NOT SEEDED.** Per the kickoff's own
+division of labor (operator locates and verifies every source; Claude
+Code invents nothing), no source could be verified in this build session,
+so nothing entered the seed. `truth-onion-uap-topic-draft.md` holds the
+full claim skeleton for the operator's verification pass: split-claim
+discipline throughout (testified-that vs. is-true), candidate primary
+documents flagged UNVERIFIED, the Bennewitz disinformation counter-layer,
+the recast pair (off-axis "supernatural beings" ↔ historical
+"angels-were-extraterrestrials" via recast_of), rule-11 flags on living
+persons, and the 4+ strain targets (DOPSR clearance, uninspectable
+classified documents, release-proves-what, leaked-footage provenance).
+**R1 still reads "the curated three"** — it amends to four in the same
+change that seeds the verified topic; strain entries log from the actual
+build, not from the sketch. DoD items 6–8 therefore await the operator's
+source-verification session; items 1–5 and 9 are done.
+
+**Test suites (286 passing; + 6 drop-box pins in the site repo).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1513,6 +1593,7 @@ by site redeploy — the two deploys are independent by design.
 | `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
 | `stage299a` | 27 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
+| `stage299b` | 8 | Kind adjudication: launder refused (earned tier only), on→off severance + transactional ripple with gap retention, no-other-mover (direct edit + single-shot both refused), rejected-persists-zero-effect, kind_changed lifecycle replay, persona/proposer gates; recast_of: creation validation, zero weight both directions + strawman shield, both-page display, save round-trip |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
 hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
@@ -1762,7 +1843,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty suites, 278 tests, against the real API with the real seed, in memory.
+Twenty-one suites, 286 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

@@ -199,6 +199,9 @@ export default function ClaimPanel({
   const [chDesc, setChDesc] = useState('');
   const [chOutcome, setChOutcome] = useState('upheld');
   const [chTier, setChTier] = useState('');
+  // 2.99b: the kind challenge — two-phase, the only mover of kind.
+  const [kindTo, setKindTo] = useState('');
+  const [kindReason, setKindReason] = useState('');
   const [src, setSrc] = useState({
     tier: 'primary_doc',
     citation: '',
@@ -209,6 +212,91 @@ export default function ClaimPanel({
   const [supportTarget, setSupportTarget] = useState('');
 
   const onRings = claim.radial_tier != null;
+
+  // 2.99b: contest the CATEGORY — two-phase, adjudicated by the
+  // resolvability test, the only mover of kind. Rendered on the Move tab
+  // for on-axis claims and on the Claim tab for off-axis ones (which have
+  // no Move tab). The challenge never rewords; a deliberate rewording is a
+  // recast (a new claim naming recast_of).
+  const kindCard = !demo && (
+    <div className="card">
+      <strong>Contest the category (kind)</strong>
+      <p className="small muted" style={{ margin: '4px 0' }}>
+        This claim is <b>{claim.kind}</b>. A kind challenge argues it is miscategorized AS
+        WRITTEN — the test: could documents, court records, reporting, or data bear on this
+        exact sentence, in either direction? Not whether such evidence exists — whether it
+        could. Filing has zero effect until adjudication; rejected attempts stay on the
+        record. The challenge never rewords; to reword, add a new claim as a recast.
+      </p>
+      {claim.kind_proposal ? (
+        <>
+          <div className="small">
+            <span className="badge contested">kind challenge pending</span>{' '}
+            {claim.kind} → {claim.kind_proposal.to} — {claim.kind_proposal.reason}
+          </div>
+          <div className="small muted">
+            Filed {claim.kind_proposal.at}; zero effect until adjudication. Adjudicated by
+            curator · {reviewLine || 'Independent review: none yet — single-curator record.'}
+          </div>
+          <div className="row">
+            <button
+              className="small danger-soft"
+              onClick={() =>
+                run(
+                  () => api.adjudicateKindChallenge(claim.id, 'upheld'),
+                  'Kind challenge upheld — the routing effect fires now, on the record.',
+                  { confirm: `Uphold ${claim.kind} → ${claim.kind_proposal.to}? ${claim.kind_proposal.to === 'metaphysical' ? 'Tier and vertical clear, every link severs with logged events, and dependents re-evaluate — at this moment.' : claim.kind === 'metaphysical' ? 'The claim enters the rings at exactly what its attached evidence earns — no free inward movement.' : 'Kind corrects in place; tier is untouched.'}` }
+                )
+              }
+            >
+              uphold
+            </button>
+            <button
+              className="small"
+              onClick={() =>
+                run(
+                  () => api.adjudicateKindChallenge(claim.id, 'rejected'),
+                  'Kind challenge rejected — the attempt stays permanently on the record.',
+                  { confirm: 'Reject this kind challenge? The kind stands and the rejected attempt remains visible in history.' }
+                )
+              }
+            >
+              reject
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="row">
+            <select value={kindTo} onChange={(e) => setKindTo(e.target.value)}>
+              <option value="">contest to…</option>
+              {['empirical', 'historical', 'metaphysical'].filter((k) => k !== claim.kind).map((k) => (
+                <option key={k} value={k}>{k}</option>
+              ))}
+            </select>
+          </div>
+          <textarea
+            value={kindReason}
+            onChange={(e) => setKindReason(e.target.value)}
+            placeholder="The resolvability argument: which evidence type could bear on this exact sentence, and how?"
+          />
+          <button
+            className="small"
+            disabled={!kindTo || !kindReason.trim()}
+            onClick={() =>
+              run(
+                () => api.proposeKindChallenge(claim.id, kindTo, kindReason.trim()).then((r) => { setKindTo(''); setKindReason(''); return r; }),
+                'Kind challenge filed — zero effect until adjudication.',
+                { confirm: `File a kind challenge (${claim.kind} → ${kindTo})? Filing proposes; the kind moves only if adjudication upholds it.` }
+              )
+            }
+          >
+            file kind challenge
+          </button>
+        </>
+      )}
+    </div>
+  );
   const inwardTiers = onRings ? TIERS.filter((t) => rank(t) < rank(claim.radial_tier)) : [];
   const outwardTiers = onRings ? TIERS.filter((t) => rank(t) > rank(claim.radial_tier)) : [];
   // Link targets: any visible claim in any topic (the dial hides content,
@@ -298,9 +386,24 @@ export default function ClaimPanel({
           );
         })()}
       </div>
+      {/* 2.99b: kind adjudication + recast provenance on the claim's face. */}
+      {claim.kind_proposal && (
+        <p className="small" style={{ margin: '2px 0' }}>
+          <span className="badge contested">kind challenge pending</span>{' '}
+          {claim.kind} → {claim.kind_proposal.to} — zero effect until adjudication (Move tab).
+        </p>
+      )}
+      {claim.recast_of_claim && (
+        <p className="small muted" style={{ margin: '2px 0' }}>
+          Empirical recast of off-axis #{claim.recast_of_claim.id} “{claim.recast_of_claim.text.slice(0, 70)}…” —
+          zero weight both ways: the original never moves with this claim's fate.
+        </p>
+      )}
       <div className="reason">
         <strong>Why it sits here:</strong> {claim.placement_reason}
       </div>
+      {/* Off-axis claims have no Move tab — the kind machinery lives here. */}
+      {!onRings && kindCard}
       {claim.vertical.direction === 'neutral' && claim.radial_tier && (
         <p className="axis-hint">
           No documented-outcome evidence attached — the vertical axis stays empty rather than
@@ -728,6 +831,8 @@ export default function ClaimPanel({
             </div>
           )}
 
+          {kindCard}
+
           {!demo && (
           <>
           <h3>Raise a challenge</h3>
@@ -736,7 +841,7 @@ export default function ClaimPanel({
               <div>
                 <label>Type</label>
                 <select value={chType} onChange={(e) => setChType(e.target.value)}>
-                  {CHALLENGE_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  {CHALLENGE_TYPES.filter((t) => t !== 'kind_mismatch').map((t) => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div>

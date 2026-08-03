@@ -273,6 +273,23 @@ export function renderClaimPage(db, claimId, { origin = '', at = null, sandbox =
         .join('')
     : '';
 
+  // 2.99b: kind adjudication + recast provenance, rendered from the record.
+  const kindHtml = `${
+    claim.kind_proposal
+      ? `<div class="hist" style="border-style:dashed"><strong>Kind challenge pending:</strong> ${esc(claim.kind)} → ${esc(claim.kind_proposal.to)} — ${esc(claim.kind_proposal.reason)}<br><span class="small muted">Filed ${esc(claim.kind_proposal.at)}; zero effect until adjudication. Adjudicated by curator · ${esc(review.line)}</span></div>`
+      : ''
+  }${
+    claim.recast_of_claim
+      ? `<div class="card"><span class="src-tier">recast</span> Empirical recast of: <a href="${basePath}/${claim.recast_of_claim.id}">#${claim.recast_of_claim.id} ${esc(truncate(claim.recast_of_claim.text, 100))}</a> <span class="muted small">[off-axis]</span><div class="muted small">A deliberate evidence-eligible rewording. Zero weight in both directions: the original never moves with this claim's fate — a recast landing Core does not vindicate it; one landing Outermost does not refute it.</div></div>`
+      : ''
+  }${
+    claim.recasts?.length
+      ? `<div class="card"><span class="src-tier">recasts</span> Evidence-eligible rewordings of this off-axis claim:${claim.recasts
+          .map((r) => `<div>→ <a href="${basePath}/${r.id}">#${r.id} ${esc(truncate(r.text, 90))}</a> <span class="muted small">[${esc(r.radial_tier ?? 'off-axis')} · ${esc(r.status)}]</span></div>`)
+          .join('')}<div class="muted small">Each recast answers to the evidence axis on its own; none of their fates moves this claim.</div></div>`
+      : ''
+  }`;
+
   const sourcesHtml = claim.sources.length
     ? claim.sources
         .map((s) => {
@@ -459,6 +476,7 @@ ${historical ? '<meta name="robots" content="noindex">' : ''}
   ${histBanner}
   ${existed && offAxis ? '<p class="muted">This claim cannot be resolved by documents or observation in either direction. It is never ranked proven or unproven — it sits off the evidence rings entirely.</p>' : ''}
   ${existed ? `<div class="review">${esc(review.line)}</div>` : ''}
+  ${existed ? kindHtml : ''}
   ${bodySections}
 
   <footer>
