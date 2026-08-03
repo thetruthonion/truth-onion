@@ -978,7 +978,17 @@ export default function App() {
       )}
       <header className="topbar">
         <div className="topbar-row">
-          <h1>Truth Onion</h1>
+          <h1>
+            <a
+              href="https://thetruthonion.org/"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: 'inherit', textDecoration: 'none' }}
+              title="thetruthonion.org"
+            >
+              Truth Onion
+            </a>
+          </h1>
           <span className="current-topic" title="Open topic">{topic.name}</span>
           <SearchBox
             topics={topics}

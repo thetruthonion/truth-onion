@@ -386,7 +386,9 @@ export function renderClaimPage(db, claimId, { origin = '', at = null, sandbox =
   // account; we don't ask who you are and don't retain anything that says.
   // Email stays as the if-you'd-like-a-reply option (punch 3's copy box).
   const feedbackMailto = `mailto:${FEEDBACK_ADDRESS}?subject=${encodeURIComponent(`[dispute] claim #${liveClaim.id} — ${truncate(liveClaim.text, 60)}`)}`;
-  const feedbackHtml = `<details class="note fb-pop" id="feedback">
+  // Open by default: the masthead's "feedback" link lands on a ready form
+  // (one click to type), the same function as the engine's feedback button.
+  const feedbackHtml = `<details class="note fb-pop" id="feedback" open>
     <summary>Dispute this placement, or report a problem — anonymously</summary>
     <form method="POST" action="${esc(DROPBOX_URL)}" style="margin:8px 0 0">
       <p class="small" style="margin:0 0 6px">Anonymous: exactly the category and message below are sent — no identity, no account; we don't ask who you are and don't retain anything that says. The engine never reads it; volume is a prompt for the operator to look, never a force that moves anything.</p>

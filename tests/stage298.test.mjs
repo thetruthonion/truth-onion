@@ -329,6 +329,9 @@ await test('F1. (2.99a Amendment B) the in-product feedback pipe is GONE: no end
 await test('F2. the feedback channels: anonymous drop box primary (site origin), email secondary — never the app DB', async () => {
   const page = (await api('GET', '/claim/1')).text;
   assert.ok(page.includes('thetruthonion.org/api/dropbox'), 'claim pages post the anonymous box to the SITE origin');
+  // The masthead "feedback" link lands on a READY form — open by default,
+  // one click to type: the same function as the engine's feedback button.
+  assert.match(page, /<details class="note fb-pop" id="feedback" open>/, 'the page box is open, not a collapsed extra click');
   assert.ok(page.includes('mailto:truth.onionwright@gmail.com'), 'email stays for anyone who wants a reply');
   assert.match(page, /don't ask who you are and don't retain anything that says/, 'the anonymity claim, exactly as far as it is true');
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
@@ -341,6 +344,8 @@ await test('F2. the feedback channels: anonymous drop box primary (site origin),
 await test('F3. the header feedback affordance replaced the add-claim button; adding a claim lives in search', async () => {
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.match(app, /✉ feedback/, 'the header carries the feedback affordance');
+  // The engine's top-left wordmark links to the site (operator request).
+  assert.match(app, /<h1>\s*<a\s+href="https:\/\/thetruthonion\.org\/"/, 'the Truth Onion wordmark links to thetruthonion.org');
   assert.ok(!app.includes('+ Add claim\n'), 'the header add-claim button is gone');
   const searchBox = readFileSync(join(root, 'client', 'src', 'SearchBox.jsx'), 'utf8');
   assert.match(searchBox, /\+ add claim/, 'the add-claim flow remains reachable via the search dropdown');
