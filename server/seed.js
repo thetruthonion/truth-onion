@@ -4,6 +4,7 @@
 
 import { createClaim, demoteClaim, challengeClaim, addSupport, addKernelLink } from './service.js';
 import { applySourceLinks } from './sourcelinks.js';
+import { seedUAP } from './seed-uap.js';
 
 export function isSeeded(db) {
   return !!db.prepare('SELECT 1 FROM topics LIMIT 1').get();
@@ -16,10 +17,12 @@ export function seed(db) {
   // exposure and its COINTELPRO documentation are the same investigative
   // record — core supporting core, the legal direction, across topics.
   addSupport(db, mkultra.exposedId, cointelpro.existedId);
+  // 2.99b Part 3: the fourth curated topic (operator-verified sources).
+  const uap = seedUAP(db);
   // 2.98b C: canonical links / honesty labels for every seeded source —
   // verified once, applied from the single mapping in sourcelinks.js.
   applySourceLinks(db);
-  return { topicId: mkultra.topicId, cointelproTopicId: cointelpro.topicId };
+  return { topicId: mkultra.topicId, cointelproTopicId: cointelpro.topicId, uapTopicId: uap.topicId };
 }
 
 function seedMKUltra(db) {

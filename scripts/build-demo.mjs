@@ -24,7 +24,7 @@ console.log('2/5 Assembling demo/app…');
 rmSync(demo, { recursive: true, force: true });
 mkdirSync(join(demo, 'app', 'server'), { recursive: true });
 mkdirSync(join(demo, 'data'), { recursive: true });
-for (const f of ['index.js', 'db.js', 'rules.js', 'service.js', 'seed.js', 'timemachine.js', 'claimpages.js', 'sourcelinks.js', 'history.js', 'sandbox.js']) {
+for (const f of ['index.js', 'db.js', 'rules.js', 'service.js', 'seed.js', 'seed-uap.js', 'timemachine.js', 'claimpages.js', 'sourcelinks.js', 'history.js', 'sandbox.js']) {
   copyFileSync(join(root, 'server', f), join(demo, 'app', 'server', f));
 }
 // 2.99a: sandbox copies restore from the same fixture the pristine DB was

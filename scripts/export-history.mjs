@@ -32,7 +32,7 @@ const dbPath = process.env.ONION_DB || join(root, 'server', 'data', 'truth-onion
 const outPath = join(root, 'exports', 'curated-record.history.json');
 const names = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ['MKUltra', 'COINTELPRO', 'The Replication Crisis'];
+  : ['MKUltra', 'COINTELPRO', 'The Replication Crisis', 'UAP: Disclosure, Evidence, and Overreach'];
 
 const db = new DatabaseSync(dbPath, { readOnly: true });
 

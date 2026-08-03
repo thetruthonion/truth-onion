@@ -102,7 +102,11 @@ await test('H3b. every topic scrubber spans its real history — including RC pr
   const spans = {
     1: ['2026-07-11', '2026-07-28'],
     2: ['2026-07-11', '2026-08-01'],
-    3: ['2026-07-12', '2026-07-30']
+    3: ['2026-07-12', '2026-07-30'],
+    // Topic 7 = UAP (live id preserved; 4–6 are the excluded live topics).
+    // Seeded 2026-08-02/03 through the rules layer — its history genuinely
+    // begins at its own seeding, all post-epoch, all logged.
+    7: ['2026-08-0', '2026-08-0']
   };
   for (const [topicId, [lo, hi]] of Object.entries(spans)) {
     const tl = topicTimeline(db, Number(topicId));
@@ -164,18 +168,35 @@ await test('H6. identity bar: no name, no email, no paths; actors are curator-ne
   assert.ok(!/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(raw), 'no email address');
   assert.ok(!/[A-Za-z]:\\|\/Users\/|OneDrive/i.test(raw), 'no filesystem path');
   const actors = [...new Set(fixture.events.map((e) => e.actor))].sort();
-  assert.deepEqual(actors, ['claude (2.9b seeding)', 'local'], 'actor values are the recorded, neutral set');
+  assert.deepEqual(
+    actors,
+    ['claude (2.9b seeding)', 'claude (2.99b seeding)', 'local'].sort(),
+    'actor values are the recorded, neutral set'
+  );
 });
 
-await test('H7. curation boundary: only the three topics, no residue, id gaps honest', () => {
-  assert.deepEqual(fixture.topics.map((t) => t.name), ['MKUltra', 'COINTELPRO', 'The Replication Crisis']);
+await test('H7. curation boundary: the curated FOUR (R1 amendment), no residue, id gaps honest', () => {
+  assert.deepEqual(fixture.topics.map((t) => t.name), [
+    'MKUltra',
+    'COINTELPRO',
+    'The Replication Crisis',
+    'UAP: Disclosure, Evidence, and Overreach'
+  ]);
+  // Topic ids verbatim from the live record: 1,2,3,7 — the gap (4–6) IS
+  // the curation, honestly visible, never compacted.
+  assert.deepEqual(fixture.topics.map((t) => t.id), [1, 2, 3, 7]);
   const raw = readFileSync(join(root, 'exports', 'curated-record.history.json'), 'utf8');
   assert.ok(!/christ is god/i.test(raw), 'the test topic is absent');
   // Event 10 (the excluded topic's creation) leaves its id gap — ids are
-  // verbatim, never compacted into a fake continuity.
+  // verbatim, never compacted into a fake continuity. Events 14+ are the
+  // UAP seeding, logged through the rules layer with its own actor.
   const ids = fixture.events.map((e) => e.id);
   assert.ok(!ids.includes(10), 'the excluded topic\'s event is not carried');
-  assert.deepEqual(ids, [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13], 'recorded event ids, gap preserved');
+  assert.deepEqual(
+    ids,
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+    'recorded event ids, gap preserved'
+  );
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

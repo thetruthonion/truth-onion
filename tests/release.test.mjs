@@ -53,10 +53,13 @@ restoreHistory(db, JSON.parse(readFileSync(join(root, 'exports', 'curated-record
 const server = buildApp(db, { demo: true, rateLimit: 0 }).listen(0);
 const base = `http://localhost:${server.address().port}`;
 
-await test('R1 (0a). the shipped seed is the curated topics ONLY — no test residue, no "Christ is God"', () => {
+await test('R1 (0a, amended 2.99b). the shipped seed is the curated FOUR — no test residue, no "Christ is God"', () => {
+  // R1 AMENDMENT (operator decision, 2026-08-02, recorded in the 2.99b
+  // kickoff): UAP joins as the fourth curated topic. Explicit amendment,
+  // not a silent change.
   const names = db.prepare('SELECT name FROM topics ORDER BY id').all().map((t) => t.name);
-  assert.deepEqual(names, ['MKUltra', 'COINTELPRO', 'The Replication Crisis'],
-    `shipped topics must be exactly the curated three, got: ${names.join(' | ')}`);
+  assert.deepEqual(names, ['MKUltra', 'COINTELPRO', 'The Replication Crisis', 'UAP: Disclosure, Evidence, and Overreach'],
+    `shipped topics must be exactly the curated four, got: ${names.join(' | ')}`);
   // Residue scan across every claim: nothing from operator test sessions.
   const texts = db.prepare('SELECT text FROM claims').all().map((c) => c.text);
   for (const t of texts) {
@@ -99,8 +102,8 @@ await test('R4 (0a-i). the debunked claims ship their kernel fans, correctly enc
     .all();
   assert.deepEqual(
     links.map((l) => [l.claim_id, l.kernel_id]),
-    [[11, 1], [11, 2], [20, 13], [20, 17]],
-    'the four seeded kernel links (MKUltra #11 fan, COINTELPRO #20 fan)'
+    [[11, 1], [11, 2], [20, 13], [20, 17], [42, 36]],
+    'the seeded kernel links (MKUltra #11 fan, COINTELPRO #20 fan, UAP sample #42 ← AARO #36)'
   );
   // The exact glyphs the curl era mangled: en-dashes in year ranges, em-dashes
   // between clauses, apostrophes in possessives.
@@ -248,6 +251,26 @@ await test('R9 (3). rate limiting covers every demo route family: /api and /clai
   } finally {
     ltd.close();
     ltdDb.close();
+  }
+});
+
+await test('R11. the demo package ships every module its shipped files import — the boot-crash class is closed', () => {
+  // This class bit twice: build-demo copies a FIXED file list, and a new
+  // local import in a shipped module (fetch-proxy once, seed-uap once)
+  // makes the package crash on boot while every source-level test stays
+  // green. Pin: walk the local-import closure of the shipped list.
+  const buildSrc = readFileSync(join(root, 'scripts', 'build-demo.mjs'), 'utf8');
+  const listMatch = /for \(const f of \[([^\]]+)\]\)/.exec(buildSrc);
+  const shipped = listMatch[1].split(',').map((s) => s.trim().replace(/['"]/g, '')).filter(Boolean);
+  for (const f of shipped) {
+    const src = readFileSync(join(root, 'server', f), 'utf8');
+    for (const m of src.matchAll(/from '\.\/([A-Za-z0-9-]+\.js)'/g)) {
+      const dep = m[1];
+      // fetch-proxy/browser-render are the DELIBERATE lazy exceptions
+      // (imported dynamically, non-demo only — pinned by D4/D5).
+      if (['fetch-proxy.js', 'browser-render.js'].includes(dep)) continue;
+      assert.ok(shipped.includes(dep), `${f} imports ./${dep}, which build-demo does not ship — the package would crash on boot`);
+    }
   }
 });
 

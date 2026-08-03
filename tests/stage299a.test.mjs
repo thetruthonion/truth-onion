@@ -310,7 +310,10 @@ await test('C3. the copy\'s event log is genuinely multi-actor and replay render
   const actors = new Set(evs.map((e) => e.actor));
   assert.ok(actors.has('contributor') && actors.has('reviewer') && actors.has('curator'), 'three personas on one log');
   for (const e of evs) {
-    assert.ok([...PERSONAS, 'local', 'claude (2.9b seeding)'].includes(e.actor), `unexpected actor "${e.actor}"`);
+    assert.ok(
+      [...PERSONAS, 'local', 'claude (2.9b seeding)', 'claude (2.99b seeding)'].includes(e.actor),
+      `unexpected actor "${e.actor}"`
+    );
   }
   // Replay (the timeline) carries the persona actors into rendering data.
   const tl = (await s.get('/api/topics/1/timeline')).body;
@@ -527,7 +530,7 @@ await test('F1. the entry card is doors, not teaching — and no first-run surfa
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   // The minimal copy, verbatim facts: curated record; read-only; the
   // sandbox's private copy; the two doors (Amendment C reduced them).
-  assert.match(app, /The curated record of three documented topics/);
+  assert.match(app, /The curated record of four documented topics/);
   // Punch 2: concrete verbs, no fog — everywhere the copy is described.
   assert.match(app, /add claims, attach sources, file\s+challenges; the rules accept or refuse them, with reasons/);
   assert.ok(!/rules answer to you/.test(app), 'the fog sentence is gone from the app');

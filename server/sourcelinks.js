@@ -75,12 +75,35 @@ export const SOURCE_LINKS = [
   { match: 'Ioannidis (2005), "Why Most Published Research Findings Are False", PLoS Medicine 2(8): e124 — the claim\'s own origin: a model, not a measurement', url: 'https://doi.org/10.1371/journal.pmed.0020124' },
   { match: 'Blogs and posts asserting the field is wholesale bunk, citing the crisis', label: CLASS_LABEL },
   { match: 'Open Science Collaboration (2015), Science 349(6251): aac4716 — the same audit that documents the failures also documents the ~36–39% that replicated, with large effects replicating most reliably', url: 'https://doi.org/10.1126/science.aac4716' },
-  { match: 'Simmons, Nelson & Simonsohn (2011), "False-Positive Psychology", Psychological Science 22(11): 1359–1366 — the documented mechanism the judgment rests on', url: 'https://doi.org/10.1177/0956797611417632' }
+  { match: 'Simmons, Nelson & Simonsohn (2011), "False-Positive Psychology", Psychological Science 22(11): 1359–1366 — the documented mechanism the judgment rests on', url: 'https://doi.org/10.1177/0956797611417632' },
+
+  // ---- UAP (2.99b Part 3 — web-verified 2026-08-02, operator-confirmed;
+  // archive captures triggered at seed time, ledger in PROJECT-STATE) ----
+  { match: "U.S. Department of Defense, 'Statement by the Department of Defense on the Release of Historical Navy Videos' (April 27, 2020) — published at defense.gov, since migrated to the renamed department domain; archive-captured at seed time", url: 'https://www.war.gov/News/Releases/Release/Article/2165713/statement-by-the-department-of-defense-on-the-release-of-historical-navy-videos/' },
+  { match: 'Naval Air Systems Command FOIA Reading Room — the three Navy videos (FLIR, GIMBAL, GOFAST) as officially posted', url: 'https://www.navair.navy.mil/foia/documents' },
+  { match: 'Congress.gov, House Event 116282 (118th Congress) — hearing record with witness list and submitted documents; Grusch listed as Former National Reconnaissance Office Representative, UAP Task Force', url: 'https://www.congress.gov/event/118th-congress/house-event/116282' },
+  { match: 'Official GPO transcript of the July 26, 2023 hearing (serial 53-022) — the sworn record', url: 'https://www.congress.gov/118/meeting/house/116282/documents/HHRG-118-GO06-Transcript-20230726.pdf' },
+  { match: 'House Oversight Committee announcement, "National Security Subcommittee to Hold Hearing on Unidentified Anomalous Phenomena" — hearing title, date, and witnesses', url: 'https://oversight.house.gov/release/national-security-subcommittee-to-hold-hearing-on-unidentified-anomalous-phenomena%ef%bf%bc/' },
+  { match: 'AARO, Historical Record Report Volume 1 (2024) — released at aaro.mil March 8, 2024; stable full-text capture at Wikimedia Commons cited as archive', url: 'https://commons.wikimedia.org/wiki/File:AARO_Historical_Record_Report_Volume_1_2024.pdf' },
+  { match: 'AARO, Historical Record Report Volume 1 (2024): "AARO has no evidence for the USG reverse-engineering narrative provided by interviewees and has been able to disprove the majority of the interviewees\' claims"', url: 'https://commons.wikimedia.org/wiki/File:AARO_Historical_Record_Report_Volume_1_2024.pdf' },
+  { match: 'AARO, Historical Record Report Volume 1 (2024): the alleged off-world metal sample assessed as ordinary and terrestrial', url: 'https://commons.wikimedia.org/wiki/File:AARO_Historical_Record_Report_Volume_1_2024.pdf' },
+  { match: 'Public Law 117-263 (James M. Inhofe NDAA for FY2023, signed Dec 23, 2022), full text — §1673, "Unidentified anomalous phenomena reporting procedures"', url: 'https://www.congress.gov/117/plaws/publ263/PLAW-117publ263.pdf' },
+  { match: 'GovInfo record for Public Law 117-263', url: 'https://www.govinfo.gov/app/details/PLAW-117publ263' },
+  { match: 'AARO reporting form DD-3212, citing §1673(b)(1) — the provision in operation', url: 'https://www.aaro.mil/Portals/136/PDFs/UAP_Program_Report/DD_3212.pdf' },
+  { match: 'Metabunk analysis threads (Mick West et al.) on FLIR1/Nimitz, GIMBAL, and GOFAST — metabunk.org threads t9190, t9333, t9569 (old-style ids; they redirect on the current forum)', url: 'https://www.metabunk.org' },
+  { match: 'Vice, "The Skeptic\'s Guide to the Pentagon\'s UFO Videos"', url: 'https://www.vice.com/en/article/the-skeptics-guide-to-the-pentagons-ufo-videos/' }
 ];
+
+// 2.99b (UAP): offline-source labels — print books and film carry their
+// full citations with an honest no-canonical-online-copy label instead of
+// a URL, per the 2.98b rule.
+export const PRINT_LABEL = ' [print source — no canonical online copy]';
+export const FILM_LABEL = ' [print/film — offline citation]';
+export const CLASS_LABEL_WORKS = ' [cited as a class of works — no single canonical copy]';
 
 // Every label this audit may append — the lint test accepts a source as
 // honestly labeled when its citation carries one of these.
-export const HONEST_LABELS = [CLASS_LABEL, CLASS_LABEL_HISTORIES, CNV_LABEL];
+export const HONEST_LABELS = [CLASS_LABEL, CLASS_LABEL_HISTORIES, CNV_LABEL, PRINT_LABEL, FILM_LABEL, CLASS_LABEL_WORKS];
 
 // Release 2b: verification-status labels. A recorded source whose entry
 // above carries a canonical URL was resolved live and mechanically verified

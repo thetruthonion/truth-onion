@@ -64,10 +64,11 @@ product working.
   plus schema constraints and triggers, React frontend, adversarially tested (a
   permanent pressure-test suite attempts laundering, circular support, self-published
   stacking, cross-topic smuggling, and edit-after-placement on every run).
-- **Three curated topics in the shipped seed:** MKUltra, COINTELPRO, and the Replication
-  Crisis — each spanning the full range from documented Core to
+- **Four curated topics in the shipped seed:** MKUltra, COINTELPRO, the Replication
+  Crisis, and UAP disclosure — each spanning the full range from documented Core to
   faithfully-stated-and-debunked edge, every seeded source carrying its canonical link
-  or an honest label (audited).
+  or an honest label (audited; the UAP genre also exercises the split-claim rule —
+  "X testified that Y" and "Y is true" are two claims in two different universes).
 - **2D and 3D views** of every onion — concentric rings, or nested spherical shells with
   claims as record-derived tiles, sharing one dial and one dataset. The 3D layer has
   zero write access.

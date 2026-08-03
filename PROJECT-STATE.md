@@ -36,7 +36,7 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 286 tests passing across twenty-one suites. **Stage 2.99a
+(stage297 E7).** 287 tests passing across twenty-one suites. **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1569,7 +1569,62 @@ change that seeds the verified topic; strain entries log from the actual
 build, not from the sketch. DoD items 6–8 therefore await the operator's
 source-verification session; items 1–5 and 9 are done.
 
-**Test suites (286 passing; + 6 drop-box pins in the site repo).**
+### 3.2o-i — the UAP topic SEEDED (operator go, 2026-08-02/03)
+
+**R1 IS AMENDED: the demo ships the curated FOUR** — the operator
+confirmed the verified source ledger and directed the seed. Built as
+`server/seed-uap.js`, seeded through the SAME service layer as every
+topic (11 claims, 20 sources), into: (1) `seed()` for fresh engines,
+(2) the LIVE record through the rules layer with actor
+`claude (2.99b seeding)` (16 events, topic id 7 — ids 34–44), and
+(3) the re-exported curated fixture (4 topics, 42 claims, 28 events;
+topic-id gap 4–6 is the curation, visible, never compacted). Double-seed
+determinism holds; residue scan, R1/R4, history spans/actors/ids, and
+the entry-card/README/site copy all updated to four.
+
+**The build's own honesty artifacts:**
+- **The rules refused the builder** — the AARO claim was proposed at Core
+  and refused live ("Core requires at least two independent primary
+  documents; this claim has 1"); it sits at inner with the refusal in its
+  placement reason. Logged as strain Entry 12.
+- **The split-claim rule made mechanical:** the GPO transcript sources
+  ONLY the testimony-occurred claim; the retrieval-program claim (outer)
+  gets a zero-weight support link from it instead of a weight-carrying
+  source, plus AARO's finding attached as contradicts. Strain Entry 8.
+- **The recast pair is live:** off-axis #43 ("supernatural beings") ↔
+  historical recast #44 ("angels were extraterrestrial visitors"),
+  linked recast_of, with the disclosure chain drawn (#40 outer supports
+  #44 outer) — and promotion of the recast inward refused, pinned.
+- **Claim 9 selection (operator-swappable, flagged):** the outermost
+  debunked specific is the metal-sample claim — chosen because its
+  contradicting primary record (AARO's ordinary-and-terrestrial
+  assessment) was already in the verified ledger; demoted through the
+  real debunker flow with a kernel fan to the AARO claim (#42 ← #36).
+- **Strains logged from the actual build: Entries 7–12** (DOPSR
+  clearance vs. review-as-true; testimony of uninspectable content;
+  release-proves-what + domain migration; offline sources/provenance —
+  new PRINT/FILM/CLASS_WORKS honest labels added; venue-vs-method;
+  self-describing record capped below Core). Six entries against the 4+
+  target; the taxonomy itself untouched.
+- **Archive captures (mandatory for .gov):** Save Page Now accepted for
+  the PL 117-263 PDF, the GovInfo record, and the GPO transcript;
+  existing Wayback captures confirmed for the war.gov release statement
+  (2026-07), the ORIGINAL defense.gov URL (2025-08 — pre-migration), the
+  Congress.gov event page, and DD-3212. NAVAIR's FOIA reading room
+  refused SPN (520, dynamic page) and has no capture — reported, not
+  papered over; the release statement itself carries the substantive
+  load and is captured on both domains.
+- **Boot-crash class CLOSED (bit twice):** seed-uap.js was initially
+  missing from build-demo's fixed copy list — the same failure as the
+  original fetch-proxy incident. Fixed, and now pinned by R11: the
+  release suite walks the local-import closure of the shipped file list,
+  so a new import in a shipped module fails the suite instead of
+  crashing the package on boot.
+- Sourcelinks gained the 13 UAP url-entries (curator-verified chips
+  derive; verification record: web-verified 2026-08-02,
+  operator-confirmed) and the three offline labels.
+
+**Test suites (287 passing; + 6 drop-box pins in the site repo).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1590,7 +1645,7 @@ source-verification session; items 1–5 and 9 are done.
 | `demo` | 5 | Read-only enforcement, zero residue, fetch proxy absent |
 | `companion` | 40 | Grounding, isolation, fidelity, keys, tools, search, storage |
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
-| `release` | 11 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
+| `release` | 12 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
 | `stage299a` | 27 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
 | `stage299b` | 8 | Kind adjudication: launder refused (earned tier only), on→off severance + transactional ripple with gap retention, no-other-mover (direct edit + single-shot both refused), rejected-persists-zero-effect, kind_changed lifecycle replay, persona/proposer gates; recast_of: creation validation, zero weight both directions + strawman shield, both-page display, save round-trip |
@@ -1843,7 +1898,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty-one suites, 286 tests, against the real API with the real seed, in memory.
+Twenty-one suites, 287 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo

@@ -1,7 +1,7 @@
 {
   "format": "truth-onion-history",
   "version": 1,
-  "exported_at": "2026-08-02T04:07:53.949Z",
+  "exported_at": "2026-08-03T00:53:09.747Z",
   "source_note": "Complete curated record exported from the live DB with original timestamps, reasons, and actors. Restored verbatim into the demo pristine database — nothing is re-stamped at build or boot time.",
   "corrections": [
     {
@@ -104,6 +104,11 @@
       "id": 3,
       "name": "The Replication Crisis",
       "description": "Whether published psychology findings survive independent replication (2011–present). Chosen by the builder as a topic personally cared about: it is this tool's own subject — what survives scrutiny — applied to a scientific literature."
+    },
+    {
+      "id": 7,
+      "name": "UAP: Disclosure, Evidence, and Overreach",
+      "description": "Government UAP disclosure — releases, hearings, and reports — and the claims built on them. Chosen because the genre splits testimony from content, releases from depictions, and documented disinformation from the phenomena it imitated: the full range of evidence tiers, under live national attention."
     }
   ],
   "claims": [
@@ -119,7 +124,11 @@
       "vertical_evidenced": 1,
       "status": "confirmed",
       "placement_reason": "Established by primary government documents and sworn testimony (Church Committee, 1977 Senate hearings, surviving CIA financial records). Has survived public challenge continuously since 1975.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 2,
@@ -133,7 +142,11 @@
       "vertical_evidenced": 0,
       "status": "confirmed",
       "placement_reason": "The exposure is itself the primary record: committee reports and the published hearing transcript.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 3,
@@ -147,7 +160,11 @@
       "vertical_evidenced": 0,
       "status": "confirmed",
       "placement_reason": "Acknowledged under oath by CIA leadership in the 1977 hearings and documented by the Church Committee.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 4,
@@ -161,7 +178,11 @@
       "vertical_evidenced": 1,
       "status": "confirmed",
       "placement_reason": "Documented by the Rockefeller Commission and settled by act of Congress — primary and legal records, not reporting.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 5,
@@ -175,7 +196,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "The incompleteness is documented in the 1977 hearings; how much is missing, and what it contained, remains credibly disputed — well-supported, but not Core.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 6,
@@ -189,7 +214,11 @@
       "vertical_evidenced": 1,
       "status": "contested",
       "placement_reason": "CIA funding and patient harm are documented (Orlikow settlement, surviving subproject records); the precise share of CIA versus Canadian government responsibility remains credibly disputed.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 7,
@@ -203,7 +232,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "The Murray study and Kaczynski's participation are documented; the study's tie to MKUltra funding is circumstantial and has never been shown in primary records. Path inward: a surviving subproject financial record naming the Murray study.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 8,
@@ -217,7 +250,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "A value judgment resting on a documented factual record. Barred from Core by rule — moral claims never sit in the factual core — but the facts beneath it are Core-grade.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 9,
@@ -231,7 +268,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Stated faithfully. No primary documentation of continuation after the program's termination in the early 1970s; the only offered source is anonymous, which carries zero weight. The 1973 record destruction explains missing history — it is not evidence of a present-day program. Path inward: verifiable post-1973 documents showing continuation.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 10,
@@ -245,7 +286,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Framing claim: it converts a documented historical program into a present-tense characterization of intent. The historical facts are established; the present-tense \"still treats\" carries no evidence of its own.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 11,
@@ -259,7 +304,11 @@
       "vertical_evidenced": 0,
       "status": "refuted",
       "placement_reason": "Established: MKUltra existed (1953–early 1970s), experimented on unwitting subjects, was exposed by the Church Committee and 1977 hearings, and most of its records were destroyed in 1973. — The present-day total-mind-control remainder is checked and failed: its only supporting source is the claimant's own publication (zero weight by rule), and the primary record documents a program that could not achieve reliable behavioral control. Debunked — kept visible, not fleshed out.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 12,
@@ -273,7 +322,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Not resolvable by documents, observation, or data in either direction. Routed off the radial axis by rule — ranking it \"weak\" would secretly assert its negation as \"strong\".",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 13,
@@ -287,7 +340,11 @@
       "vertical_evidenced": 1,
       "status": "confirmed",
       "placement_reason": "Established by the FBI's own released files and the Church Committee's investigation — primary government documents, publicly challenged and standing since 1971.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 14,
@@ -301,7 +358,11 @@
       "vertical_evidenced": 0,
       "status": "confirmed",
       "placement_reason": "The stolen files are themselves the primary record; their authenticity was confirmed by the FBI and the subsequent investigations.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 15,
@@ -315,7 +376,11 @@
       "vertical_evidenced": 1,
       "status": "confirmed",
       "placement_reason": "Documented by the Church Committee from FBI files; the anonymous letter itself is in the released record.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 16,
@@ -329,7 +394,11 @@
       "vertical_evidenced": 0,
       "status": "confirmed",
       "placement_reason": "Hoover's termination directive survives in the released files and is documented by the Church Committee.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 17,
@@ -343,7 +412,11 @@
       "vertical_evidenced": 1,
       "status": "contested",
       "placement_reason": "An FBI informant's floor plan and the Bureau's Panther operations are documented, and the families' civil suit ended in a substantial settlement; the precise degree of FBI direction of the raid itself remains credibly disputed — well-supported, not Core.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 18,
@@ -357,7 +430,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "FBI activity around AIM and Pine Ridge is documented, but COINTELPRO formally ended in 1971 and the causal claim about AIM's collapse rests on inference from partial records. Path inward: released FBI files showing a directed disruption program against AIM comparable to the documented COINTELPRO operations.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 19,
@@ -371,7 +448,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Stated faithfully. The program's 1971 termination is documented; later documented abuses (which are real) are not evidence that the same program continued. The only offered source is anonymous — zero weight. Path inward: verifiable post-1971 documents showing a successor program with the same charter and chain of command.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 20,
@@ -385,7 +466,11 @@
       "vertical_evidenced": 0,
       "status": "refuted",
       "placement_reason": "Established: COINTELPRO existed (1956–1971), targeted lawful domestic groups, and in documented cases contributed to deaths (e.g., Fred Hampton). — The universal version is checked and failed: its only support is the claimants' own publications (zero weight), and the investigated record — which documents real abuses in detail — contradicts a program of universal assassination. Debunked; kept visible, not fleshed out.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 21,
@@ -399,7 +484,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Not resolvable by documents or observation in either direction. Off the radial axis by rule.",
-      "created_at": "2026-07-11 22:41:52"
+      "created_at": "2026-07-11 22:41:52",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 22,
@@ -413,7 +502,11 @@
       "vertical_evidenced": 0,
       "status": "confirmed",
       "placement_reason": "Three independent, preregistered, multi-lab projects published their own primary records and converge; the figure is stated as a range because the samples differ. Publicly challenged since 2015 and standing.",
-      "created_at": "2026-07-12 02:45:11"
+      "created_at": "2026-07-12 02:45:11",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 23,
@@ -427,7 +520,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Two independent multi-lab primary records converge on a near-zero effect. The original authors’ published methodological objection is attached as contradicting evidence, honestly — and while that credible dispute stands, this stays out of Core. Inner is what it earns.",
-      "created_at": "2026-07-12 02:46:41"
+      "created_at": "2026-07-12 02:46:41",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 24,
@@ -441,7 +538,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "The demonstration is its own primary record and has been reproduced conceptually many times, but one primary document is what exists — Inner is what one primary document earns under this tool's bar, and Core's two-independent-records requirement is the right kind of strict.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 25,
@@ -455,7 +556,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "A higher-powered replication and the first author's own against-interest disavowal support the failure; the senior author's published p-curve defense is attached as contradicting evidence and keeps this at Inner while the dispute stands.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 26,
@@ -469,7 +574,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "The prevalence of the practices is documented (survey with truth-telling incentives), and the mechanism is proven possible (the false-positive demonstration) — but \"primary cause\" is a causal attribution none of the attached sources measures. Deliberately placed at Middle although the evidence count would pass Inner: the sources establish plausibility, not the causal share. Path inward: studies that trace failed replications to specific documented practices in the original papers.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 27,
@@ -483,7 +592,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Stated faithfully. The 2005 origin paper is a theoretical model of publication incentives, not an empirical audit — it argues the claim rather than measures it, so citing it is close to restating the claim. The replication projects sample specific psychology literatures and are consistent with high false rates there, but do not establish \"most, in most fields\". Path inward: preregistered field-wide audits across disciplines.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 28,
@@ -497,7 +610,11 @@
       "vertical_evidenced": 0,
       "status": "refuted",
       "placement_reason": "Established: Large preregistered multi-lab projects (2011–2018) found replication rates of roughly 36–62% in the sampled literatures; undisclosed analytic flexibility demonstrably manufactures false positives; several famous effects failed high-powered replication. — The nihilist remainder is checked and failed: the same audits that document the failures document the substantial fraction that replicated — large effects most reliably — and the only support offered for \"nothing can be trusted\" is the claimants' own posts (zero weight). Debunked; kept visible, not fleshed out.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 29,
@@ -511,7 +628,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Framing claim: it converts a documented measurement problem into a verdict on the field's nature. The documented record (large-scale self-audit and reform) is, if anything, science behaving as science. No sources offered.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 30,
@@ -525,7 +646,11 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "A value judgment, barred from Core by rule regardless of sourcing. It rests on the documented fact that undisclosed flexibility manufactures false positives — the factual base is attached; the moral weight is the claim's own.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
     },
     {
       "id": 31,
@@ -539,7 +664,209 @@
       "vertical_evidenced": 0,
       "status": "contested",
       "placement_reason": "Not resolvable by replication data in either direction — any replication rate is compatible with it. Off the radial axis by rule.",
-      "created_at": "2026-07-12 02:49:54"
+      "created_at": "2026-07-12 02:49:54",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 34,
+      "topic_id": 7,
+      "text": "In April 2020 the Department of Defense officially released three Navy videos — FLIR (recorded November 2004), GIMBAL and GOFAST (recorded January 2015) — depicting unidentified aerial phenomena, after prior unauthorized circulation in 2007 and 2017.",
+      "kind": "historical",
+      "layer": "factual",
+      "radial_tier": "core",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "confirmed",
+      "placement_reason": "Established by the department's own release statement and the officially posted files — primary government documents. The release statement says it was issued to clear up misconceptions about the videos' authenticity and characterizes the phenomena only as 'unidentified.' The release proves the release; what the footage depicts is a separate question (see the disputed-analyses claim).",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 35,
+      "topic_id": 7,
+      "text": "On July 26, 2023 the House Oversight Committee's national security subcommittee held a public hearing on unidentified anomalous phenomena at which David Grusch testified under oath that the United States operates a multi-decade UAP crash-retrieval and reverse-engineering program.",
+      "kind": "historical",
+      "layer": "factual",
+      "radial_tier": "core",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "confirmed",
+      "placement_reason": "The congressional event record and the GPO transcript are the primary record that the hearing occurred and that this testimony was given under oath. Sworn testimony is Core-grade evidence that the testimony occurred and near-zero evidence for its content absent inspectable artifacts — the program claim is its own claim, placed on its own evidence.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 36,
+      "topic_id": 7,
+      "text": "AARO's 2024 Historical Record Report Volume 1 states that AARO found no verifiable evidence that any UAP sighting represented extraterrestrial technology, no evidence for the alleged government reverse-engineering program, and that the alleged off-world metal sample it examined is ordinary and terrestrial.",
+      "kind": "historical",
+      "layer": "factual",
+      "radial_tier": "inner",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "A claim about WHAT THE REPORT STATES, established by the report itself — a primary government document released to the public March 8, 2024 at aaro.mil. As the record of its own contents the document is definitive, yet the Core floor requires TWO independent primary documents and admits no carve-out for self-describing records — so this sits at inner on one primary (a recorded taxonomy strain: the rules refused the build's own Core placement here, and the refusal stands). Path inward: a second independent primary record, e.g. the department's release announcement. The cover carries its DOPSR stamp — 'CLEARED For Open Publication Mar 06, 2024' — clearance for release, not review as true (also a recorded strain).",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 37,
+      "topic_id": 7,
+      "text": "The FY2023 National Defense Authorization Act (Public Law 117-263) established unidentified anomalous phenomena reporting procedures (§1673) and a protected authorized-disclosure channel for UAP-related whistleblowers, codified at 50 U.S.C. §3373b.",
+      "kind": "historical",
+      "layer": "factual",
+      "radial_tier": "core",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "confirmed",
+      "placement_reason": "The public law's own text — §1673 appears in the law's table of sections — and the government's DD-3212 reporting form cites §1673(b)(1): the provision in operation. Anchored on FY2023, which is fully verified; the FY2024 NARA records provision is deliberately not asserted here.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 38,
+      "topic_id": 7,
+      "text": "In the 1980s U.S. Air Force personnel fed fabricated UFO material to civilian Paul Bennewitz — a documented disinformation operation against an American civilian.",
+      "kind": "historical",
+      "layer": "factual",
+      "radial_tier": "middle",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "Documented through reputable secondary accounts and participant admissions (Richard Doty's on-record statements in the Mirage Men film); no released government primary document confirms the operation as such. That evidentiary shape earns middle — reputable secondary, no primary. Path inward: released Air Force records of the operation.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 39,
+      "topic_id": 7,
+      "text": "Independent technical analyses dispute that the three released Navy videos show phenomena beyond conventional explanation, offering parallax, engine glare, and sensor or gimbal artifacts as candidate explanations.",
+      "kind": "empirical",
+      "layer": "factual",
+      "radial_tier": "middle",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "Presented as dispute, not resolution. The analyses are methodical and reproducible but published on forum/self-published venues, with a reputable-secondary summary attached — that mix earns middle. The venue-versus-method tension is a recorded taxonomy strain, logged not solved.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 40,
+      "topic_id": 7,
+      "text": "The United States operates a multi-decade UAP crash-retrieval and reverse-engineering program.",
+      "kind": "empirical",
+      "layer": "factual",
+      "radial_tier": "outer",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "Stated faithfully. Its principal support is sworn testimony — Core-grade evidence that the testimony occurred (the hearing claim, linked below), near-zero for its content absent inspectable artifacts; the transcript therefore sources the hearing claim, not this one. AARO's Historical Record Report states it found no evidence for the reverse-engineering narrative (attached as contradicting). Path inward: released artifacts, or corroborating documents that can be inspected.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 41,
+      "topic_id": 7,
+      "text": "The government's released UAP materials are a controlled disinformation operation.",
+      "kind": "empirical",
+      "layer": "factual",
+      "radial_tier": "outer",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "Stated faithfully. The documented Bennewitz operation (linked below) establishes that the CLASS of government UFO disinformation against civilians is real; the class being real is not evidence that this instance is — this claim currently sits on no evidence of its own. Path inward: documents showing the specific releases were directed disinformation.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 42,
+      "topic_id": 7,
+      "text": "The metal sample recovered from an alleged UAP crash and examined by AARO is extraterrestrial technology whose properties cannot be explained by terrestrial manufacture.",
+      "kind": "empirical",
+      "layer": "factual",
+      "radial_tier": "outermost",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "refuted",
+      "placement_reason": "Established: A metal sample alleged to be off-world was submitted to and examined by AARO; the 2024 Historical Record Report states its assessment: ordinary and terrestrial. — The off-world remainder is checked and failed: its only supporting source is the claimants' own publications (zero weight by rule), and the primary record of the examination states the sample is ordinary and terrestrial. Debunked — kept visible, not fleshed out.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 43,
+      "topic_id": 7,
+      "text": "Non-human intelligences exist as supernatural or spiritual beings.",
+      "kind": "metaphysical",
+      "layer": "framing",
+      "radial_tier": null,
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "Not resolvable by documents, observation, or data in either direction. Routed off the radial axis by rule — ranking it weak would covertly assert its negation as strong. The attributed position, rendered with this explanation, never ranked.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": null
+    },
+    {
+      "id": 44,
+      "topic_id": 7,
+      "text": "The beings described in religious texts as angels and demons were extraterrestrial visitors.",
+      "kind": "historical",
+      "layer": "factual",
+      "radial_tier": "outer",
+      "vertical_direction": "neutral",
+      "vertical_magnitude": 0,
+      "vertical_evidenced": 0,
+      "status": "contested",
+      "placement_reason": "Stated faithfully — the empirical-historical recast of the off-axis position, deliberately written to be evidence-eligible, and answerable to the evidence axis alone. Its evidence: none carrying weight. Path inward: physical or documentary evidence tying specific textual descriptions to non-human technology. It cannot borrow the retrieval-program claim's standing — outer cannot feed inner, on exactly the chain a disclosure narrative wants to build.",
+      "created_at": "2026-08-03 00:52:55",
+      "kind_proposed_at": null,
+      "kind_proposed_to": null,
+      "kind_proposed_reason": null,
+      "recast_of": 43
     }
   ],
   "sources": [
@@ -1094,6 +1421,222 @@
       "withdrawn_reason": null,
       "proposed_at": null,
       "proposed_reason": null
+    },
+    {
+      "id": 49,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "U.S. Department of Defense, 'Statement by the Department of Defense on the Release of Historical Navy Videos' (April 27, 2020) — published at defense.gov, since migrated to the renamed department domain; archive-captured at seed time",
+      "url": "https://www.war.gov/News/Releases/Release/Article/2165713/statement-by-the-department-of-defense-on-the-release-of-historical-navy-videos/",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 50,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "Naval Air Systems Command FOIA Reading Room — the three Navy videos (FLIR, GIMBAL, GOFAST) as officially posted",
+      "url": "https://www.navair.navy.mil/foia/documents",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 51,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "Congress.gov, House Event 116282 (118th Congress) — hearing record with witness list and submitted documents; Grusch listed as Former National Reconnaissance Office Representative, UAP Task Force",
+      "url": "https://www.congress.gov/event/118th-congress/house-event/116282",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 52,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "Official GPO transcript of the July 26, 2023 hearing (serial 53-022) — the sworn record",
+      "url": "https://www.congress.gov/118/meeting/house/116282/documents/HHRG-118-GO06-Transcript-20230726.pdf",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 53,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "House Oversight Committee announcement, \"National Security Subcommittee to Hold Hearing on Unidentified Anomalous Phenomena\" — hearing title, date, and witnesses",
+      "url": "https://oversight.house.gov/release/national-security-subcommittee-to-hold-hearing-on-unidentified-anomalous-phenomena%ef%bf%bc/",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 54,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "AARO, Historical Record Report Volume 1 (2024) — released at aaro.mil March 8, 2024; stable full-text capture at Wikimedia Commons cited as archive",
+      "url": "https://commons.wikimedia.org/wiki/File:AARO_Historical_Record_Report_Volume_1_2024.pdf",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 55,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "Public Law 117-263 (James M. Inhofe NDAA for FY2023, signed Dec 23, 2022), full text — §1673, \"Unidentified anomalous phenomena reporting procedures\"",
+      "url": "https://www.congress.gov/117/plaws/publ263/PLAW-117publ263.pdf",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 56,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "GovInfo record for Public Law 117-263",
+      "url": "https://www.govinfo.gov/app/details/PLAW-117publ263",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 57,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "AARO reporting form DD-3212, citing §1673(b)(1) — the provision in operation",
+      "url": "https://www.aaro.mil/Portals/136/PDFs/UAP_Program_Report/DD_3212.pdf",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 58,
+      "topic_id": 7,
+      "tier": "reputable_secondary",
+      "citation": "Greg Bishop, \"Project Beta: The Story of Paul Bennewitz, National Security, and the Creation of a Modern UFO Myth\" (Paraview Pocket Books, 2005) [print source — no canonical online copy]",
+      "url": "",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 59,
+      "topic_id": 7,
+      "tier": "reputable_secondary",
+      "citation": "Mark Pilkington, \"Mirage Men\" (2010, book) and \"Mirage Men\" (2013 documentary, dir. Denham/Kypourgos/Pilkington) — the documentary carries Richard Doty's on-camera statements [print/film — offline citation]",
+      "url": "",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 60,
+      "topic_id": 7,
+      "tier": "reputable_secondary",
+      "citation": "Adam Gorightly, \"Saucers, Spooks and Kooks: UFO Disinformation in the Age of Aquarius\" (2021) [print source — no canonical online copy]",
+      "url": "",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 61,
+      "topic_id": 7,
+      "tier": "self_published",
+      "citation": "Metabunk analysis threads (Mick West et al.) on FLIR1/Nimitz, GIMBAL, and GOFAST — metabunk.org threads t9190, t9333, t9569 (old-style ids; they redirect on the current forum)",
+      "url": "https://www.metabunk.org",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 62,
+      "topic_id": 7,
+      "tier": "reputable_secondary",
+      "citation": "Vice, \"The Skeptic's Guide to the Pentagon's UFO Videos\"",
+      "url": "https://www.vice.com/en/article/the-skeptics-guide-to-the-pentagons-ufo-videos/",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 63,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "AARO, Historical Record Report Volume 1 (2024): \"AARO has no evidence for the USG reverse-engineering narrative provided by interviewees and has been able to disprove the majority of the interviewees' claims\"",
+      "url": "https://commons.wikimedia.org/wiki/File:AARO_Historical_Record_Report_Volume_1_2024.pdf",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 64,
+      "topic_id": 7,
+      "tier": "self_published",
+      "citation": "Websites and programs of proponents asserting the sample's off-world origin [cited as a class of postings — no single canonical copy exists]",
+      "url": "",
+      "is_claimant_self_published": 1,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 65,
+      "topic_id": 7,
+      "tier": "primary_doc",
+      "citation": "AARO, Historical Record Report Volume 1 (2024): the alleged off-world metal sample assessed as ordinary and terrestrial",
+      "url": "https://commons.wikimedia.org/wiki/File:AARO_Historical_Record_Report_Volume_1_2024.pdf",
+      "is_claimant_self_published": 0,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "id": 66,
+      "topic_id": 7,
+      "tier": "self_published",
+      "citation": "Ancient-astronaut literature and programs asserting the identification [cited as a class of works — no single canonical copy]",
+      "url": "",
+      "is_claimant_self_published": 1,
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
     }
   ],
   "attachments": [
@@ -1510,6 +2053,168 @@
       "withdrawn_reason": null,
       "proposed_at": null,
       "proposed_reason": null
+    },
+    {
+      "claim_id": 34,
+      "source_id": 49,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 34,
+      "source_id": 50,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 35,
+      "source_id": 51,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 35,
+      "source_id": 52,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 35,
+      "source_id": 53,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 36,
+      "source_id": 54,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 37,
+      "source_id": 55,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 37,
+      "source_id": 56,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 37,
+      "source_id": 57,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 38,
+      "source_id": 58,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 38,
+      "source_id": 59,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 38,
+      "source_id": 60,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 39,
+      "source_id": 61,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 39,
+      "source_id": 62,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 40,
+      "source_id": 63,
+      "relation": "contradicts",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 42,
+      "source_id": 64,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 42,
+      "source_id": 65,
+      "relation": "contradicts",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
+    },
+    {
+      "claim_id": 44,
+      "source_id": 66,
+      "relation": "supports",
+      "withdrawn_at": null,
+      "withdrawn_reason": null,
+      "proposed_at": null,
+      "proposed_reason": null
     }
   ],
   "supports": [
@@ -1540,6 +2245,18 @@
     {
       "supporter_id": 24,
       "supported_id": 30
+    },
+    {
+      "supporter_id": 35,
+      "supported_id": 40
+    },
+    {
+      "supporter_id": 38,
+      "supported_id": 41
+    },
+    {
+      "supporter_id": 40,
+      "supported_id": 44
     }
   ],
   "kernels": [
@@ -1582,6 +2299,16 @@
       "gap_path_inward": "the standard of evidence that documented the Hampton case, met separately for each further claimed death",
       "origin": "manual",
       "created_at": "2026-07-28 00:54:41"
+    },
+    {
+      "id": 5,
+      "claim_id": 42,
+      "kernel_id": 36,
+      "gap_establishes": "A metal sample alleged to be off-world was submitted to and examined by AARO, whose 2024 report states its assessment: ordinary and terrestrial.",
+      "gap_asserts_beyond": "That the sample is extraterrestrial technology beyond terrestrial manufacture — the opposite of the examination record, with no inspectable analysis behind it.",
+      "gap_path_inward": "independent, inspectable materials analysis contradicting AARO's assessment — reproducible data, not assertion",
+      "origin": "manual",
+      "created_at": "2026-08-03 00:52:55"
     }
   ],
   "challenges": [
@@ -1896,6 +2623,90 @@
       "kernel_link_id": null,
       "hop_supporter_id": null,
       "hop_supported_id": null
+    },
+    {
+      "id": 29,
+      "claim_id": 34,
+      "type": "mis_tiered",
+      "description": "Automatic placement review at \"core\": evidence requirements met; claim survived.",
+      "outcome": "rejected",
+      "resulting_tier_change": "placed at core",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
+    },
+    {
+      "id": 30,
+      "claim_id": 35,
+      "type": "mis_tiered",
+      "description": "Automatic placement review at \"core\": evidence requirements met; claim survived.",
+      "outcome": "rejected",
+      "resulting_tier_change": "placed at core",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
+    },
+    {
+      "id": 31,
+      "claim_id": 36,
+      "type": "mis_tiered",
+      "description": "Automatic placement review at \"inner\": evidence requirements met; claim survived.",
+      "outcome": "rejected",
+      "resulting_tier_change": "placed at inner",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
+    },
+    {
+      "id": 32,
+      "claim_id": 37,
+      "type": "mis_tiered",
+      "description": "Automatic placement review at \"core\": evidence requirements met; claim survived.",
+      "outcome": "rejected",
+      "resulting_tier_change": "placed at core",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
+    },
+    {
+      "id": 33,
+      "claim_id": 38,
+      "type": "mis_tiered",
+      "description": "Automatic placement review at \"middle\": evidence requirements met; claim survived.",
+      "outcome": "rejected",
+      "resulting_tier_change": "placed at middle",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
+    },
+    {
+      "id": 34,
+      "claim_id": 39,
+      "type": "mis_tiered",
+      "description": "Automatic placement review at \"middle\": evidence requirements met; claim survived.",
+      "outcome": "rejected",
+      "resulting_tier_change": "placed at middle",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
+    },
+    {
+      "id": 35,
+      "claim_id": 42,
+      "type": "contradicting_evidence",
+      "description": "Established: A metal sample alleged to be off-world was submitted to and examined by AARO; the 2024 Historical Record Report states its assessment: ordinary and terrestrial. — The off-world remainder is checked and failed: its only supporting source is the claimants' own publications (zero weight by rule), and the primary record of the examination states the sample is ordinary and terrestrial. Debunked — kept visible, not fleshed out.",
+      "outcome": "upheld",
+      "resulting_tier_change": "outer → outermost",
+      "created_at": "2026-08-03 00:52:55",
+      "kernel_link_id": null,
+      "hop_supporter_id": null,
+      "hop_supported_id": null
     }
   ],
   "events": [
@@ -2018,6 +2829,166 @@
       "detail": "source #31 \"Church Committee, Final Report, Books II–III (1976): docume…\" withdrawn — adjudicated by curator",
       "reason": "\"Every\" is too broad of a term as it can include activists for other countries which this document doesn't support",
       "created_at": "2026-08-01 21:00:42"
+    },
+    {
+      "id": 14,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 34,
+      "topic_id": 7,
+      "detail": "placed at core",
+      "reason": "Established by the department's own release statement and the officially posted files — primary government documents. The release statement says it was issued to clear up misconceptions about the videos' authenticity and characterizes the phenomena only as 'unidentified.' The release proves the release; what the footage depicts is a separate question (see the disputed-analyses claim).",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 15,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 35,
+      "topic_id": 7,
+      "detail": "placed at core",
+      "reason": "The congressional event record and the GPO transcript are the primary record that the hearing occurred and that this testimony was given under oath. Sworn testimony is Core-grade evidence that the testimony occurred and near-zero evidence for its content absent inspectable artifacts — the program claim is its own claim, placed on its own evidence.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 16,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 36,
+      "topic_id": 7,
+      "detail": "placed at inner",
+      "reason": "A claim about WHAT THE REPORT STATES, established by the report itself — a primary government document released to the public March 8, 2024 at aaro.mil. As the record of its own contents the document is definitive, yet the Core floor requires TWO independent primary documents and admits no carve-out for self-describing records — so this sits at inner on one primary (a recorded taxonomy strain: the rules refused the build's own Core placement here, and the refusal stands). Path inward: a second independent primary record, e.g. the department's release announcement. The cover carries its DOPSR stamp — 'CLEARED For Open Publication Mar 06, 2024' — clearance for release, not review as true (also a recorded strain).",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 17,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 37,
+      "topic_id": 7,
+      "detail": "placed at core",
+      "reason": "The public law's own text — §1673 appears in the law's table of sections — and the government's DD-3212 reporting form cites §1673(b)(1): the provision in operation. Anchored on FY2023, which is fully verified; the FY2024 NARA records provision is deliberately not asserted here.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 18,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 38,
+      "topic_id": 7,
+      "detail": "placed at middle",
+      "reason": "Documented through reputable secondary accounts and participant admissions (Richard Doty's on-record statements in the Mirage Men film); no released government primary document confirms the operation as such. That evidentiary shape earns middle — reputable secondary, no primary. Path inward: released Air Force records of the operation.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 19,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 39,
+      "topic_id": 7,
+      "detail": "placed at middle",
+      "reason": "Presented as dispute, not resolution. The analyses are methodical and reproducible but published on forum/self-published venues, with a reputable-secondary summary attached — that mix earns middle. The venue-versus-method tension is a recorded taxonomy strain, logged not solved.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 20,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 40,
+      "topic_id": 7,
+      "detail": "placed at outer",
+      "reason": "Stated faithfully. Its principal support is sworn testimony — Core-grade evidence that the testimony occurred (the hearing claim, linked below), near-zero for its content absent inspectable artifacts; the transcript therefore sources the hearing claim, not this one. AARO's Historical Record Report states it found no evidence for the reverse-engineering narrative (attached as contradicting). Path inward: released artifacts, or corroborating documents that can be inspected.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 21,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 41,
+      "topic_id": 7,
+      "detail": "placed at outer",
+      "reason": "Stated faithfully. The documented Bennewitz operation (linked below) establishes that the CLASS of government UFO disinformation against civilians is real; the class being real is not evidence that this instance is — this claim currently sits on no evidence of its own. Path inward: documents showing the specific releases were directed disinformation.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 22,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 42,
+      "topic_id": 7,
+      "detail": "placed at outer",
+      "reason": "Stated faithfully as its proponents state it; under review.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 23,
+      "actor": "claude (2.99b seeding)",
+      "action": "demotion",
+      "claim_id": 42,
+      "topic_id": 7,
+      "detail": "outer → outermost",
+      "reason": "Established: A metal sample alleged to be off-world was submitted to and examined by AARO; the 2024 Historical Record Report states its assessment: ordinary and terrestrial. — The off-world remainder is checked and failed: its only supporting source is the claimants' own publications (zero weight by rule), and the primary record of the examination states the sample is ordinary and terrestrial. Debunked — kept visible, not fleshed out.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 24,
+      "actor": "claude (2.99b seeding)",
+      "action": "kernel_link_created",
+      "claim_id": 42,
+      "topic_id": 7,
+      "detail": "kernel is #36 \"AARO's 2024 Historical Record Report Volume 1 states that A…\" (manual)",
+      "reason": "Establishes: A metal sample alleged to be off-world was submitted to and examined by AARO, whose 2024 report states its assessment: ordinary and terrestrial. — asserts beyond: That the sample is extraterrestrial technology beyond terrestrial manufacture — the opposite of the examination record, with no inspectable analysis behind it.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 25,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 43,
+      "topic_id": 7,
+      "detail": "placed at off-axis (metaphysical)",
+      "reason": "Not resolvable by documents, observation, or data in either direction. Routed off the radial axis by rule — ranking it weak would covertly assert its negation as strong. The attributed position, rendered with this explanation, never ranked.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 26,
+      "actor": "claude (2.99b seeding)",
+      "action": "claim_created",
+      "claim_id": 44,
+      "topic_id": 7,
+      "detail": "placed at outer · recast of #43",
+      "reason": "Stated faithfully — the empirical-historical recast of the off-axis position, deliberately written to be evidence-eligible, and answerable to the evidence axis alone. Its evidence: none carrying weight. Path inward: physical or documentary evidence tying specific textual descriptions to non-human technology. It cannot borrow the retrieval-program claim's standing — outer cannot feed inner, on exactly the chain a disclosure narrative wants to build.",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 27,
+      "actor": "claude (2.99b seeding)",
+      "action": "support_link_added",
+      "claim_id": 35,
+      "topic_id": 7,
+      "detail": "#35 supports #40",
+      "reason": "\"On July 26, 2023 the House Oversight Committee's national s…\" recorded as supporting \"The United States operates a multi-decade UAP crash-retriev…\".",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 28,
+      "actor": "claude (2.99b seeding)",
+      "action": "support_link_added",
+      "claim_id": 38,
+      "topic_id": 7,
+      "detail": "#38 supports #41",
+      "reason": "\"In the 1980s U.S. Air Force personnel fed fabricated UFO ma…\" recorded as supporting \"The government's released UAP materials are a controlled di…\".",
+      "created_at": "2026-08-03 00:52:55"
+    },
+    {
+      "id": 29,
+      "actor": "claude (2.99b seeding)",
+      "action": "support_link_added",
+      "claim_id": 40,
+      "topic_id": 7,
+      "detail": "#40 supports #44",
+      "reason": "\"The United States operates a multi-decade UAP crash-retriev…\" recorded as supporting \"The beings described in religious texts as angels and demon…\".",
+      "created_at": "2026-08-03 00:52:55"
     }
   ]
 }
