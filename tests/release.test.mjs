@@ -53,13 +53,15 @@ restoreHistory(db, JSON.parse(readFileSync(join(root, 'exports', 'curated-record
 const server = buildApp(db, { demo: true, rateLimit: 0 }).listen(0);
 const base = `http://localhost:${server.address().port}`;
 
-await test('R1 (0a, amended 2.99b). the shipped seed is the curated FOUR — no test residue, no "Christ is God"', () => {
-  // R1 AMENDMENT (operator decision, 2026-08-02, recorded in the 2.99b
-  // kickoff): UAP joins as the fourth curated topic. Explicit amendment,
-  // not a silent change.
+await test('R1 (0a, amended twice — 2.99b, 2.99b-2). the shipped seed is the curated FIVE — no test residue, no "Christ is God"', () => {
+  // R1 FIRST AMENDMENT (operator decision, 2026-08-02): UAP joins as the
+  // fourth curated topic. R1 SECOND AMENDMENT (operator decision,
+  // 2026-08-09, recorded in the 2.99b-2 kickoff, superseding the
+  // live-only mini-build ruling of 2026-08-08): AI Evaluation joins as
+  // the fifth. Explicit amendments, never silent changes.
   const names = db.prepare('SELECT name FROM topics ORDER BY id').all().map((t) => t.name);
-  assert.deepEqual(names, ['MKUltra', 'COINTELPRO', 'The Replication Crisis', 'UAP: Disclosure, Evidence, and Overreach'],
-    `shipped topics must be exactly the curated four, got: ${names.join(' | ')}`);
+  assert.deepEqual(names, ['MKUltra', 'COINTELPRO', 'The Replication Crisis', 'UAP: Disclosure, Evidence, and Overreach', 'AI Evaluation: Benchmarks, System Cards, and Independent Testing'],
+    `shipped topics must be exactly the curated five, got: ${names.join(' | ')}`);
   // Residue scan across every claim: nothing from operator test sessions.
   const texts = db.prepare('SELECT text FROM claims').all().map((c) => c.text);
   for (const t of texts) {
@@ -102,8 +104,8 @@ await test('R4 (0a-i). the debunked claims ship their kernel fans, correctly enc
     .all();
   assert.deepEqual(
     links.map((l) => [l.claim_id, l.kernel_id]),
-    [[11, 1], [11, 2], [20, 13], [20, 17], [42, 36]],
-    'the seeded kernel links (MKUltra #11 fan, COINTELPRO #20 fan, UAP sample #42 ← AARO #36)'
+    [[11, 1], [11, 2], [20, 13], [20, 17], [42, 36], [60, 59]],
+    'the seeded kernel links (MKUltra #11 fan, COINTELPRO #20 fan, UAP sample #42 ← AARO #36, AI-eval expectation #60 ← survey #59)'
   );
   // The exact glyphs the curl era mangled: en-dashes in year ranges, em-dashes
   // between clauses, apostrophes in possessives.

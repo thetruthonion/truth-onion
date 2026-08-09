@@ -937,7 +937,7 @@ export default function App() {
               Truth Onion
             </h2>
             <p>
-              The curated record of four documented topics — every claim placed by its
+              The curated record of five documented topics — every claim placed by its
               evidence, debunked claims kept visible. This shared record is read-only; the
               sandbox gives you your own private copy — add claims, attach sources, file
               challenges; the rules accept or refuse them, with reasons.

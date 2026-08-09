@@ -129,5 +129,69 @@ Workaround used: placed at inner as earned; the refusal kept, verbatim, in the p
 
 ---
 
+## AI-evaluation genre — the fifth curated topic (2.99b-2, seeded 2026-08-09)
+
+Third-genre strain input, one entry per claim shape probed, from the actual
+build (all eight shapes seeded by operator decision). The taxonomy remains
+untouched — 2.99c input.
+
+### Entry 13 — Shape 1, the control: NO STRAIN (genre: AI evaluation)
+Claim pair: "Anthropic published that Claude 3.5 Sonnet improves SWE-bench Verified from 33.4% to 49.0%, and the UK/US government institutes jointly published a pre-deployment evaluation" (Core); "METR independently evaluated GPT-5 pre-deployment, and the system card names METR" (Core).
+Document kind: developer announcement + independent government/third-party evaluation records.
+What the vocabulary forced: nothing. Two independent primary documents each; Core earned; claim-text honesty ("independently evaluated," never "replicated the number") fit inside ordinary placement discipline.
+What was lost: nothing. Logged per the kickoff — the clean case makes the other entries legible: when developer publication and independent evaluation both exist as documents, the existing vocabulary is sufficient.
+Workaround used: none needed.
+
+### Entry 14 — A validity critique has no relation to the score it critiques (genre: AI evaluation)
+Claim pair: "OpenAI's announcement reports GPT-5 scoring 74.9% on SWE-bench Verified…" (inner) and "published critiques document construct-validity, contamination, and gaming problems in AI benchmarks" (inner).
+Document kind: a self-describing announcement; peer-reviewed and preprint critique literature.
+What the vocabulary forced: the relations are supports / contradicts / is_origin_of. A construct-validity critique does not contradict "the announcement reports N" — the score is really reported — and it certainly does not support it. The true relation (qualifies what the score measures) does not exist, so the two claims sit deliberately unlinked.
+What was lost: a reader of the record cannot see mechanically that the critique claim BEARS ON the score claim; the bearing lives only in prose placement reasons pointing at each other.
+Workaround used: both claims seeded side by side in the same topic; each placement reason names the other; no link drawn — a wrong relation is worse than a stated absence.
+
+### Entry 15 — The self-published-only primary record, at maximum (genre: AI evaluation)
+Claims: "Anthropic's system card states … blackmail in 84% of rollouts … ASL-3" (inner); "OpenAI's o1 card states medium risk … 5% … 99%" (inner).
+Document kind: developer system cards — the ONLY possible primary records of internal, contrived, unrerunnable evaluations (the Carney problem at maximum: the sole primary record is self-published by the interested party, and no independent evidence type CAN exist for the content).
+What the vocabulary forced: primary_doc as the closest honest fit for the states-that claims (Entry 2 precedent), Inner ceiling (Entry 12); and for the content universe ("the model would actually do this") there is no seedable shape at all — its only possible source scores zero weight forever.
+What was lost: the distinction between "no independent evidence yet" (a gap evidence could close) and "no independent evidence possible" (structural). The tiers treat both as the same absence. Also unexpressed: the o1 card's internal/external split — Apollo's figures are external but rest on unreproducible pre-deployment access; "external" does not mean "checkable" and the taxonomy has only the one axis.
+Workaround used: content claims deliberately NOT seeded; the states-that claims carry the nuance verbatim in text and placement reason. D3 disclosure honored: one card from each developer.
+
+### Entry 16 — The retired artifact: tiers assume re-checkable content (genre: AI evaluation)
+Claims: "the Claude 3 model card reports Opus at 86.8% MMLU … retired January 5, 2026" (Core); "Kosinski's seven-times-revised paper reports davinci-003 solved 20% … older completion models no longer available" (Core).
+Document kind: model cards and deprecation records — public measurements whose measured artifact is now gone.
+What the vocabulary forced: Core, honestly — the publication facts are impeccably documented by two primary records each. But the tier reads as confidence in content, and the content can never be re-run by anyone: the record of the measurement is now the only measurement.
+What was lost: re-checkability as an evidence property (Entry 11's mirror image: there, a reproducible method tiered low for its venue; here, unreproducible content tiers high for its documents). The seven-version paper adds a second face: a "primary record" that substantially revised its headline claims across versions, where only version-pinning in the citation carries the honesty.
+Workaround used: strain named in both placement reasons; versions pinned (v7; v2 for Eriksson; v3 for Grace); the un-rerunnability stated in prose, invisible to the rules.
+
+### Entry 17 — The contested predicate, and the venue asymmetry it rode in on (genre: AI evaluation)
+Claims: "Sparks of AGI states GPT-4 'could reasonably be viewed as an early (yet still incomplete) version of an AGI system'" (inner) vs. "Arkoudas states 'GPT-4 at present is utterly incapable of reasoning'" (outer) vs. "whether LLMs 'understand' is an open definitional dispute" (Core).
+Document kind: two never-peer-reviewed preprints asserting opposite predicates; peer-reviewed records of the dispute itself.
+What the vocabulary forced: the operator-verified ledger kinds the two preprints differently (primary_doc of the assertion vs. self-published preprint), and the tiers follow the venue judgment — Inner and Outer for two claims of identical shape, each document equally definitive as the record of its own contents.
+What was lost: the actual dispute has no expression. The disagreement lives in what "reason"/"AGI" would have to mean for either sentence to be checkable — a contested PREDICATE, not contested evidence — and the only ring-expressible fact is "the dispute exists" (seeded at Core), which is not the fact the disputants care about.
+Workaround used: the dispute claim + both states-that claims seeded; the asymmetry left standing and named in the Arkoudas placement reason rather than harmonized.
+
+### Entry 18 — The recast held, but nothing stops a predicate upgrade (genre: AI evaluation / recast_of)
+Claim pair: off-axis "LLMs genuinely understand the language they process" ↔ recast "a GPT-style model trained on Othello transcripts developed an internal representation of the board state" (inner, recast_of).
+Document kind: probing-experiment paper (Othello-GPT); a priori position paper (Bender & Koller) beside it.
+What the vocabulary forced: nothing structural — recast_of (2.99b Part 2, first use outside UAP) expressed the pair cleanly: zero weight both directions, creation-validated, displayed on both pages.
+What was lost: the recast's honesty is pure discipline. The paper claims a *representation*; the recast text must resist upgrading it toward "understanding," and nothing mechanical checks predicate fidelity between a recast and its evidence — adjudication quality is load-bearing, as 2.99b already recorded for kind changes. Second face: the paper's own "nonlinear" detail is revised by follow-up literature outside the verified ledger — a pinned verbatim quote whose load-bearing adjective the field has moved past, with no versioned-quote or superseded-detail mechanism.
+Workaround used: recast text written to the paper's own predicate; the follow-up revision noted (not cited) in the placement reason.
+
+### Entry 19 — Headcount at the refused path: the survey probe (genre: AI evaluation / rules)
+Claim pair: "the 2023 survey of 2,778 researchers reports an aggregate 50% forecast for 2047 (and 2116 on the other framing)" (inner) vs. "AI experts collectively expect machines to outperform humans at every task by 2047" (outer → debunked through the real flow, kernel fan drawn).
+Document kind: one survey paper playing two evidentiary roles (Entry 4's one-document-many-roles, live again): it grounds the survey claim and contradicts the flattening.
+The probe, run live on the record (event 51): promotion of the debunked expectation claim toward middle, with the 2,778-researcher survey attached. REFUSED, verbatim: "Middle requires at least one reputable secondary source (or two independent single-outlet reports); this claim has none that carry weight (1 of its sources is anonymous or self-published and carries zero weight)." Headcount moved nothing — invariant 6 held mechanically, and the refusal is a permanent event.
+What the vocabulary forced, residually: (1) the refusal names source-tier arithmetic, not the real epistemic blocker — a survey documents what people BELIEVE, which is not evidence about the believed fact; that reason lives only in the placement reason and gap statement. (2) The build also hit kernel/support mutual exclusion live: the Entry 8 zero-weight-support pattern (survey → expectation, provenance stated honestly) is unavailable on a pair that carries the debunker's kernel link — provenance and evidence-stops-here are either/or on one pair, though both are true here.
+Workaround used: the kernel link carries the relation (it holds the gap statement, the richer artifact); the support-link refusal recorded in the seed module's comments and here.
+
+### Entry 20 — Documented harm: the axis worked; the magnitudes are judgment (genre: AI evaluation / legal)
+Claims: Dutch DPA €2.75M fine (inner, harm 3) · Garante €15M fine, under appeal (inner, harm 2) · Moffatt v. Air Canada, $812.02 ordered (inner, harm 1).
+Document kind: regulator announcements and a tribunal decision — the genre's first true court_record source (operator-opened; CanLII is robots-disallowed, so the operator's click is the verification, and the order text entered the record by operator transcription).
+What the vocabulary forced: vertical magnitude 1–3 normalized within the topic is pure curator judgment — a mass administrative scandal, a fine under appeal, and one passenger's $812.02 ranked 3/2/1 with no documented-scale vocabulary behind the integers. And "under appeal" has no status expression on a source or claim: a decision being contested rides only in claim text ("OpenAI has announced an appeal"), invisible to the rules — nothing would flag the claim if the appeal succeeded.
+What was lost: outcome scale and finality as recordable properties; Entry 5's court-record-access strain recurs in miniature (the accessible tribunal record is robots-walled; agency pages carry regulator findings).
+Workaround used: magnitudes stated with their reasoning in placement reasons; appeal caveat in the claim text per the verified ledger; operator transcription for the walled record.
+
+---
+
 When a new strain is hit, append it here with the topic and claim that
 surfaced it. Do not patch the taxonomy piecemeal.

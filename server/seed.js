@@ -5,6 +5,7 @@
 import { createClaim, demoteClaim, challengeClaim, addSupport, addKernelLink } from './service.js';
 import { applySourceLinks } from './sourcelinks.js';
 import { seedUAP } from './seed-uap.js';
+import { seedAIEval } from './seed-aieval.js';
 
 export function isSeeded(db) {
   return !!db.prepare('SELECT 1 FROM topics LIMIT 1').get();
@@ -19,10 +20,18 @@ export function seed(db) {
   addSupport(db, mkultra.exposedId, cointelpro.existedId);
   // 2.99b Part 3: the fourth curated topic (operator-verified sources).
   const uap = seedUAP(db);
+  // 2.99b-2: the fifth curated topic (operator-verified sources, all eight
+  // claim shapes by operator decision 2026-08-09).
+  const aieval = seedAIEval(db);
   // 2.98b C: canonical links / honesty labels for every seeded source —
   // verified once, applied from the single mapping in sourcelinks.js.
   applySourceLinks(db);
-  return { topicId: mkultra.topicId, cointelproTopicId: cointelpro.topicId, uapTopicId: uap.topicId };
+  return {
+    topicId: mkultra.topicId,
+    cointelproTopicId: cointelpro.topicId,
+    uapTopicId: uap.topicId,
+    aievalTopicId: aieval.topicId
+  };
 }
 
 function seedMKUltra(db) {

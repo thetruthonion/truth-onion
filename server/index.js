@@ -65,7 +65,13 @@ const DEMO_MESSAGE = () =>
 // same routes, same rules — not a fork.
 export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, sandboxManager = null } = {}) {
   const app = express();
-  app.use(express.json());
+  // Body limit sits ABOVE the sandbox per-copy size cap (8 MB), which is
+  // the designed bound on record-shaped payloads — express's 100kb default
+  // silently broke save re-import the day the record outgrew it (caught by
+  // the 2.99b-2 fifth-topic seed; D1/H10/H14 pin the round-trip). The cap
+  // that refuses oversized WORK is the sandbox's own, with its honest
+  // message — never the parser's.
+  app.use(express.json({ limit: '10mb' }));
 
   // Inside a sandbox copy, the acting persona rides a header and is clamped
   // to the known set — the event log records personas, never freeform

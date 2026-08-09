@@ -41,7 +41,15 @@ UI fix session (2026-08-09, §3.2n correction): the reported demo-side
 upload panel did NOT exist — built now on the main page as the one
 combined "contribute / feedback" surface (operator ruling); stale
 gmail address swept to contact@thetruthonion.org everywhere it renders.
-Reported, not verified.** **Stage 2.99a
+Reported, not verified.** **Stage 2.99b-2 (2026-08-09, §3.2p): the
+AI-evaluation FIFTH topic SHIPPED — R1 amended a second time to the
+curated five (operator supersession of the 2026-08-08 live-only ruling,
+on the record in the kickoff); all eight claim shapes seeded by operator
+decision from the operator-confirmed sources ledger; strains 13–20
+journaled including the no-strain control; the fifth topic exposed and
+fixed a real limit bug (express body cap silently below the sandbox size
+cap — save re-import would have failed on the grown record). Reported,
+not verified.** **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1669,6 +1677,103 @@ the entry-card/README/site copy all updated to four.
   derive; verification record: web-verified 2026-08-02,
   operator-confirmed) and the three offline labels.
 
+## 3.2p Stage 2.99b-2 — the AI-evaluation FIFTH topic, SHIPPED (2026-08-09)
+
+**Supersession stated (operator decision, 2026-08-09, from the 2.99b-2
+kickoff): T2 (ship vs live-only) is answered — SHIP.** This supersedes the
+reconciliation ruling of 2026-08-08 that the AI-evaluation topic runs as a
+live-only strain mini-build and that the seed stays the curated four.
+**Release pin R1 amends a SECOND time: the shipped seed is the curated
+FIVE** — MKUltra, COINTELPRO, Replication Crisis, UAP, AI Evaluation. The
+named costs (second R1 amendment, extended residue scan, double-seed
+determinism, release-suite extension, operator source verification on the
+release path) were accepted on the record by the operator. The set-aside
+topics stay dropped.
+
+**Operator decisions at session start (recorded in
+`truth-onion-ai-eval-topic-sources-verified.md`, repo root + build tree):**
+the full 24-entry sources ledger confirmed 2026-08-09 including every
+operator-only check (GPT-5 system card PDF opened — third-party section
+names METR; Stochastic Parrots §6.1 read off the ACM PDF and deliberately
+NOT transcribed, so no surface carries that quote; the CanLII decision
+opened, order text supplied verbatim: "…pay Mr. Moffatt a total of
+$812.02"); **ALL EIGHT claim shapes seed** (supersedes the kickoff's
+proposed seed/probe split — shapes 4–6 carry verified documents, so they
+seed and their breaks journal from real claims); **Moffatt v. Air Canada
+included** as the genre's first true court_record source.
+
+**Built:** `server/seed-aieval.js` (19 claims through the service layer:
+4 core · 10 inner · 1 outer · 1 outermost via the real debunker flow with
+its kernel fan · 1 off-axis metaphysical · 1 recast via `recast_of` —
+first use outside UAP; verticals harm 3/2/1 on the documented-harm
+claims), wired into `seed()` and build-demo's ship list (R11 covered).
+Citation strings live ONCE in `sourcelinks.js` (`AIEVAL_SOURCES`,
+26 url-entries) and the seed imports them — the seeded citation and the
+audit mapping are structurally the same string. Seeded into: (1) `seed()`
+for fresh engines, (2) the LIVE record through the rules layer, actor
+`claude (2.99b-2 seeding)` (topic id 8, claims 45–63, events 30–50, plus
+event 51 — see below), (3) the re-exported curated fixture (5 topics,
+61 claims, 91 sources, 50 events; topic-id gap 4–6 and event-id gap 10
+honest, never compacted). Double-seed determinism holds; residue scan
+clean; zero U+FFFD in the shipped seed (the 15 pre-existing curl-era live
+rows repair at export, as before).
+
+**The build's own honesty artifacts:**
+- **The rules refused the builder twice, live.** (1) The seed's planned
+  zero-weight support link (survey → expectation, the Entry 8 pattern)
+  was refused: kernel and support links are mutually exclusive per pair,
+  and the debunker flow had drawn the kernel — the kernel carries the
+  relation; refusal kept in the module comments and Entry 19. (2) The
+  shape-7 probe, run deliberately on the live record: promotion of the
+  debunked expectation claim toward middle with the 2,778-researcher
+  survey attached — REFUSED ("…this claim has none that carry weight"),
+  a permanent `promotion_failed` event (id 51) that SHIPS in the fixture
+  (pinned in H7). Headcount moved nothing; invariant 6 held mechanically.
+- **A real bug, found by growth and fixed:** `express.json()`'s default
+  100kb body cap sat silently below the sandbox's designed 8 MB per-copy
+  size cap — the five-topic save file crossed 100kb and save re-import
+  broke (caught by D1/H10/H14 going red). Fixed: parser limit 10mb,
+  ABOVE the sandbox cap, with the why in the code — the cap that refuses
+  oversized work is the sandbox's own, with its honest message, never
+  the parser's.
+- **Split-claim discipline throughout:** the system-card content
+  universes ("the model would actually do this") are deliberately NOT
+  seeded — no independent evidence type can exist for an unrerunnable
+  internal scenario (Entry 15); "the card states X" claims cap at inner
+  per the Entry 12 ceiling, met again in this genre.
+- **D3 disclosure honored:** shape 3 seeds one Anthropic and one OpenAI
+  system card so the record leans on neither developer alone; the topic
+  description names the disclosure.
+- **Archive captures: every ledger URL has a Wayback snapshot.** All
+  mandatory ones confirmed (both www-cdn hash PDFs, the o1 cdn PDF, the
+  living deprecations page 2026-08-04, aisi.gov.uk 2025-08-27), fresh SPN
+  triggered where accepted (Opus 4 card 2026-08-07); METR's existing
+  2026-07-19 capture surfaced by SPN redirect; even robots-walled CanLII
+  has a 2026-08-01 capture. SPN rate-limited (429) part-way — no capture
+  is missing, so nothing was papered over.
+- **Strain journal Entries 13–20 appended** (third genre), one per shape
+  incl. the shape-1 NO-STRAIN control, the relation gap (a validity
+  critique can neither support nor contradict the score it bears on),
+  the self-published-only primary record at maximum, the retired
+  artifact, the contested predicate + venue asymmetry, recast predicate
+  discipline, the survey probe, and harm-magnitude-as-judgment.
+
+**Pins amended, never silently:** release R1 (curated FIVE, both
+amendments cited), R4 (+ kernel [60,59]), history H6 (+ the 2.99b-2
+actor), H7 (curated FIVE, event ids 1–51 minus 10, event 51 is the
+refusal probe), H3b (+ topic 8 span), stage299a C3 (+ actor) and the
+entry-card copy pin ("five documented topics"); App.jsx entry card,
+README (five topics), export-history default names, and the site's
+whats-built.html (Five complete topics + AI Evaluation card; the site's
+test number stays for the deploy-day C2 refresh). Suite green at close:
+289 passing across twenty-one suites, totals in the table below
+(unchanged in count — amendments landed in existing pins).
+
+**Reported, not verified.** The operator verification set for launch now
+runs against FIVE topics — gate (a) extends to this topic's source-ledger
+click-through (already performed pre-seed 2026-08-09; the launch-gate
+click-through against the HOSTED build remains).
+
 **Test suites (289 passing; + 6 drop-box pins in the site repo).**
 
 | Suite | Tests | Covers |
@@ -1696,8 +1801,9 @@ the entry-card/README/site copy all updated to four.
 | `stage299b` | 8 | Kind adjudication: launder refused (earned tier only), on→off severance + transactional ripple with gap retention, no-other-mover (direct edit + single-shot both refused), rejected-persists-zero-effect, kind_changed lifecycle replay, persona/proposer gates; recast_of: creation validation, zero weight both directions + strawman shield, both-page display, save round-trip |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
-hand-built and committed as an export), Purdue Pharma & the Sacklers (2), The
-Epstein Case (0 — created, empty).
+hand-built and committed as an export), UAP (11), AI Evaluation (19), Purdue
+Pharma & the Sacklers (2, live-only), The Epstein Case (0 — created, empty,
+live-only).
 
 ---
 
@@ -1943,7 +2049,7 @@ App on http://localhost:5173, API on 3111, database at
 npm test
 ```
 
-Twenty-one suites, 287 tests, against the real API with the real seed, in memory.
+Twenty-one suites, 289 tests, against the real API with the real seed, in memory.
 
 ```bash
 npm run build-demo
