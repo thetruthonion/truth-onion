@@ -21,9 +21,8 @@ primary_region = "iad" # operator's pick at `fly launch`; any region works
   dockerfile = "deploy/Dockerfile"
 
 [env]
-  # Uncomment and fill when known; both are optional and safe to set later:
-  # PUBLIC_ORIGIN = "https://demo.thetruthonion.org"  # canonical origin for claim-page share links
-  # DEMO_REPO_URL = "https://github.com/OWNER/truth-onion"  # clone link in refusal + showcase messages
+  PUBLIC_ORIGIN = "https://demo.thetruthonion.org"
+  DEMO_REPO_URL = "https://github.com/thetruthonion/truth-onion"
 
 [http_service]
   internal_port = 3111
