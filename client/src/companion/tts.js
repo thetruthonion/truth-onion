@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // TTS: the companion speaks. Baseline is the Web Speech API — free, local,
 // no key. Premium (ElevenLabs / OpenAI-compatible speech) and local
 // endpoints (AllTalk-style, OpenAI speech shape at a custom URL) follow the

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Headless-browser rendering fallback for the fetch proxy.
 //
 // Why: some pages (e.g. justice.gov /archives/opa/pr/ press releases) return

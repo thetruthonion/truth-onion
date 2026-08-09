@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The tier color tokens — SINGLE SOURCE OF TRUTH, implementing
 // truth-onion-design-brief.md as scoped by the 2.9c kickoff.
 //

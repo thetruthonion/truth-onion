@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Companion settings, keys, and active card — localStorage ONLY (survives
 // browser and computer restarts). Nothing here ever enters a request to the
 // app, is logged, or appears in the topic export.

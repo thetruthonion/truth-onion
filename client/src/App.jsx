@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import Onion from './Onion.jsx';
 import Onion3D from './Onion3D.jsx';

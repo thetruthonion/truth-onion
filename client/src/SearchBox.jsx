@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Predictive search (2.9c) — replaces the horizontal topic row. One field:
 // empty-focus lists every topic (plus "+ new topic"); typing filters live
 // across topic titles and claim text in two labeled groups. Ranking comes

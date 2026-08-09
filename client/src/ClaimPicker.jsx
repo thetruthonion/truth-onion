@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Claim picker (2.9d follow-up, operator request): the connect-a-claim
 // dropdowns become a SEARCH input. Empty focus shows this claim's own onion
 // first — the topic you are standing in — and typing searches every onion,

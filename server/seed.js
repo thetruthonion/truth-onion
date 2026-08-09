@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Seeds the MKUltra onion. Everything here goes through the same service
 // layer as the UI — if the seed content couldn't survive the rules, it
 // wouldn't load.

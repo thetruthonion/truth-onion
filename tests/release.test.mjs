@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Release checklist pins (decision record items 0a, 0a-i, 2, 2a, 2b, 3 and
 // the Fly.io deploy artifacts). These tests state the guarantees the public
 // artifact ships under: the seed is curated and clean of mojibake, the

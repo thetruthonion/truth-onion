@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.95: the time machine. READ-SIDE ONLY — every function here takes a
 // db and returns JSON; nothing writes, and no write path imports this module.
 // The map replays itself from the record: what it believed, when, and why it

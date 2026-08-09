@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The portable parking lot (2.97). Private scratch with no epistemic
 // standing — no tier, no weight, no place on the rings, deletion unlogged
 // (settled). This module holds all three pieces:

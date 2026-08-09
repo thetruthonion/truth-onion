@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Adversarial pressure tests — the sneaky paths where an engine like this
 // usually leaks: tier laundering, zero-weight aggregation, circular support,
 // and edit-after-placement.

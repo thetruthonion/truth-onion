@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 # Truth Onion — public read-only demo image (release decision record: Fly.io,
 # but the file is a portable OCI build — the host stays a twelve-line decision).
 #

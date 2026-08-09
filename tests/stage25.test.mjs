@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.5 pressure tests: source-library ripple, the parking lot's
 // isolation from the epistemics, is_origin_of zero weight, refusal
 // legibility, tier-preview honesty, and export/import through the rules.

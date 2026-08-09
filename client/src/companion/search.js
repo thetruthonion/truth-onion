@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // §14 live web search — retrieval, never vetting, never attachment.
 //
 // The companion searches the live web on request and hands back candidates

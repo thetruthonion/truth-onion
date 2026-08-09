@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Thin fetch wrapper. A 422 from the server is the rules layer saying "no" —
 // it carries a plain-language reason and, when known, the tier the evidence
 // actually earns.

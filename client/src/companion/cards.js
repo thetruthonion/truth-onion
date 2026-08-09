@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Character cards: the personality layer. Cards may contain ANY persona
 // content — there is no content validation (§11, operator ruling). The
 // protection is structural, not behavioral: in claim work, pass 1 runs

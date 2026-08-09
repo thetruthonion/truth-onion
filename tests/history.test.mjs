@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // History fixture pins (fix session 2026-08-01, pre-2.99a). The demo's
 // pristine database is a RESTORE of the exported curated record: original
 // timestamps, reasons, and actors verbatim — nothing stamped at build or

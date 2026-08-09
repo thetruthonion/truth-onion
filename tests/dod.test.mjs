@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Definition-of-done checks, run against the real API with the real seed.
 // Each test corresponds to one numbered criterion in the Stage One kickoff.
 

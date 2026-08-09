@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.99a pins: sandbox core & personas. Per-visitor copies created at
 // FIRST WRITE (reads create nothing), absolute isolation, wipe on expiry,
 // honest caps; the SAME rules layer answering in-copy (not a fork —

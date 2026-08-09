@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Usage: npm run import -- <file.json>
 // Runs every item through the rules layer — a tampered export is refused.
 import { readFileSync } from 'node:fs';

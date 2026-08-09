@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.9b pressure tests: the interaction supersession (single-click
 // selects ONLY; double-click owns the chain view; the dial never resets),
 // discrete-tile sizing (ring diameter + crowding only — never evidence

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.99a: the sandbox client state, as PURE functions — the indicator
 // is the honesty organ (Amendment C), so the text it shows is derived
 // logic, testable outside the DOM, not scattered JSX conditions.

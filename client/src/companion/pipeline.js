@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The two-pass mask-lift. Pass 1 is bare-core analysis — the character card
 // is STRUCTURALLY absent from context. Pass 2 renders a fixed substance
 // manifest in persona, validated by a mechanical fidelity gate.

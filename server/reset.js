@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Deletes the local database and reseeds the MKUltra onion.
 import { rmSync } from 'node:fs';
 import { openDb, DEFAULT_DB_PATH } from './db.js';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The interaction model as a pure state machine, so its guarantees are
 // testable without a renderer. 2.9b supersession (this REPLACES the 2.9
 // select behavior):

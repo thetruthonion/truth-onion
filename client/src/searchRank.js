@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Search ranking — LEXICAL MATCH QUALITY ONLY, by construction.
 //
 // A search that surfaces "active" claims first is a soft popularity channel,

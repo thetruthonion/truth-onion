@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Setup walkthrough (2.96 phase 1). Skippable at every step; ends in a fork,
 // never a wall. States the TRUE key guarantee in plain words — the key is
 // stored in this browser only and never sent to this server — phrasing

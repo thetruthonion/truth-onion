@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The time scrubber (2.95): the depth dial's sibling axis. Renders the topic
 // at any past moment, computed from the event log alone. Same legibility
 // standard as the dial — the control shows exactly what it is doing: an

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Sphere placement: where a claim's tile sits and how big it draws. Pure —
 // no three.js, no DOM — so the 2.9b guarantees are testable properties:
 //

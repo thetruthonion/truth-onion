@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // History restore (release fix session, 2026-08-01). The demo's pristine
 // database is a RESTORE of the exported curated record — ids, timestamps,
 // reasons, and actors preserved verbatim from the fixture — not a re-seed

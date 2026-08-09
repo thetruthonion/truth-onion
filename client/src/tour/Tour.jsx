@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The tour framework (2.96). THE SCRIPT NAVIGATES; THE COMPANION NARRATES.
 // This component owns stops, order, highlighting, and every UI change —
 // deterministically, from stops.js data via callbacks App hands it. The

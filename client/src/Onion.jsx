@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The visual onion: five concentric rings, innermost = strongest. Claims sit
 // on the ring of their radial_tier; vertical position encodes documented
 // help (up) / harm (down). Metaphysical claims never appear here.

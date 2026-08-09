@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.99b pins: kind adjudication & the recast relation. The routing
 // decision (on-axis/off-axis) becomes contestable through the same
 // two-phase discipline as withdrawal — and NOTHING else can move kind.

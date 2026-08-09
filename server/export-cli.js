@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Usage: npm run export -- <topic id or name> [outfile]
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';

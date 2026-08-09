@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage Two pressure tests: multi-topic + cross-topic constraints + proof
 // that the depth dial (a view-only client control) cannot touch the rules.
 

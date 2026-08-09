@@ -175,8 +175,9 @@ kickoffs, and addenda the code comments cite.
 
 ## License
 
-**Pending.** The license is an open operator decision; `LICENSE` is a placeholder to be
-filled the day it lands, and nothing here should be assumed licensed until it does.
+The engine (all code in this repository) is licensed under **AGPL-3.0-only** — see
+`LICENSE`. The record content (claims, placement reasons, gap statements, seeded
+fixtures) is licensed under **CC BY-SA 4.0** — see `LICENSE-CONTENT`.
 
 ## Status
 

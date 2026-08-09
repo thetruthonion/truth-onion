@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.9c pressure tests: the tier color tokens (single source, consumed
 // everywhere, never restated), kind-vs-tier separation, and the predictive
 // search ranking (lexical match quality ONLY — no popularity channel).

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.95: the client side of "strict read-only, structurally".
 // Every write in the app funnels through App.run(); run() consults this
 // module first. While the scrubber is anywhere but Now, the answer is a

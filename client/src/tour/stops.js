@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The tour script (2.96): ONE deterministic stop sequence, two voices.
 // Each stop's `copy` is its GROUNDING DOC — what is on screen, what it
 // means, what the visitor can try. Keyless visitors read it verbatim; a

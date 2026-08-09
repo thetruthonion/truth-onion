@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The UAP topic (2.99b Part 3) — the fourth curated topic, seeded through
 // the SAME service layer as everything else: if this content couldn't
 // survive the rules, it wouldn't load.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { DEPTH_LABELS } from './depth.js';
 
 // One global dial. Keyboard accessible (arrow keys on the range input), with

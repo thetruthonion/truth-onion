@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.96 pressure tests: the tour script is complete and grounded; the
 // companion refuses to narrate an ungrounded stop (before any model call);
 // keyless mode is written copy with no fake companion; the script navigates

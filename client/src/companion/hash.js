@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // SHA-256 hex of the core prompt, displayed in the UI so a modified prompt
 // is visible, not hidden. Works in browsers and Node (globalThis.crypto).
 

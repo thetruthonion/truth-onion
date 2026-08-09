@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The Builder (§10): a shipped, fixed persona whose job is building
 // character cards through conversation — newcomers never see JSON or learn
 // prompt mechanics. The Builder is itself a standard card, and its output is

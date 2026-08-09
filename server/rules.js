@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The rules layer. Every write that could change a claim's standing runs
 // through here. There is no override path — the UI never gets to decide.
 

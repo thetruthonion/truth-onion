@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Conversation persistence (§12a). Per-character threads, titled by the first
 // exchange, resumable after the panel is closed and reopened. Stored in
 // localStorage so a thread survives panel close, browser restart, and the

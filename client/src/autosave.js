@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.99a Amendment B, reworked per the punch list (item 8): autosave's
 // two jobs are SPLIT and each is equalized across browsers — parity, no
 // second-class mode.

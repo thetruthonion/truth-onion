@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Source picker (2.9d follow-up): the "attach from the topic library" select
 // becomes a SEARCH input, like the claim picker. Empty focus lists the whole
 // attachable library — one entity per document, create once attach

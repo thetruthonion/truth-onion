@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.9d Amendment B pressure tests: the stage indicator is wired to
 // REAL pipeline events (no timed fakery), mid-stage errors name the stage,
 // drafts never render pre-gate, provider reasoning is surfaced only when

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Demo-mode pressure test: with the read-only flag set, EVERY mutating
 // operation used anywhere in the suites returns 403 from the middleware,
 // every read path still serves, and the data is untouched afterward.

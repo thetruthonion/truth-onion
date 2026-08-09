@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Companion pressure tests: read-only tool manifest, grounding, pass-1
 // isolation, the substance-calibrated fidelity gate (§9c), interleaved
 // fallback (§9b), any-persona import (§11), the Builder (§10), key privacy

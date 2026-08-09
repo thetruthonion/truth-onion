@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // All writes go through this module. Tier changes happen in exactly three
 // places — createClaim, promoteClaim (must survive the automatic challenge
 // battery), and demote (outward only). There is no direct tier setter.

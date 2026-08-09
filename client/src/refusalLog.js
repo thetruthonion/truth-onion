@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // 2.99a punch 12: the refusals ledger — a thin CLIENT-side recorder of
 // every refusal the visitor was shown, riding the save file and the
 // in-browser mirror. Zero server involvement: nothing here is sent

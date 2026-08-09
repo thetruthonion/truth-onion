@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The data-to-render boundary for lineage drawing. Every line the 3D view
 // draws for a selected claim is specified HERE, as plain data, before any
 // three.js object exists — so the visual grammar is a testable property, not

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Release 2b: verification-status labels, one copy for every client surface.
 //
 // Two truths, phrased as designed boundaries rather than bugs:

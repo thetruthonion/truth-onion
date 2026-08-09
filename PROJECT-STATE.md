@@ -65,6 +65,24 @@ place. Stopped before push and deploy — those are the operator's:
 create the Fly account (MFA, monitored thetruthonion.org address) and the
 GitHub remote, push, deploy, then checklist items 4–7 against the hosted
 URL.** Under version control as of this session (§8 risk closed).
+**License day (2026-08-09): the stub is filled.** LICENSE now carries the
+verbatim AGPL-3.0-only text (byte-exact from gnu.org/licenses/agpl-3.0.txt,
+sha256-verified); LICENSE-CONTENT added with the verbatim CC BY-SA 4.0
+legalcode; README's License section and package.json ("AGPL-3.0-only")
+updated in the same change, exactly as the stub's own instructions
+prescribed. SPDX headers: none existed; added same day (operator
+instruction, second pass) as line 1 of all 87 tracked source files —
+`//` on js/mjs/jsx, `/* */` on the stylesheet, `<!-- -->` on index.html,
+`#` on deploy/Dockerfile and fly.toml; md/json/ignore files untouched.
+Suite re-run green after insertion, totals unchanged.
+The setup-notes section was deleted from LICENSING.md, which lives in the
+document tree's legal folder, not this repo — if it is meant to ship in
+the repo root (its own text says "at the root of this repository"), that
+move is a separate operator decision. Pre-push scan clean: no DB blob,
+secret, key, or .env-shaped file among the tracked files; the single
+pattern hit is the pinned fake-key fixture in stage29d; .gitignore covers
+every family. Full suite green, totals unchanged. Reported, not verified;
+the operator commits as Onionwright.
 
 **Standing rule (operator, 2026-07-27, applies to every future session):**
 nothing created during a build session — verification fixtures, seeded data,

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Fixture history export (release fix session, 2026-08-01 — pre-2.99a).
 //
 // Extracts the COMPLETE curated record for the named topics from the live

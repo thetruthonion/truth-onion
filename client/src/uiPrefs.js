@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // UI preferences (2.9d): presentation-only client state — panel widths and
 // the like. Lives in its own `onion.ui.*` localStorage entries, never sent
 // to the server, and survives every reset path exactly like the companion

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.9 pressure tests: the kernel link (zero weight, gap statement,
 // direction, schema backstops), the debunker auto-create, link and hop
 // challenges, routed lineages and fans (the routing rule), the whole-vs-

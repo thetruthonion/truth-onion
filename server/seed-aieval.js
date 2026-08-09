@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The AI Evaluation topic (2.99b-2) — the fifth curated topic, seeded
 // through the SAME service layer as everything else: if this content
 // couldn't survive the rules, it wouldn't load.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.95 pressure tests: the time machine. State reconstruction from
 // the log; error-vs-supersession legibility; failed promotions in history;
 // strict read-only from historical views; the log epoch rendered honestly

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // BYOK provider layer. Every provider call flows through providerFetch, the
 // single choke point that enforces the key promise: a request carrying an
 // API key may NEVER target the app's own origin. Keys live in localStorage

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The depth dial: a VIEW filter only. Nothing here touches writes or rules —
 // the server has no concept of depth (proven in tests/stage2.test.mjs).
 

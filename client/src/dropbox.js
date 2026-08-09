@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The anonymous drop box (client side). Contributions and feedback go to
 // the SITE's Netlify Function — durable storage on the operator's site
 // account, never the disposable demo host, never the app database.

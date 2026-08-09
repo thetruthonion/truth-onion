@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.98 pressure tests: claim pages (status travels inseparably —
 // including share previews; record-only generation; read-only under
 // pressure; stable URLs across seed rebuilds; both palettes), the

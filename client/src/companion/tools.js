@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The read-only tool set exposed to the model. This manifest is everything
 // the companion can touch — there is no mutating tool, and the executor
 // only ever issues GET requests against the existing read API.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Server-side fetch proxy for the companion's fetch_url / verify_source tools.
 //
 // Why server-side: a client-side fetch of a third-party page hits CORS (and,

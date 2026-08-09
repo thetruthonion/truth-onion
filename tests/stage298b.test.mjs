@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.98b pressure tests: record permanence & source links.
 // The record already refuses to forget; these tests pin that the UI/API
 // surface now agrees — no hard-delete affordance on any record entity,

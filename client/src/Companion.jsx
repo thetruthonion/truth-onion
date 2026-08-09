@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { sha256Hex } from './companion/hash.js';
 import { chatComplete, runToolLoop, PROVIDERS } from './companion/providers.js';

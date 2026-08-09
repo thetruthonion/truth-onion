@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.99a: per-visitor sandbox sessions — the demo's participation
 // layer. A read-only exhibit cannot show the engine's defining behavior,
 // the refusal; a private copy can. Each session is an in-memory database

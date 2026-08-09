@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Fetch-proxy tests: the SSRF guard, the browser-header fetch, and the
 // MECHANICAL quote check that makes verification a fact, not a model claim.
 

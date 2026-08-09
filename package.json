@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "AGPL-3.0-only",
   "description": "Evidence engine: claims earn their place on concentric tiers, rules enforced at the data layer with no override path.",
   "scripts": {
     "dev": "concurrently -k -n api,web \"node server/index.js\" \"vite\"",

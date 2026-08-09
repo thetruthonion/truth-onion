@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Tour narration (2.96): the companion VOICES a stop; the stop's grounding
 // doc is the substance. No doc → REFUSAL, before any model call — the
 // companion does not invent UI (pinned by test). One script, two voices:

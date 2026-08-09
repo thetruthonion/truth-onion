@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.9d pressure tests: per-adapter key privacy (multi-provider BYOK),
 // card import validation + round-trip, UI-prefs isolation, the topic-shape
 // gate (rules layer, deterministic), and global record search (FTS5 —

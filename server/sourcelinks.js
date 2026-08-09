@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // 2.98b C: the seed source link audit, as code. Every seeded source gets
 // its canonical online link, or an honest label — no naked linkless
 // statements, and NO invented or approximate links (a wrong link is worse

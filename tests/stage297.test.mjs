@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.97 pressure tests: the portable parking lot. The demo store is
 // device-only by structure (the server can never see a visitor's notes);
 // export is versioned, readable, and round-trips losslessly; import is

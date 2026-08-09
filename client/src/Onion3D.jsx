@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // The 3D onion: nested spherical shells, one per tier, claims as small crisp
 // tiles on their shell's surface. Pure presentation over the same data and
 // dial state as the 2D view — this file has no write access of any kind.

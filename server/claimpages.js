@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Stage 2.98: claim pages. Every claim gets a stable, server-rendered,
 // READ-ONLY permalink — a fact-check-article-shaped page generated entirely
 // from the record. Shared like a fact-checker link, checkable unlike one.

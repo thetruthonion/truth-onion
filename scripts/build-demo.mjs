@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Builds the self-contained, read-only demo package in demo/.
 // Usage: npm run build-demo
 

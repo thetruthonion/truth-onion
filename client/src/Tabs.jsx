@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Shared tab bar (2.9c). Tab state is PRESENTATION ONLY: nothing about
 // which tab is open ever gates, fetches, or reorders data — all panel state
 // lives in the parent and survives switching, and every action's refusal
