@@ -33,7 +33,7 @@ import {
   CONTRIBUTION_ASK
 } from './sandboxState.js';
 import { recordRefusal, refusalLedger, seedRefusals } from './refusalLog.js';
-import { sendFeedback, sendSave, DROPBOX_ANONYMITY_LINE, FEEDBACK_EMAIL } from './dropbox.js';
+import { sendFeedback, sendSave, parseSaveFileText, DROPBOX_ANONYMITY_LINE, FEEDBACK_EMAIL } from './dropbox.js';
 import TabBar from './Tabs.jsx';
 import SearchBox from './SearchBox.jsx';
 import { loadPanelWidth, savePanelWidth, PANEL_BOUNDS } from './uiPrefs.js';
@@ -115,6 +115,21 @@ export default function App() {
   const [fbMessage, setFbMessage] = useState('');
   const [fbState, setFbState] = useState(null); // null | 'sending' | {ok, receipt} | {error, unreachable}
   const [contribState, setContribState] = useState(null); // save contribution: null | 'open' | 'sending' | {ok, receipt} | {error}
+  // UI-fix session: the main-page upload path — a dropped/picked save file,
+  // parsed through the payload-only funnel before anything is shown or sent.
+  const [upFile, setUpFile] = useState(null); // null | {name, size, save}
+  const [upState, setUpState] = useState(null); // null | 'sending' | {ok, receipt} | {error, unreachable} | {parseError}
+  const takeUploadFile = async (file) => {
+    if (!file) return;
+    setUpState(null);
+    const parsed = parseSaveFileText(await file.text());
+    if (!parsed.ok) {
+      setUpFile(null);
+      setUpState({ parseError: parsed.message });
+      return;
+    }
+    setUpFile({ name: file.name, size: file.size, save: parsed.save });
+  };
   const [copyBirthNote, setCopyBirthNote] = useState(false); // punch 1: shown once, non-blocking
   // 2.95: topic-health readouts (aggregates only, never leaderboards).
   const [health, setHealth] = useState(null);
@@ -1102,12 +1117,12 @@ export default function App() {
               />
             </label>
           )}
-          {/* Drop-box handoff B: the anonymous feedback box returns as the
-              PRIMARY path — durable storage now exists on the site, so the
-              honest copy is true again. Email stays inside as the
-              if-you'd-like-a-reply option (punch 3's copy box). Unreachable
-              endpoint → said plainly, email fallback — never a fake
-              success. Punch 7: pinned to a consistent right edge. */}
+          {/* Drop-box handoff B + UI-fix session (operator ruling 2026-08-09):
+              ONE surface on the main page — contribute your save / leave
+              feedback. The anonymous box is the PRIMARY path — durable
+              storage exists on the site; email stays inside as the
+              if-you'd-like-a-reply option. Unreachable endpoint → said
+              plainly, email fallback — never a fake success. */}
           <span className="hdr-feedback" style={{ marginLeft: 'auto', position: 'relative' }}>
             <button
               className="primary"
@@ -1115,18 +1130,20 @@ export default function App() {
                 setFeedbackPop((v) => !v);
                 setFeedbackCopied(false);
                 setFbState(null);
+                setUpFile(null);
+                setUpState(null);
               }}
-              title={`Anonymous feedback to the site's drop box — ${DROPBOX_ANONYMITY_LINE}; email available if you'd like a reply`}
+              title={`Contribute your save or leave anonymous feedback — the site's drop box; ${DROPBOX_ANONYMITY_LINE}; email available if you'd like a reply`}
             >
-              ✉ feedback
+              ✉ contribute / feedback
             </button>
             {feedbackPop && (
-              <span className="popover" role="dialog" aria-label="Anonymous feedback" style={{ minWidth: 300 }}>
+              <span className="popover" role="dialog" aria-label="Contribute your save or leave feedback" style={{ minWidth: 320 }}>
                 <span className="pop-text">
-                  Anonymous: exactly the category and message below are sent — no identity, no
-                  account; {DROPBOX_ANONYMITY_LINE}. It lands in a quarantine store outside the
-                  record: the engine never reads it, and volume is a prompt for the operator to
-                  look, never a force that moves anything.
+                  <strong>Leave feedback.</strong> Anonymous: exactly the category and message below
+                  are sent — no identity, no account; {DROPBOX_ANONYMITY_LINE}. It lands in a
+                  quarantine store outside the record: the engine never reads it, and volume is a
+                  prompt for the operator to look, never a force that moves anything.
                 </span>
                 <select value={fbCategory} onChange={(e) => setFbCategory(e.target.value)}>
                   <option value="other">general</option>
@@ -1165,6 +1182,67 @@ export default function App() {
                   </span>
                 )}
                 {fbState?.error && <span className="pop-text" style={{ color: 'var(--critical, #d03b3b)' }}>{fbState.error}</span>}
+                {/* The save-file upload path — drop or pick. What is sent is
+                    exactly the file's parsed contents: not its name, not its
+                    size, not who you are. The parse funnel (dropbox.js)
+                    structurally cannot see file metadata. */}
+                <span className="pop-text" style={{ borderTop: '1px solid var(--line, #3a3f55)', paddingTop: 8, marginTop: 4 }}>
+                  <strong>Contribute a save file.</strong> Drop one on the button below or pick it.
+                  What will be sent: the file's contents — your claims, sources, challenges,
+                  refusals, and reasons — and nothing else; not the filename, no identity, no
+                  account; {DROPBOX_ANONYMITY_LINE}.
+                </span>
+                <label
+                  className="small"
+                  style={{ cursor: 'pointer', border: '1px dashed var(--line, #3a3f55)', padding: '6px 8px', textAlign: 'center' }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    takeUploadFile(e.dataTransfer?.files?.[0]);
+                  }}
+                >
+                  {upFile ? 'choose a different file' : 'drop a save file here, or click to pick one'}
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      takeUploadFile(e.target.files?.[0]);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+                {upState?.parseError && (
+                  <span className="pop-text" style={{ color: 'var(--critical, #d03b3b)' }}>{upState.parseError}</span>
+                )}
+                {upFile && upState?.ok == null && (
+                  <>
+                    <span className="pop-text">
+                      Ready: <code>{upFile.name}</code> ({Math.max(1, Math.round(upFile.size / 1024))} KB).
+                      Only its contents go — the name stays here.
+                    </span>
+                    <button
+                      className="small primary"
+                      disabled={upState === 'sending'}
+                      onClick={async () => {
+                        setUpState('sending');
+                        const out = await sendSave(upFile.save);
+                        setUpState(out.ok ? { ok: true, receipt: out.receipt } : { error: out.message, unreachable: out.unreachable });
+                      }}
+                    >
+                      {upState === 'sending' ? 'sending…' : 'send this file anonymously'}
+                    </button>
+                  </>
+                )}
+                {upState?.ok && (
+                  <span className="pop-text">
+                    ✓ Received into the quarantine store — the file, nothing else.
+                    {upState.receipt ? ` Receipt (content hash): ${upState.receipt.slice(0, 16)} — proof of inclusion, no identity.` : ''}
+                  </span>
+                )}
+                {upState?.error && (
+                  <span className="pop-text" style={{ color: 'var(--critical, #d03b3b)' }}>{upState.error}</span>
+                )}
                 <span className="pop-text muted" style={{ fontSize: 11 }}>
                   Prefer email, if you'd like a reply:{' '}
                   <code style={{ userSelect: 'all' }}>{FEEDBACK_EMAIL}</code>{' '}

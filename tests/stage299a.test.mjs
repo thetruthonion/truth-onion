@@ -680,7 +680,7 @@ await test('H10 (punch 10). preferences ride the save; resume re-prompts nothing
 await test('H11 (punch 11, drop-box update). the ask: drop box primary, email if-you\'d-like-a-reply, nothing automatic', () => {
   assert.match(CONTRIBUTION_ASK, /^Voluntary: contribute your save file through the anonymous drop box/);
   assert.match(CONTRIBUTION_ASK, /don't ask who you are and don't retain anything that says/);
-  assert.match(CONTRIBUTION_ASK, /Prefer email, if you'd like a reply: truth\.onionwright@gmail\.com/);
+  assert.match(CONTRIBUTION_ASK, /Prefer email, if you'd like a reply: contact@thetruthonion\.org/);
   assert.match(CONTRIBUTION_ASK, /read the file first — it's yours\.$/);
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.ok(app.includes('CONTRIBUTION_ASK'), 'shown at the save-setup prompt');
@@ -723,7 +723,7 @@ await test('I1 (drop box). the client: honest success/refusal/unreachable states
   assert.equal(down.unreachable, true);
   assert.equal(down.message, DROPBOX_UNREACHABLE_MESSAGE);
   assert.match(down.message, /Nothing was sent/);
-  assert.match(down.message, /truth\.onionwright@gmail\.com/, 'email fallback named');
+  assert.match(down.message, /contact@thetruthonion\.org/, 'email fallback named');
   // Copy review: the anonymity claim never exceeds "not asked, not retained".
   assert.equal(DROPBOX_ANONYMITY_LINE, "we don't ask who you are and don't retain anything that says");
   for (const f of ['client/src/App.jsx', 'client/src/dropbox.js', 'server/claimpages.js']) {
@@ -733,6 +733,59 @@ await test('I1 (drop box). the client: honest success/refusal/unreachable states
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.match(app, /contribute save/, 'the contribution affordance at the save surfaces');
   assert.match(app, /download to review first/, 'read-the-file-first is an action, not just a line');
+});
+
+await test('I3 (UI fix, 2026-08-09). the main-page upload panel: a dropped/picked file becomes EXACTLY the payload — no filename, no metadata', async () => {
+  const { parseSaveFileText, sendSave } = await import('../client/src/dropbox.js');
+  // Parse failures name the blocker and say nothing was sent.
+  const bad = parseSaveFileText('not json {');
+  assert.equal(bad.ok, false);
+  assert.match(bad.message, /Nothing was sent/);
+  const notObj = parseSaveFileText('"a bare string"');
+  assert.equal(notObj.ok, false);
+  assert.match(notObj.message, /Nothing was sent/);
+  // A good file: the parsed contents are the WHOLE payload — kind + save,
+  // no other key, even though the UI knows the file's name and size.
+  const fileText = JSON.stringify({ format: 'truth-onion-sandbox-save', version: 1, record: {} });
+  const parsed = parseSaveFileText(fileText);
+  assert.equal(parsed.ok, true);
+  let sent;
+  const capture = async (url, opts) => {
+    sent = JSON.parse(opts.body);
+    return { ok: true, json: async () => ({ stored: true, receipt: 'b'.repeat(64) }) };
+  };
+  const out = await sendSave(parsed.save, capture);
+  assert.equal(out.ok, true);
+  assert.deepEqual(Object.keys(sent).sort(), ['kind', 'save'], 'payload-only: nothing rides along');
+  assert.deepEqual(sent.save, JSON.parse(fileText), 'the file contents, verbatim');
+  // Structurally: the parse funnel takes the file's TEXT alone — name and
+  // size have no path in.
+  const dropboxSrc = readFileSync(join(root, 'client', 'src', 'dropbox.js'), 'utf8');
+  assert.match(dropboxSrc, /export function parseSaveFileText\(text\)/, 'text in, payload out — no file-metadata parameter');
+  // The panel lives on the MAIN page, one surface with feedback (operator
+  // ruling 2026-08-09), and parses through the funnel.
+  const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(app, /contribute \/ feedback/, 'one surface: contribute your save / leave feedback');
+  assert.ok(app.includes('parseSaveFileText'), 'the panel parses through the payload-only funnel');
+  assert.match(app, /drop a save file here, or click to pick one/, 'drop or pick, on the main page');
+});
+
+await test('I4 (UI fix, 2026-08-09). unreachable endpoint at the panel: said plainly with the monitored email fallback — never silent, never fake', async () => {
+  const { sendSave, DROPBOX_UNREACHABLE_MESSAGE, FEEDBACK_EMAIL } = await import('../client/src/dropbox.js');
+  assert.equal(FEEDBACK_EMAIL, 'contact@thetruthonion.org', 'the monitored company address, everywhere it renders');
+  const down = await sendSave({ format: 'truth-onion-sandbox-save', version: 1 }, async () => {
+    throw new Error('network down');
+  });
+  assert.equal(down.ok, false);
+  assert.equal(down.unreachable, true);
+  assert.equal(down.message, DROPBOX_UNREACHABLE_MESSAGE);
+  assert.match(down.message, /Nothing was sent/);
+  assert.match(down.message, /contact@thetruthonion\.org/, 'the fallback names the address');
+  // The panel renders the failure state — the message flows to the visitor,
+  // never a silent failure, never a fake success.
+  const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
+  assert.match(app, /upState\?\.error/, 'the upload panel renders its failure state');
+  assert.match(app, /upState\?\.parseError/, 'an unreadable file is named, not swallowed');
 });
 
 await test('I2 (rider C). vertical input the rules will not record is NAMED at submit; the field disables with its why', async () => {

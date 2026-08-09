@@ -12,7 +12,7 @@
 // failure, never a fake success.
 
 export const DROPBOX_URL = 'https://thetruthonion.org/api/dropbox';
-export const FEEDBACK_EMAIL = 'truth.onionwright@gmail.com';
+export const FEEDBACK_EMAIL = 'contact@thetruthonion.org';
 
 export const DROPBOX_ANONYMITY_LINE =
   "we don't ask who you are and don't retain anything that says";
@@ -54,4 +54,27 @@ export function sendFeedback({ category, message }, fetchImpl = fetch) {
 // A save-file contribution: exactly the save file is sent — nothing else.
 export function sendSave(save, fetchImpl = fetch) {
   return post({ kind: 'save', save }, fetchImpl);
+}
+
+// A dropped or picked save file, reduced to exactly what will be sent:
+// the parsed contents. This function takes the file's TEXT alone — the
+// filename, size, and anything else the browser knows about the file
+// have no path into the payload, because nothing here can see them.
+export function parseSaveFileText(text) {
+  let save;
+  try {
+    save = JSON.parse(text);
+  } catch {
+    return {
+      ok: false,
+      message: "That file isn't readable as JSON, so it can't be a save file. Nothing was sent."
+    };
+  }
+  if (save === null || typeof save !== 'object' || Array.isArray(save)) {
+    return {
+      ok: false,
+      message: "That file's JSON isn't a save object. Nothing was sent."
+    };
+  }
+  return { ok: true, save };
 }

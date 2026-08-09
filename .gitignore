@@ -19,3 +19,6 @@ demo/
 # Local editor/agent state and stray archives.
 .claude/settings.local.json
 files.zip
+
+# Machine-local session instructions (paths, export step) — never committed.
+CLAUDE.local.md

@@ -44,7 +44,7 @@ import { CURATOR_VERIFIED_LABEL } from './sourcelinks.js';
 // remains for anyone who'd like a reply. The page promises nothing the
 // disposable demo host can't keep.
 export const DROPBOX_URL = 'https://thetruthonion.org/api/dropbox';
-export const FEEDBACK_ADDRESS = 'truth.onionwright@gmail.com';
+export const FEEDBACK_ADDRESS = 'contact@thetruthonion.org';
 export const IMPERMANENCE_LINE =
   'This page is served by the demo host, temporary by design — permanent claim addresses arrive with multiplayer.';
 

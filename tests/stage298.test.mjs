@@ -252,7 +252,7 @@ await test('P10. ?at= renders the reconstruction: earlier tier, labeled read-onl
   // document alike; no form ever posts to the app itself.
   assert.ok(!/action="\/api/i.test(mid), 'no form posts to the app — the ephemeral DB keeps no inboxes');
   assert.ok(mid.includes('thetruthonion.org/api/dropbox'), 'the drop box is the primary channel');
-  assert.ok(mid.includes('truth.onionwright@gmail.com'), 'email stays as the if-you\'d-like-a-reply option');
+  assert.ok(mid.includes('contact@thetruthonion.org'), 'email stays as the if-you\'d-like-a-reply option');
   assert.ok(mid.includes('current wording of the placement reason'), 'placement-reason honesty: the record keeps only the current wording');
   // 2026-01-15 predates the log epoch (events begin at seed time) — the
   // page says so instead of passing the view off as complete.
@@ -269,7 +269,7 @@ await test('P10. ?at= renders the reconstruction: earlier tier, labeled read-onl
   // And the present view is untouched by all of this: current tier, form back.
   const now = (await api('GET', `/claim/${tmProbe}`)).text;
   assert.match(now, /--tier-outermost\)">outermost tier/);
-  assert.ok(now.includes('truth.onionwright@gmail.com'), 'the mailto channel on the present document too');
+  assert.ok(now.includes('contact@thetruthonion.org'), 'the mailto channel on the present document too');
 });
 
 // ------------------------------------------------------------ review socket
@@ -332,18 +332,20 @@ await test('F2. the feedback channels: anonymous drop box primary (site origin),
   // The masthead "feedback" link lands on a READY form — open by default,
   // one click to type: the same function as the engine's feedback button.
   assert.match(page, /<details class="note fb-pop" id="feedback" open>/, 'the page box is open, not a collapsed extra click');
-  assert.ok(page.includes('mailto:truth.onionwright@gmail.com'), 'email stays for anyone who wants a reply');
+  assert.ok(page.includes('mailto:contact@thetruthonion.org'), 'email stays for anyone who wants a reply');
   assert.match(page, /don't ask who you are and don't retain anything that says/, 'the anonymity claim, exactly as far as it is true');
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.ok(app.includes('FEEDBACK_EMAIL'), 'the app keeps the email option (one constant, dropbox.js)');
   const dropbox = readFileSync(join(root, 'client', 'src', 'dropbox.js'), 'utf8');
-  assert.ok(dropbox.includes('truth.onionwright@gmail.com'), 'the address lives once, in the drop-box module');
+  assert.ok(dropbox.includes('contact@thetruthonion.org'), 'the address lives once, in the drop-box module');
   assert.ok(!/api\.feedback|\/api\/feedback/.test(app), 'no client path posts feedback to the app server');
 });
 
 await test('F3. the header feedback affordance replaced the add-claim button; adding a claim lives in search', async () => {
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
-  assert.match(app, /✉ feedback/, 'the header carries the feedback affordance');
+  // UI-fix session 2026-08-09: the affordance became the ONE combined
+  // surface — contribute your save / leave feedback (operator ruling).
+  assert.match(app, /✉ contribute \/ feedback/, 'the header carries the feedback affordance');
   // The engine's top-left wordmark links to the site (operator request).
   assert.match(app, /<h1>\s*<a\s+href="https:\/\/thetruthonion\.org\/"/, 'the Truth Onion wordmark links to thetruthonion.org');
   assert.ok(!app.includes('+ Add claim\n'), 'the header add-claim button is gone');

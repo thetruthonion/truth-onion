@@ -36,7 +36,12 @@ inline confirm bar, routed through run()'s confirm option. The frozen
 (time-scrubbed) refusal runs BEFORE the confirm; the rules layer still
 decides after it. Challenges/promote/demote keep their own deliberate
 multi-field flows without a second confirm — extend if wanted. Pinned
-(stage297 E7).** 287 tests passing across twenty-one suites. **Stage 2.99a
+(stage297 E7).** 289 tests passing across twenty-one suites. **Drop-box
+UI fix session (2026-08-09, §3.2n correction): the reported demo-side
+upload panel did NOT exist — built now on the main page as the one
+combined "contribute / feedback" surface (operator ruling); stale
+gmail address swept to contact@thetruthonion.org everywhere it renders.
+Reported, not verified.** **Stage 2.99a
 (sandbox core & personas) built 2026-08-02 — see §3.2m — and the
 operator-inspection punch list executed same day (§3.2m-i): api-level
 copy-on-first-write (diagnosed and pinned end-to-end), fog sentence
@@ -1213,7 +1218,7 @@ guarantee-shaped sentence on card, stops, or sandbox notes.
 **Feedback (Amendment B): the in-product pipe is REMOVED** — endpoint,
 modal, quarantine table (an ephemeral DB cannot keep an accept-then-lose
 inbox promise; the operator's live DB keeps its existing table). The
-affordance is a mailto to truth.onionwright@gmail.com (category-prefilled
+affordance is a mailto to contact@thetruthonion.org (category-prefilled
 subject) in the header and on claim pages; durable in-product feedback is
 2.99b scope. Pinned: no route (403/404), no table in fresh schemas, no
 orphaned machinery.
@@ -1489,6 +1494,46 @@ gate; if the site Function isn't deployed by launch, the demo panels
 already say so honestly and fall back to email, and the drop box follows
 by site redeploy — the two deploys are independent by design.
 
+### 3.2n-i — correction: the §B upload panel did not exist (UI fix, 2026-08-09)
+
+The paragraph above reported a save-file upload path; the operator — the
+verifier — found on 2026-08-09 that no drop-or-pick upload panel existed
+anywhere in the demo app. What actually existed: the header feedback
+popover (wired, honest states) and a "contribute save" button that only
+renders inside the save cluster AFTER a visitor has created a private copy
+(`demo && sbx.sid`), and sends the current copy — not a picked file. A
+session report is a restatement of the claim, not evidence for it.
+
+Built this session, per the operator's placement ruling (2026-08-09):
+- **One main-page surface** — the header button is now "✉ contribute /
+  feedback"; its popover carries the anonymous feedback form AND the
+  save-file path: drop or pick a file, parsed through
+  `parseSaveFileText(text)` in `client/src/dropbox.js` — the funnel takes
+  the file's TEXT alone, so filename/size/metadata structurally cannot
+  enter the payload (`{kind:'save', save}` and nothing else, pinned
+  stage299a I3). Parse failures name the blocker and say nothing was
+  sent; unreachable endpoint states it plainly with the email fallback
+  (pinned I4). The save-cluster "contribute save" affordance is kept.
+- **Email correction sweep (operator decision):** every render surface
+  showing the old gmail address now shows contact@thetruthonion.org —
+  `client/src/dropbox.js` (FEEDBACK_EMAIL), `server/claimpages.js`
+  (FEEDBACK_ADDRESS), `client/src/sandboxState.js` (CONTRIBUTION_ASK),
+  README.md, this file's §3.2m mailto note, and the address pins in
+  stage298/stage299a suites. Git commit identity untouched (stays the
+  Onionwright noreply configuration).
+- Verified in the running dev build: popover renders on the main page,
+  bad file → named refusal, good file → ready state with local-only
+  filename; send not exercised against the live endpoint (wire shape
+  pinned by test instead).
+- **Correction, same day:** the operator booted the demo and saw no
+  change — the demo runs the BUILT package under `demo/`, and the session
+  had changed source without rerunning `npm run build-demo`. Rebuilt
+  (after killing a stale node process holding the known `demo/` lock) and
+  re-verified against the demo package itself on :3199: combined surface,
+  upload section, corrected address; old address absent from `demo/app`.
+  Session rule going forward: a UI change isn't demo-visible until
+  build-demo runs — rebuild before reporting.
+
 ## 3.2o Stage 2.99b — kind adjudication & the recast relation (2026-08-02)
 
 **Decision re-recorded (operator, 2026-08-02, so it isn't relitigated):
@@ -1624,7 +1669,7 @@ the entry-card/README/site copy all updated to four.
   derive; verification record: web-verified 2026-08-02,
   operator-confirmed) and the three offline labels.
 
-**Test suites (287 passing; + 6 drop-box pins in the site repo).**
+**Test suites (289 passing; + 6 drop-box pins in the site repo).**
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -1647,7 +1692,7 @@ the entry-card/README/site copy all updated to four.
 | `fetchproxy` | 14 | SSRF guard, mechanical check, shell detection, browser fallback |
 | `release` | 12 | Seed curation, zero-U+FFFD + charset pins, showcase message both layers, proxy-path enumeration closed, verification labels, rate-limit families, deploy gate + no-volume |
 | `history` | 8 | Restore-is-the-fixture (double rebuild), no build-day stamping, recorded epoch + derived/actor-null, per-topic spans incl. RC pre-creation, disclosed corrections, withdrawal restoration, identity bar, curation boundary |
-| `stage299a` | 27 | Sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
+| `stage299a` | 29 | Drop-box UI-fix pins (payload-only upload funnel I3, unreachable fallback I4), sandbox isolation + reads-create-nothing crawl, honest cap/TTL/size refusals + wipe, same-code-path refusal sampler (structure + behavior), persona gates + proposer-never-upholds + multi-actor replay + honesty labels, save round-trip, indicator/save-engine pure logic (mirror both classes, batching, staleness, revoked-handle fallback), api-funnel first-write end-to-end (punch 1), rejected-withdrawal permanence both scopes (punch 5), doors-not-teaching card + no-fog no-guarantee copy, canonical-only pages + impermanence line |
 | `stage299b` | 8 | Kind adjudication: launder refused (earned tier only), on→off severance + transactional ripple with gap retention, no-other-mover (direct edit + single-shot both refused), rejected-persists-zero-effect, kind_changed lifecycle replay, persona/proposer gates; recast_of: creation validation, zero weight both directions + strawman shield, both-page display, save round-trip |
 
 **Content.** MKUltra (12 claims), COINTELPRO (9), The Replication Crisis (10,
