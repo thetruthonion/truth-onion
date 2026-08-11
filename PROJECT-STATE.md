@@ -1,8 +1,8 @@
 # Truth Onion — state of the project
 
-Written 2026-07-20; updated 2026-08-11 (header date corrected — the 2026-08-09
-session-close export was full and this line alone had lagged it; this update also
-adds the living-people gate to the Stage 3+ list). A working handoff document:
+Written 2026-07-20; updated 2026-08-11, second session that date (public-tree
+removal per operator ruling — see §3.2q; the first 08-11 session corrected this
+header's date lag and added the living-people gate to the Stage 3+ list). A working handoff document:
 what exists, why it is shaped the way it is, what was tried and abandoned, and
 what is still open. The design documents (`truth-onion-spec.md`,
 `truth-onion-spec-addendum.md`, `truth-onion-stage-one-kickoff.md`, and now
@@ -1824,6 +1824,69 @@ click-through against the HOSTED build remains).
 hand-built and committed as an export), UAP (11), AI Evaluation (19), Purdue
 Pharma & the Sacklers (2, live-only), The Epstein Case (0 — created, empty,
 live-only).
+
+---
+
+## 3.2q Public-tree removal session (2026-08-11, second session that date)
+
+Per the operator ruling at reconciliation 2026-08-11 — anything in the public
+repo that is not part of the live demo / public release is removed — the full
+tree was walked three ways (ship/reference inventory, check against the
+record, reference safety) and three files came out of HEAD, history untouched:
+
+- `exports/the-epstein-case-prosecution-files-and-release.json` — the ruled
+  removal, confirmed an empty scaffold (zero sources, claims, supports,
+  parked); its title names a topic excluded until the living-people bar lands.
+- `.claude/launch.json` — machine-specific dev launch config (Windows cmd,
+  hardcoded paths); the same machine-local category the repo gitignores
+  elsewhere; nothing ships or references it.
+- `truth-onion-post-release-design-capture.md` — supervision-workstream
+  working context; the repo copy was a stale snapshot (the document-tree
+  master has since gained the proposer-never-upholds section this copy
+  lacked); it cites a companion note not present in the repo. The status
+  paragraph's "post-release design capture Amendment A" citation now resolves
+  in the workstream tree only — the same class as the §9b/§12c citations,
+  documented in §8.
+
+Everything else superficially unreferenced was kept, with reasons: the
+committed kickoff/spec/addendum/audit/draft documents were committed
+deliberately at release prep "so § citations resolve" (§3.2k 0b), and shipped
+code comments and tests cite them stage by stage; `exports/
+the-replication-crisis.json` is the versioned fixture the shipped curated
+seed was built from (§3.2k 0a); `CLAUDE.md` declares itself public and
+governs repo sessions.
+
+**Correction, found by the baseline run (the verification rule proving
+itself):** the suite was NOT green at the head this session inherited.
+stage299a H11 asserts the README's drop-box ask; the approved truth-forward
+README replacement reworded that ask, the replacing session never ran the
+suite, and H11 stood red behind a green-believed record from that commit
+until this session's pre-removal baseline caught it. The test's expectations
+are re-pinned to the approved wording (emphasis markers and line wrap
+stripped as presentation); the README itself did not move — it is the
+operator-approved text. Suite counts are unchanged.
+
+**Stray, not acted on:** `package-lock.json` never picked up the `engines`/
+`license` fields added to `package.json` at the signpost-fix commit; any
+`npm install` regenerates it with npm-version-dependent churn attached, so
+the sync is left to the operator's machine rather than committed from a
+different npm.
+
+**Flag for the operator (kept, not removed — flag-the-tension):** the record
+points two ways on the committed kickoffs. This document's §3.2k says all
+kickoff/spec/addendum docs were committed so § citations resolve;
+`CLAUDE.md` says kickoff documents live in the build supervision workstream,
+not in this repository; and the in-repo set is partial either way (stage two,
+2.5, 2.75, 2.8, 2.9d, 2.99a, 2.99b, 2.99b-2 kickoffs were never committed).
+Either the committed set is release material and the gaps are a traceability
+hole, or CLAUDE.md's line is the rule and the set is removable under this
+same ruling. Operator's call; nothing removed on it this session.
+
+Post-removal verification, reported not verified: full suite green at the
+canonical counts stated in the status paragraph; demo package rebuilt; booted
+in-session serving exactly the five curated topics with mutations refused
+(403) and the root page 200. Verification is the operator's boot and suite
+run, plus a look at the repo tree on GitHub after push.
 
 ---
 
