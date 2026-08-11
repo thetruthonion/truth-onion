@@ -686,9 +686,14 @@ await test('H11 (punch 11, drop-box update). the ask: drop box primary, email if
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   assert.ok(app.includes('CONTRIBUTION_ASK'), 'shown at the save-setup prompt');
   assert.ok(app.includes('onion.ui.contribAskSeen'), 'dismissible, never repeated in-session');
-  const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  assert.ok(readme.includes('contribute your save file through the anonymous drop box'), 'the README leads with the drop box');
-  assert.match(readme, /no response is\s+guaranteed/, 'no promise beyond what is true');
+  // The README expectations follow the approved truth-forward text (the
+  // README replacement), which reworded the ask; the test had stayed pinned
+  // to the pre-replacement wording and stood red until this was caught.
+  // Emphasis markers and line wrap are presentation, not substance — strip
+  // them before asserting so the guarantee tracks the words, not the layout.
+  const readme = readFileSync(join(root, 'README.md'), 'utf8').replace(/\*\*/g, '').replace(/\s+/g, ' ');
+  assert.ok(readme.includes('contribute your save file or feedback through the anonymous drop box'), 'the README leads with the drop box');
+  assert.ok(readme.includes('no response is guaranteed'), 'no promise beyond what is true');
   // The APP DB accepts saves ONLY as sandbox imports — the drop box lives
   // on the site origin, never here.
   const idx = readFileSync(join(root, 'server', 'index.js'), 'utf8');
