@@ -2,30 +2,45 @@
 
 **An investigation game where evidence decides everything — including when you're wrong.**
 
+**Live demo:** https://demo.thetruthonion.org/ · **Source:** https://github.com/thetruthonion/truth-onion
+
 The Truth Onion maps real topics as layered spheres of claims. The better-proven a claim,
 the closer it sits to the center. The wilder and less-supported, the further out. Claims
-move inward only by surviving challenge, and outward the moment their evidence fails —
-and the rules are enforced at the data layer, where no one, including the operator, can
-override them.
+move inward only by surviving challenge, and outward the moment their evidence fails.
+The rules are write-time constraints in the database itself: they cannot be overridden
+at runtime, not even by the operator.
 
 It is part research tool, part game, and — on the roadmap — a shared 3D universe built
 literally on what's been established.
 
 ---
 
-## The idea in one image
+## Why this exists
 
-Open the app and you see a small, solid sphere: the **Core** — only the claims backed by
-primary documents and court records, having survived challenge. Nothing speculative is
-on screen. A note beside it reads: *"8 more claims at deeper levels — the dial hides
-content, never existence."*
+Every existing venue for figuring out what's true fails in one of two directions. Social
+platforms reward whatever is most gripping, so the fringe outruns the documented.
+Institutional fact-checking hands down verdicts without showing enough of the work, so
+much of the audience simply doesn't trust it. Both fail the same person: someone who
+wants to know what's established, what's contested, and what's empty — and wants to
+check the reasoning themselves.
 
-Turn the **depth dial** and shells materialize around the core: Inner (well-supported,
-credible dispute remaining), Middle (partial support), Outer (speculative — stated
-faithfully, with the path inward written down), Outermost (checked and failed — kept
+The Truth Onion is built for that person. It doesn't tell you what to believe. It shows
+you where every claim sits, why it sits there, and exactly what evidence would move it.
+
+## The layers and the dial
+
+Every topic is an onion of tiers: **Core** (claims backed by primary documents and
+court records that survived challenge), **Inner** (well-supported, credible dispute
+remaining), **Middle** (partial support), **Outer** (speculative — stated faithfully,
+with the path inward written down), and **Outermost** (checked and failed — kept
 visible so nothing gets re-litigated forever).
 
-Uncertainty is opt-in. You choose how far down the rabbit hole your view reaches.
+By default you see the Core only; nothing speculative is on screen. Turning the
+**depth dial** outward brings the further tiers into view. The dial hides content,
+never existence — the count of what sits deeper is always shown, so nothing is
+quietly withheld. Uncertainty is opt-in: you choose how far down the rabbit hole
+your view reaches. The same record renders as flat concentric rings or nested
+spherical shells — the 2D and 3D views described below.
 
 ## The rules are the product
 
@@ -52,11 +67,10 @@ Every rule below is a **write-time constraint in the database**, not a moderatio
    changes a tier. Only evidence surviving review does. Search ranking is lexical-only
    by construction, for the same reason.
 
-The engine has refused its own author. During testing, the developer submitted a claim
-about the engine's own integrity, backed by their own passing test suite — and the engine
-placed it at Outer: *your tests restate your claim; they don't independently verify it;
-the path inward is someone who isn't you auditing the rules.* That refusal is the
-product working.
+These constraints bind the author's claims exactly as they bind anyone's. Under the
+self-assertion rule, the author's own tests are self-assertion — which is why the
+project's credibility claim sits at Outer until independently audited (see
+Contributing).
 
 ## What exists today
 
@@ -77,10 +91,14 @@ product working.
   from: what the kernel establishes, what was asserted beyond it, and the evidence path
   inward. Zero weight in every direction, by structure.
 - **The BYOK research companion** — bring your own API key (OpenRouter, Anthropic,
-  Gemini; keys never touch the server, proven per adapter). Two-pass mask-lift: analysis
-  runs with the character card structurally absent, then a mechanical fidelity gate
-  checks the persona render against the record. Read-only tools; live web search on
-  your own key; mechanical source verification in the full engine.
+  Gemini; keys never touch the server, and the test suite proves it per adapter).
+  Two-pass mask-lift: analysis runs with the character card structurally absent, then a
+  mechanical fidelity gate checks the persona render against the record. Read-only
+  tools; live web search on your own key; mechanical source verification in the full
+  engine.
+- **The Proving Grounds sandbox** — act as Curator, Contributor, and Reviewer against
+  the real rules layer; a proposer never upholds their own entry, enforced in code.
+  Sandbox saves export as files — the same save files the drop box accepts.
 - **The time machine** — scrub any topic or claim back through the recorded event log;
   reconstructions name what cannot be honestly rebuilt instead of guessing.
 - **Claim pages** — stable, script-free, server-rendered permalinks (`/claim/<id>`)
@@ -92,59 +110,75 @@ product working.
 
 ## What's staged next
 
-- **The Proving Grounds (2.99)** — a sandbox where visitors act as Curator, Contributor,
-  and Reviewer against the rules for real; sandbox saves import into multiplayer at
-  Stage 3 through the rules layer, entry by entry.
+- **One deliberate taxonomy revision** — the append-only strain journal is its input
+  set; drop-box submissions are read-only study material for it, never engine input.
+- **A heightened evidence bar for claims about living, identifiable people** — a named
+  gate in the rules layer that lands before multiplayer opens. Until it ships, it is a
+  roadmap item, not a present-tense promise.
 - **Multiplayer and adversarial review** — persistent pseudonymous identity, claims
   moved by other people's challenges, dissent preserved rather than steamrolled.
+  Sandbox saves enter multiplayer only entry by entry, through the rules layer.
 - **The shared universe** — everyone spawns inside a vast sphere on the same bedrock of
   established claims; the world's geometry *is* the epistemology.
 
 ## Running it
 
-Requires **Node.js 22.5+** (the database is the built-in `node:sqlite` — no native
-build step; developed on Node 24).
-
 ```
 npm install
-npm run dev     # app at http://localhost:5173, API on 3111
+npm run dev
 ```
 
-The database lives at `server/data/truth-onion.db`, seeded on first run.
+The Node.js requirement is pinned in `package.json` (`engines`); the database is Node's
+built-in `node:sqlite`, so there is no native build step. The dev server prints its
+local URLs; the database lives at `server/data/truth-onion.db`, seeded on first run.
 Other commands:
 
-- `npm test` — the full suite: 19 files, 251 tests, run against the real API with the
-  real seed, in memory. Definition-of-done, adversarial pressure, every stage's pins
-  (kernel grammar, time machine, tour, parking, claim pages, record permanence), demo
-  read-only enforcement, companion grounding/key privacy, the SSRF-guarded fetch proxy,
-  the release checklist (seed curation, encoding, showcase boundary, rate limits,
-  deploy gate), and the history fixture (the demo ships the real curated record with
-  its recorded timestamps — nothing re-stamped at build time).
+- `npm test` — the full suite: **289 tests across 21 suites**, run against the real API
+  with the real seed, in memory. Definition-of-done, adversarial pressure, the pins for
+  every shipped feature (kernel grammar, time machine, tour, parking, claim pages,
+  record permanence, sandbox personas), demo read-only enforcement, companion
+  grounding and key privacy, the SSRF-guarded fetch proxy, the release checklist (seed
+  curation, encoding, showcase boundary, rate limits, deploy gate), and the history
+  fixture (the demo ships the real curated record with its recorded timestamps —
+  nothing re-stamped at build time).
 - `npm run build-demo` — build the read-only showcase package into `demo/`
-  (hosted image: `docker build -f deploy/Dockerfile .` — see `deploy/README.md`).
+  (hosted image: see `deploy/README.md`).
 - `npm run export -- "<topic>"` / `npm run import -- <file>` — move topics through the
   rules layer; a tampered export is refused with the normal plain-language reasons.
 - `npm run reset` — wipe and reseed (**hand-built topics are destroyed — export first**).
 
-## The public demo (showcase)
+## The public demo
 
-The hosted demo is **read-only, enforced server-side** — every mutation answers 403,
-every route is rate-limited, and the database resets to the pristine curated seed on
-every restart. Your first write creates a private sandbox copy; export a save file to
-keep your work.
+The hosted demo is live at **https://demo.thetruthonion.org/** and is **read-only,
+enforced server-side** — every mutation is refused at the API, every route is
+rate-limited, and the database resets to the pristine curated seed on every restart.
+Your first write creates a private sandbox copy; export a save file to keep your work.
 
-Voluntary: contribute your save file through the anonymous drop box (the "contribute /
-feedback" surface on the demo's main page, the save controls, or POST to
-https://thetruthonion.org/api/dropbox) — it shows us where the rules and the vocabulary
-strain, which is exactly what improves the engine. We don't ask
-who you are and don't retain anything that says. Prefer email, if you'd like a reply:
-contact@thetruthonion.org. Either way you'd be sending your own drafts and reasons, so
-read the file first — it's yours. (Drops are read by the operator; no response is
-guaranteed, and nothing ever sends automatically.) **The companion's fetch proxy (`/api/fetch`) is deliberately absent from
-the showcase**: a keyless public fetcher would be an open relay, so `fetch_url` /
-`verify_source` surface an honest "not available in this demo" message instead. Clone
-this repo and run the full engine locally to use mechanical source verification — and
-to try to cheat the rules yourself.
+Voluntary: contribute your save file or feedback through the **anonymous drop box** —
+the contribute/feedback surface on the demo's main page, or the save controls. It shows
+us where the rules and the vocabulary strain, which is exactly what improves the engine.
+The channel is payload-only: no account, no email, no identity fields — we don't ask
+who you are and don't retain anything that says. Drops are read by the operator; no
+response is guaranteed, and nothing ever sends automatically. You'd be sending your own
+drafts and reasons, so read the file first — it's yours. Before submitting, read the
+**"what not to submit"** policy in `CONTRIBUTING.md` and `SECURITY.md` — in particular,
+this project does not solicit classified or otherwise restricted material. If you'd
+like a reply, use email instead: contact@thetruthonion.org.
+
+**The companion's fetch proxy is deliberately absent from the hosted demo**: a keyless
+public fetcher would be an open relay, so `fetch_url` / `verify_source` surface an
+honest "not available in this demo" message instead. Clone this repo and run the full
+engine locally to use mechanical source verification — and to try to cheat the rules
+yourself.
+
+## What this is not
+
+- **Not a debunking site, and not a belief site.** The map doesn't take sides; the
+  evidence does.
+- **Not a content warehouse.** The record stores claims, placement reasons, and sources
+  with their canonical links — a map of where evidence lives.
+- **Not for sale.** No ads, no pay-for-placement, no data sales. Placement can't be
+  bought, because popularity moves nothing — only evidence surviving review does.
 
 ## Philosophy, stated plainly
 
@@ -161,27 +195,40 @@ to try to cheat the rules yourself.
 
 ## Contributing
 
-The engine and rules are open source, and the project's own credibility claim sits at
-Outer until people who aren't its author audit it. The path inward is you: run the
-suite, read `server/rules.js`, try to cheat the engine, and file what you find. Claims,
-topics, code, and challenges are all contributions.
+The engine and rules are open source, and the project's own credibility claim sits, by
+its own rules, at Outer: the author's tests are self-assertion. The path inward is you
+— someone who isn't the author — running the suite, reading `server/rules.js`, trying
+to cheat the engine, and filing what you find. Claims, topics, code, and challenges are
+all contributions.
+
+Contributions are accepted under the Developer Certificate of Origin (sign-off, not a
+CLA) — see `CONTRIBUTING.md`. Vulnerability reporting and the drop box's handling
+rules, including what not to submit, are in `SECURITY.md`. Pseudonymous contribution is
+welcome and expected.
 
 ## Documents
 
-`PROJECT-STATE.md` is the working picture of the build; `DECISIONS.md` holds designs
-agreed but deliberately not built; `TAXONOMY-STRAINS.md` is the append-only strain
-journal behind the coming taxonomy revision; the `truth-onion-*.md` files are the specs,
-kickoffs, and addenda the code comments cite.
+`CONTRIBUTING.md`, `LICENSING.md`, and `SECURITY.md` govern contribution, licensing,
+and reporting. `PROJECT-STATE.md` is the working picture of the build; `DECISIONS.md`
+holds designs agreed but deliberately not built; `TAXONOMY-STRAINS.md` is the
+append-only strain journal behind the coming taxonomy revision; the `truth-onion-*.md`
+files are the specs, kickoffs, and addenda the code comments cite.
 
 ## License
 
-The engine (all code in this repository) is licensed under **AGPL-3.0-only** — see
-`LICENSE`. The record content (claims, placement reasons, gap statements, seeded
-fixtures) is licensed under **CC BY-SA 4.0** — see `LICENSE-CONTENT`.
+The engine (all code in this repository) is licensed under **AGPL-3.0-only**; the
+verbatim license text is `LICENSE`. The record content (claims, placement reasons, gap
+statements, seeded fixtures) is licensed under **CC BY-SA 4.0**; the verbatim text is
+`LICENSE-CONTENT`. The license files are the terms — nothing in this README or
+`LICENSING.md` modifies them.
 
 ## Status
 
-Solo-built. Stages 1 through 2.98b complete and adversarially verified; the public
-release checklist is executed and the repo is prepared for its first public push. Next:
-the Proving Grounds sandbox (2.99a), then the one deliberate taxonomy revision (2.99b),
-then multiplayer (3). The roadmap runs to the shared universe (6).
+Solo-built by **Onionwright**. Launched 2026-08-09 and operator-verified end to end:
+the live demo at https://demo.thetruthonion.org/ running the five curated topics, with
+289 tests across 21 suites green behind the deployed build. The full single-player
+ladder — engine, companion, time machine, claim pages, record permanence, sandbox — is
+complete and adversarially verified. Next: the one deliberate taxonomy revision, then
+multiplayer. The roadmap runs to the shared universe.
+
+*The center is the same for everyone. That's the point.*
