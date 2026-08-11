@@ -161,8 +161,8 @@ The channel is payload-only: no account, no email, no identity fields — we don
 who you are and don't retain anything that says. Drops are read by the operator; no
 response is guaranteed, and nothing ever sends automatically. You'd be sending your own
 drafts and reasons, so read the file first — it's yours. Before submitting, read the
-**"what not to submit"** policy in `CONTRIBUTING.md` and `SECURITY.md` — in particular,
-this project does not solicit classified or otherwise restricted material. If you'd
+**"what not to submit"** policy in `CONTRIBUTING.md` — in particular, this project
+does not solicit classified or otherwise restricted material. If you'd
 like a reply, use email instead: contact@thetruthonion.org.
 
 **The companion's fetch proxy is deliberately absent from the hosted demo**: a keyless
@@ -202,8 +202,8 @@ to cheat the engine, and filing what you find. Claims, topics, code, and challen
 all contributions.
 
 Contributions are accepted under the Developer Certificate of Origin (sign-off, not a
-CLA) — see `CONTRIBUTING.md`. Vulnerability reporting and the drop box's handling
-rules, including what not to submit, are in `SECURITY.md`. Pseudonymous contribution is
+CLA) — see `CONTRIBUTING.md`. Vulnerability reporting and the drop box's data-handling
+rules are in `SECURITY.md`; what not to submit is in `CONTRIBUTING.md`. Pseudonymous contribution is
 welcome and expected.
 
 ## Documents

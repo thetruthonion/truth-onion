@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "license": "AGPL-3.0-only",
   "description": "Evidence engine: claims earn their place on concentric tiers, rules enforced at the data layer with no override path.",
   "scripts": {

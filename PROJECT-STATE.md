@@ -2058,7 +2058,9 @@ the local engine). The rebuilt package boots, serves three topics, and answers
 
 ## 9. Running it
 
-Node 22.5+ required (uses built-in `node:sqlite`; built on Node 24). On this
+Node 22.13+ required (uses built-in `node:sqlite`, which runs unflagged only
+from 22.13.0 — the 22.5 floor previously stated here needed a flag the npm
+scripts never pass; built on Node 24; pinned in `package.json` `engines`). On this
 machine Node is at `C:\Program Files\nodejs` and is **not on PATH**.
 
 ```bash
