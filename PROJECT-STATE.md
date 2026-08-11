@@ -1,6 +1,8 @@
 # Truth Onion — state of the project
 
-Written 2026-07-20; updated 2026-08-01 (release prep). A working handoff document:
+Written 2026-07-20; updated 2026-08-11 (header date corrected — the 2026-08-09
+session-close export was full and this line alone had lagged it; this update also
+adds the living-people gate to the Stage 3+ list). A working handoff document:
 what exists, why it is shaped the way it is, what was tried and abandoned, and
 what is still open. The design documents (`truth-onion-spec.md`,
 `truth-onion-spec-addendum.md`, `truth-onion-stage-one-kickoff.md`, and now
@@ -1900,6 +1902,9 @@ same-content re-creation with correct encoding, on operator sign-off.
 **Stage 3+ (designed, not built).** Multiplayer and adversarial review;
 Matrix/Postgres split with canonical placement never living in the federated
 layer; source capture + content hashing (spec §4); pseudonymous identity;
+the heightened evidence bar for claims about living, identifiable people — a
+named gate that lands in `rules.js` by Stage 3 at the latest (until it ships,
+a roadmap item, not a present-tense promise);
 active-investigation mode; the spatial world. `DECISIONS.md` holds the one
 design already settled: companion voice renders **once** on the owner's client
 and transmits as audio, never re-rendered per listener.
