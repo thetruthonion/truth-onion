@@ -224,9 +224,9 @@ export function buildApp(db, { demo = false, rateLimit = 0, sandbox = false, san
     res.json({ demo_mode: demo });
   });
 
-  // § fetch proxy — public-page retrieval for the companion's fetch_url /
+  // Fetch proxy — public-page retrieval for the companion's fetch_url /
   // verify_source tools. No key, SSRF-guarded (see fetch-proxy.js); every
-  // fetch is logged server-side (the §4 "every fetched URL logged").
+  // fetch is logged server-side — every fetched URL logged, no exceptions.
   //
   // LOCAL ENGINE ONLY. It was originally made GET-only so it would survive the
   // demo's read-only middleware — that reasoning was backwards. The proxy

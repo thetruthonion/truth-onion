@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Character cards: the personality layer. Cards may contain ANY persona
-// content — there is no content validation (§11, operator ruling). The
+// content — there is no content validation (operator ruling). The
 // protection is structural, not behavioral: in claim work, pass 1 runs
 // core-only with the card absent, and the substance-lock guarantees findings
 // arrive intact in any voice. String-checking persona text was a lock on a
@@ -9,7 +9,7 @@
 // fabricate what the onions contain; never leverage the companion
 // relationship to steer beliefs.
 
-// §12d: powers are structured DECLARATIONS, not loose backstory prose —
+// Powers are structured DECLARATIONS, not loose backstory prose —
 // {name, description, tags} — so future user-hosted sections can honor them
 // via a capability handshake. They are real in worlds that run them,
 // presentation everywhere else, and NEVER a key to the ledger: the tool
@@ -31,8 +31,8 @@ function normPowers(raw) {
     .filter((p) => p && p.name);
 }
 
-// 2.9d: SHAPE validation for .json import — content stays unvalidated (§11:
-// any persona content is legal; the mask is the protection). A file is
+// 2.9d: SHAPE validation for .json import — content stays unvalidated (any
+// persona content is legal; the mask is the protection). A file is
 // refused whole with the blocker NAMED — never partially imported.
 export class CardValidationError extends Error {}
 

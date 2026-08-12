@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Companion pressure tests: read-only tool manifest, grounding, pass-1
-// isolation, the substance-calibrated fidelity gate (§9c), interleaved
-// fallback (§9b), any-persona import (§11), the Builder (§10), key privacy
+// isolation, the substance-calibrated fidelity gate, interleaved
+// fallback, any-persona import, the Builder, key privacy
 // (LLM + TTS), prompt-file integrity, and the hostile-model scenario.
 
 import assert from 'node:assert/strict';
@@ -166,7 +166,7 @@ const testManifest = {
 };
 const testAnchors = ['outer', 'not established'];
 
-// ------------------------------------------------ §9c gate calibration
+// ------------------------------------------------ gate calibration
 await test('C14a. a legitimate in-voice PARAPHRASE of the manifest passes the gate', async () => {
   const tokens = fidelityTokens(testManifest, testAnchors);
   // Every content word is reworded; the substance (numbers, names, standing,
@@ -235,7 +235,7 @@ await test('I1. pass-1 context provably contains no card content', async () => {
   }
 });
 
-// -------------------------------------------- §12c automatic degrade
+// -------------------------------------------- automatic degrade
 await test('F1. gate failure degrades AUTOMATICALLY to interleaved — one attempt, no retry loop', async () => {
   let call = 0;
   const stub = async ({ system }) => {
@@ -258,7 +258,7 @@ await test('F1. gate failure degrades AUTOMATICALLY to interleaved — one attem
     return { text: JSON.stringify({ comments: [{ id: 1, comment: 'Nameless whispers. In my line, that buys you nothing.' }] }) };
   };
   const out = await narrateClaim({ claim: outerClaim, corePrompt, card: aggressiveCard, mode: 'full', callModel: stub });
-  assert.equal(call, 3, 'pass1 + ONE gated attempt + commentary — no retry loop (§12c)');
+  assert.equal(call, 3, 'pass1 + ONE gated attempt + commentary — no retry loop, by ruling');
   assert.ok(Array.isArray(out.segments), 'interleaved output carries segments');
   const records = out.segments.filter((s) => s.type === 'record');
   const commentary = out.segments.filter((s) => s.type === 'commentary');
@@ -322,7 +322,7 @@ await test('F4. the light commentary check: contradiction and invented numerals 
   assert.ok(commentaryOk('Nothing here is settled, and that is the point.', env), 'negated echo is not a contradiction');
 });
 
-// ------------------------------------------------ §11: any persona imports
+// ------------------------------------------------ any persona imports
 await test('V1. validation is gone: an "always agrees" card imports cleanly (the mask is the protection)', async () => {
   const card = parseCard({
     name: 'Yes-Man',
@@ -335,7 +335,7 @@ await test('V1. validation is gone: an "always agrees" card imports cleanly (the
   assert.equal(validateCard, undefined, 'validateCard must no longer exist');
 });
 
-// ------------------------------------------------------------ §10 Builder
+// ------------------------------------------------------------ the Builder
 await test('B1. the Builder is a standard card and its output is a standard card', async () => {
   const builder = parseCard(BUILDER_CARD);
   assert.equal(builder.name, 'Wren');
@@ -358,7 +358,7 @@ await test('B2. the Builder teaches the mask and the powers boundary instead of 
   const sys = builderSystem({ voiceOptions: describeVoiceOptions({ keys: {} }) });
   const flat = sys.toLowerCase().replace(/\s+/g, ' ');
   assert.ok(flat.includes('the character shapes the voice, never the findings'), 'mask education present');
-  assert.ok(flat.includes('build it if they want it'), 'no refusal — §11 supersedes');
+  assert.ok(flat.includes('build it if they want it'), 'no refusal — the any-persona ruling supersedes');
   assert.ok(flat.includes('not what they can access'), 'powers boundary framed');
   assert.ok(flat.includes('never show them json'), 'no JSON shown');
   for (const step of ['personality', 'backstory', 'quirks', 'appearance', 'voice']) {
@@ -366,12 +366,12 @@ await test('B2. the Builder teaches the mask and the powers boundary instead of 
   }
 });
 
-// ------------------------------------------------ §12d powers as declarations
+// ------------------------------------------------ powers as declarations
 await test('B3. Builder-produced powers are structured declarations, never key to the ledger', async () => {
   const sys = builderSystem({ voiceOptions: describeVoiceOptions({ keys: {} }) });
   const flat = sys.toLowerCase().replace(/\s+/g, ' ');
   assert.ok(flat.includes('structured declaration'), 'powers framed as structured declarations');
-  assert.ok(flat.includes('never a key to the ledger'), '§12d boundary line present');
+  assert.ok(flat.includes('never a key to the ledger'), 'the powers boundary line is present');
   assert.ok(flat.includes('capability handshake'), 'handshake mechanism named for user-hosted worlds');
   assert.ok(sys.includes('"powers": [{"name"'), 'the emission block specifies structured powers');
 
@@ -392,7 +392,7 @@ await test('B3. Builder-produced powers are structured declarations, never key t
   assert.ok(loose.powers.every((p) => Array.isArray(p.tags)), 'string powers normalize to declarations');
 });
 
-// ------------------------------------------------ §12b key/settings durability
+// ------------------------------------------------ key/settings durability
 await test('D12b1. keys survive a full restart (fresh module state, same localStorage)', async () => {
   const local = fakeStorage();
   // Session 1: user sets a key.
@@ -429,7 +429,7 @@ await test('D12b3. a read failure never lets a save clobber the good key (the va
   // key is never overwritten with bare defaults.
 });
 
-// ------------------------------------------------ §13c key + card + threads survive every reset
+// ------------------------------------------------ key + card + threads survive every reset
 await test('D13c1. the active card lives in its OWN isolated entry, like keys', async () => {
   const local = fakeStorage();
   const card = { name: 'Marlowe', personality: 'Noir.' };
@@ -446,7 +446,7 @@ await test('D13c2. key, card, and threads all survive a corrupt settings blob', 
   const card = { name: 'Wren', personality: 'Warm craftsman.' };
   saveSettings({ ...loadSettings(local), keys: { openrouter: 'sk-live' }, card }, local);
   saveThreads(upsertThread(loadThreads(local), { id: 't1', characterName: 'Wren', messages: [{ role: 'user', text: 'hi' }] }), local);
-  // Corrupt only the settings blob — the §13c reported bug lost card + key too.
+  // Corrupt only the settings blob — the reported bug lost card + key too.
   local.setItem(STORAGE_KEYS.SETTINGS_KEY, 'not json at all');
   const recovered = loadSettings(local);
   assert.equal(recovered._ok, false);
@@ -476,7 +476,7 @@ await test('D13c3. no reset path touches the onion.companion.* family', async ()
   assert.ok(after.every((v) => v !== null), 'every family member is still present');
 });
 
-// ------------------------------------------------ §12a conversation persistence
+// ------------------------------------------------ conversation persistence
 await test('D12a1. conversations persist and resume across panel close/reopen', async () => {
   const local = fakeStorage();
   const id = newThreadId();
@@ -512,17 +512,17 @@ await test('D12a2. multiple threads coexist, newest-first, and delete works', as
   assert.equal(titleFor([{ role: 'user', text: '   messy   whitespace here   ' }]), 'messy whitespace here');
 });
 
-// ------------------------------------------------ §13a capability boundary (as corrected by §14)
+// ------------------------------------------------ capability boundary (corrected when live search shipped)
 await test('R1. the core prompt knows its tool boundary: has search, cannot write', async () => {
   const flat = corePrompt.toLowerCase().replace(/\s+/g, ' ');
   assert.ok(flat.includes('know your own tool boundary'), 'the boundary rule is present');
-  assert.ok(flat.includes('live web search'), 'it knows it CAN search (§14)');
+  assert.ok(flat.includes('live web search'), 'it knows it CAN search');
   assert.ok(flat.includes('no write access'), 'it knows it cannot write');
   assert.ok(/cannot place, promote, demote, attach a source, link, or park/.test(flat), 'the write verbs are named');
   assert.ok(flat.includes('never narrate an action you have no tool for'), 'no fabricated actions');
 });
 
-await test('R2. asked to attach/promote/place, the executor refuses plainly (§21b)', async () => {
+await test('R2. asked to attach/promote/place, the executor refuses plainly', async () => {
   const readExec = makeToolExecutor({ fetchImpl: async () => ({ ok: true, json: async () => ({}) }) });
   const exec = makeCompanionExecutor({ readExec, searchExec: { web_search: async () => ({}) } });
   for (const name of ['attach_source', 'promote_claim', 'set_tier', 'place_claim', 'park_note']) {
@@ -534,7 +534,7 @@ await test('R2. asked to attach/promote/place, the executor refuses plainly (§2
   assert.ok(okSearch !== undefined, 'a genuine tool still runs');
 });
 
-// ------------------------------------------------ §13b topic context (no id leak)
+// ------------------------------------------------ topic context (no id leak)
 await test('R3. active topic is injected by name+id; a numeric id is never demanded of the user', async () => {
   const withTopic = topicContext({ id: 5, name: 'Purdue Pharma & the Sacklers' });
   assert.match(withTopic, /Purdue Pharma & the Sacklers/, 'names the active topic');
@@ -557,7 +557,7 @@ await test('R4. chatTurn with a topic open never asks which topic; with none, it
   assert.match(systems[1], /No topic is open/, 'no-topic path names the resolve-by-name behavior');
 });
 
-// ------------------------------------------------ §14 live search
+// ------------------------------------------------ live search
 await test('S1. tier classification: gov→record, news→reputable, blog→self_published, unknown→strain', async () => {
   assert.equal(classifySourceTier('https://www.supremecourt.gov/opinions/x.pdf').tier, 'court_record');
   assert.equal(classifySourceTier('https://storage.courtlistener.com/recap/x.pdf').tier, 'court_record');
@@ -797,7 +797,7 @@ await test('K3. fallback honesty: pulling the voice provider falls back to basel
 });
 
 // ------------------------------------------------------------ prompt integrity
-await test('P1. the shipped core prompt exists, carries §2 + the standing rules, and hashes deterministically', async () => {
+await test('P1. the shipped core prompt exists, carries the immutable core rules + the standing rules, and hashes deterministically', async () => {
   const flat = corePrompt.toLowerCase().replace(/\s+/g, ' ');
   for (const marker of [
     'Your win condition',

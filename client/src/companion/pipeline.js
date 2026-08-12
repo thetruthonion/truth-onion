@@ -3,13 +3,13 @@
 // is STRUCTURALLY absent from context. Pass 2 renders a fixed substance
 // manifest in persona, validated by a mechanical fidelity gate.
 //
-// Gate calibration (§9c): the gate verifies SUBSTANCE survival, not wording.
+// Gate calibration: the gate verifies SUBSTANCE survival, not wording.
 // Substance = what a legitimate paraphrase cannot change: tier anchors,
 // numerals, proper nouns, and the tool's terms of art ("zero weight",
 // "not established", …). Ordinary vocabulary belongs to the voice and is
 // free — a render fails only when it drops or contradicts substance.
 //
-// Fallback (§9b): a failed persona-full render falls back to INTERLEAVED
+// Fallback: a failed persona-full render falls back to INTERLEAVED
 // delivery — gated record blocks with in-character commentary between them.
 // The character is never absent from a response; the old "showing bare
 // analysis instead" path is gone. Interleaved is also a first-class
@@ -164,7 +164,7 @@ function parseManifest(text) {
   return manifest;
 }
 
-// ---- §9b light no-contradiction check on the commentary channel ----------
+// ---- Light no-contradiction check on the commentary channel --------------
 // Deliberately light: commentary may react, characterize, emphasize. It is
 // replaced only when it (a) asserts establishment-language against a weak
 // tier, or (b) introduces numerals that exist nowhere in the record.
@@ -213,7 +213,7 @@ function flattenSegments(segments) {
     .join('\n');
 }
 
-// ---- Interleaved rendering (§9b): gated record blocks + free-voice
+// ---- Interleaved rendering: gated record blocks + free-voice
 // commentary. Substance-locked by construction — the record blocks ARE the
 // manifest, delivered plain; the persona speaks between them.
 async function renderInterleaved({ manifest, anchors, claim, card, corePrompt, callModel, recordString }) {
@@ -336,7 +336,7 @@ export async function narrateClaim({ claim, corePrompt, card = null, mode = 'ful
   }
 
   // ---- Pass 2: persona rendering of the fixed manifest, gated. ----
-  // §12c ruling: ONE full-persona attempt. On gate failure, degrade
+  // ONE full-persona attempt, by ruling. On gate failure, degrade
   // AUTOMATICALLY to interleaved — no retry loop, no bare-analysis output,
   // ever. The character is present in 100% of responses.
   enter('render');
@@ -367,7 +367,7 @@ export async function narrateClaim({ claim, corePrompt, card = null, mode = 'ful
 }
 
 // ---- Chat ----------------------------------------------------------------
-// §13b: the active topic (id + name) is injected here so the model never asks
+// The active topic (id + name) is injected here so the model never asks
 // the operator for a numeric id, and never surfaces one. When no topic is
 // open, the model is told to resolve a topic by NAME via list_topics.
 export function topicContext(activeTopic) {
@@ -442,7 +442,7 @@ export async function chatTurn({
     return interleaveChat();
   }
 
-  // §12c: one full attempt, then automatic degrade to interleaved.
+  // One full attempt, then automatic degrade to interleaved.
   enter('render');
   const brevity = mode === 'light' ? ' Keep it brief.' : '';
   const pass2System = `${corePrompt}\n\n${cardPersonaText(card)}\n\nRender-only task: restate the analysis below in your voice — same substance, nothing added, nothing dropped, no softened warnings.${brevity}`;

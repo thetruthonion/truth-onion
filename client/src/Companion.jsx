@@ -33,7 +33,7 @@ import {
 
 const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
-// A single message may be plain text OR interleaved segments (§9b).
+// A single message may be plain text OR interleaved segments.
 function MessageBody({ m }) {
   if (m.segments) {
     return (
@@ -55,7 +55,7 @@ export default function Companion({ corePrompt, currentClaim, activeTopic = null
   const [settings, setSettings] = useState(loadSettings);
   const [showSettings, setShowSettings] = useState(false);
   const [hash, setHash] = useState('');
-  // Conversation persistence (§12a): threads survive panel close/reopen and
+  // Conversation persistence: threads survive panel close/reopen and
   // restart because they live in localStorage, not component state.
   const [threadState, setThreadState] = useState(loadThreads);
   const activeThread = threadState.threads.find((t) => t.id === threadState.activeId) || null;
@@ -80,7 +80,7 @@ export default function Companion({ corePrompt, currentClaim, activeTopic = null
     if (corePrompt) sha256Hex(corePrompt).then(setHash);
   }, [corePrompt]);
 
-  // §12b/§13c persistence. Keys and the active card live in their OWN isolated
+  // Persistence discipline. Keys and the active card live in their OWN isolated
   // localStorage entries and are saved UNCONDITIONALLY — so they survive even
   // if the settings blob is corrupt (a read failure must never take the key or
   // card down with it). The settings blob itself keeps the clobber guard:
@@ -382,7 +382,7 @@ export default function Companion({ corePrompt, currentClaim, activeTopic = null
 
   const setKey = (which, value) => setSettings((s) => ({ ...s, keys: { ...s.keys, [which]: value } }));
 
-  // ---- Conversation list (§12a) ----
+  // ---- Conversation list ----
   const newConversation = () => {
     setActiveId(null);
     setMessages([]);
@@ -612,7 +612,7 @@ export default function Companion({ corePrompt, currentClaim, activeTopic = null
 
           <div className="hashline">
             core prompt hash: <code>{hash ? hash.slice(0, 16) + '…' : '…'}</code>
-            <span className="muted"> (the immutable §2 core — independent of any card)</span>
+            <span className="muted"> (the immutable core — independent of any card)</span>
           </div>
         </div>
       )}

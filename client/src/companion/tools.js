@@ -161,7 +161,7 @@ export function makeToolExecutor({ fetchImpl = fetch, origin = '' } = {}) {
   };
 }
 
-// Combine the game-data read executor with the live-search executor (§14).
+// Combine the game-data read executor with the live-search executor.
 // Search tools are retrieval only; a name in neither set is refused — so the
 // write boundary is unchanged whether or not search is enabled.
 export function makeCompanionExecutor({ readExec, searchExec = null }) {

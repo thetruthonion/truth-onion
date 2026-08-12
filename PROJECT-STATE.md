@@ -1,14 +1,15 @@
 # Truth Onion — state of the project
 
-Written 2026-07-20; updated 2026-08-11, second session that date (public-tree
-removal per operator ruling — see §3.2q; the first 08-11 session corrected this
+Written 2026-07-20; updated 2026-08-11, third session that date (repo document
+removal per operator ruling — see §3.2r; the second 08-11 session was the
+public-tree removal, §3.2q; the first corrected this
 header's date lag and added the living-people gate to the Stage 3+ list). A working handoff document:
 what exists, why it is shaped the way it is, what was tried and abandoned, and
 what is still open. The design documents (`truth-onion-spec.md`,
-`truth-onion-spec-addendum.md`, `truth-onion-stage-one-kickoff.md`, and now
-`truth-onion-stage-2-9-addendum.md` + `truth-onion-stage-2-9-kickoff.md`, saved
-into the repo this stage) remain the source of intent; this describes the state
-of the build against them.
+`truth-onion-spec-addendum.md`, the stage kickoffs and their addenda) remain
+the source of intent and live in the build supervision workstream — removed
+from this repository 2026-08-11 per operator ruling (§3.2r); this describes
+the state of the build against them.
 
 ---
 
@@ -84,7 +85,12 @@ move is a separate operator decision. Pre-push scan clean: no DB blob,
 secret, key, or .env-shaped file among the tracked files; the single
 pattern hit is the pinned fake-key fixture in stage29d; .gitignore covers
 every family. Full suite green, totals unchanged. Reported, not verified;
-the operator commits as Onionwright.
+the operator commits as Onionwright. **Doc-removal session (2026-08-11,
+§3.2r): the seventeen internal working documents are out of HEAD per
+operator ruling; the three citing comments repointed at the build
+supervision workstream; the dangling `§` citations rewritten out of the
+code and tests; suite green at baseline counts, unchanged. Reported, not
+verified.**
 
 **Standing rule (operator, 2026-07-27, applies to every future session):**
 nothing created during a build session — verification fixtures, seeded data,
@@ -804,9 +810,14 @@ Genre sections group entries (Replication Crisis 1–4, legal 5–6). Entries ar
 appended and never revised into agreement with later understanding — a
 superseded entry gets a correction appended, not a rewrite.
 
-**Section numbering (`§9b`, `§12c`, `§13c`, `§14`).** These reference pasted
-kickoff documents that are **not in the repo**. Code comments cite them
-liberally. This is a real traceability gap — see §8.
+**Section numbering in code comments — resolved 2026-08-11 (§3.2r).** The
+`§9b`-family citations referenced 2.9d-era documents pasted into a session
+and never saved; they could not be made to resolve. Every such citation was
+rewritten to state the constraint it stood in for, or dropped where the
+comment already stated it. The only `§` references remaining in code are
+real legal/document citations inside seeded source strings and one pointer
+to this file's §6, which resolves. Do not reintroduce section-number
+citations to documents that do not live in a durable tree.
 
 **Code comments explain *why*, never *what*.** The house style is a short
 paragraph at the head of a module stating the threat it defends against or the
@@ -1024,6 +1035,14 @@ operator's license lands, never guessed — with `package.json` pointing at
 it; all kickoff/spec/addendum docs committed so `§` citations resolve.
 Verified staged: no DB blob, no secret (pattern scan), Epstein export empty.
 **The §8 "no version control" risk is closed.**
+*[Superseded in part, 2026-08-11 — operator ruling at the fifth
+reconciliation (reconciled-state §2.10, Amendment C.4, operator-log b-013):
+the "committed so `§` citations resolve" line stays on the record as what
+was done, but no longer governs. The rationale was empty at the time — the
+`§` citations in shipped code resolved to nothing in or out of the repo,
+and the committed set was never complete. The seventeen internal documents
+came out of HEAD in the doc-removal session (§3.2r); CLAUDE.md's rule —
+kickoff documents live in the build supervision workstream — governs.]*
 
 **1 — rebuild.** Demo package rebuilt with everything through 2.98b; booted
 and verified live: three curated topics, `/api/fetch` 404, mutations 403,
@@ -1850,7 +1869,7 @@ record, reference safety) and three files came out of HEAD, history untouched:
 
 Everything else superficially unreferenced was kept, with reasons: the
 committed kickoff/spec/addendum/audit/draft documents were committed
-deliberately at release prep "so § citations resolve" (§3.2k 0b), and shipped
+deliberately at release prep "so § citations resolve" (§3.2k 0c), and shipped
 code comments and tests cite them stage by stage; `exports/
 the-replication-crisis.json` is the versioned fixture the shipped curated
 seed was built from (§3.2k 0a); `CLAUDE.md` declares itself public and
@@ -1882,11 +1901,96 @@ Either the committed set is release material and the gaps are a traceability
 hole, or CLAUDE.md's line is the rule and the set is removable under this
 same ruling. Operator's call; nothing removed on it this session.
 
+*[Superseded, 2026-08-11: the flag above is resolved — flagging rather than
+acting was correct then, and the operator has now ruled (fifth
+reconciliation; reconciled-state §2.10, Amendment C.4, b-013). CLAUDE.md's
+line is the rule; the kept kickoff/spec/addendum/audit/draft/sources set
+came out of HEAD in the next repo session (§3.2r). The "kept, with reasons"
+paragraph above stays as what was decided then; it no longer governs. Also
+corrected in this pass: the citation above originally read "§3.2k 0b" — the
+committed-so-citations-resolve line sits under 0c (§3.2k carries the two as
+one combined "0b/0c — repo" bullet), and 0b, the repo-goes-public
+resolution, is the decision carrying operator attribution. He was never
+asked whether the internal documents should ship.]*
+
 Post-removal verification, reported not verified: full suite green at the
 canonical counts stated in the status paragraph; demo package rebuilt; booted
 in-session serving exactly the five curated topics with mutations refused
 (403) and the root page 200. Verification is the operator's boot and suite
 run, plus a look at the repo tree on GitHub after push.
+
+## 3.2r Repo document removal session (2026-08-11, third session that date)
+
+**Operator ruling at the fifth reconciliation, 2026-08-11 (reconciled-state
+§2.10, Amendment C.4, operator-log b-013): the seventeen internal working
+documents at the repository root — stage kickoffs, the spec and its
+addendum, two stage addenda, the source audit, the design brief, the topic
+draft, and the verified-sources ledger — come out of HEAD.** They shipped
+with the 2026-08-09 publication without anyone being asked whether they
+should. The reasoning carried: a kickoff is a stage's *input*, this file is
+the *record*; a kickoff goes stale the moment a build deviates and is never
+corrected after, so shipping the set put permanently-stale material where an
+outside reader meets it before the record. The stated commit rationale ("so
+`§` citations resolve", §3.2k 0c) was empty — the `§` citations in shipped
+code resolved to nothing anywhere — and the set was never applied evenly
+(the stage two, 2.5, 2.75, 2.8, 2.9d, 2.99a, 2.99b and 2.99b-2 kickoffs
+were never committed).
+
+What was done, all from HEAD only — no history rewrite, no force, the
+removed documents remain in history on the same accepted terms as §3.2q:
+
+- **b-014 verified before anything moved:** the three documents that
+  existed only in this repo (`truth-onion-design-brief.md`,
+  `truth-onion-2-98b-source-audit.md`, `truth-onion-uap-topic-draft.md`)
+  were operator-copied to the build workstream folder; this session
+  hash-verified the copies byte-identical (SHA-256) before removal.
+- **Seventeen documents `git rm`'d from HEAD** — the fourteen plain
+  removals plus the three code-cited ones. The per-file reference table
+  from reconciled-state §2.10 verified exactly: no extra references, no
+  missing paths.
+- **The three citing comments repointed** at the build supervision
+  workstream: `client/src/tokens.js` (design brief + 2.9c kickoff),
+  `server/sourcelinks.js` (the 2.98b audit table, and the ai-eval ledger),
+  `server/seed-aieval.js` (the ai-eval ledger). No comment anywhere points
+  at a file that is not there.
+- **The dangling `§` citations rewritten or removed.** Each now states the
+  constraint it stood in for, or the stale marker is dropped where the
+  comment already stated it; none were mapped into the 2.9d A–E scheme
+  (that would fabricate a citation). Findings beyond the kickoff's walk,
+  reported not absorbed: the same class existed in `server/index.js` (a
+  "§4" logging citation), `client/src/styles.css` (two comment headers),
+  `tests/stage29d.test.mjs` (one §11 note), plus `§2`/`§4` section numbers
+  outside the kickoff's listed set; one §2 label sat in RENDERED UI text
+  (the core-prompt hashline, now "the immutable core") and one §12d
+  reference inside the Builder's shipped system prompt (now "these terms" —
+  the terms are stated in the following clause). No test pinned either
+  string. The only `§` left in code is real legal/document citations inside
+  seeded source strings and one resolving pointer to this file's §6.
+- **Corrections to this file:** §3.2q's "§3.2k 0b" miscitation corrected to
+  0c, with the correction noted in the appended supersession — and a
+  finding: §3.2k carries the two as ONE combined "0b/0c — repo" bullet,
+  not separate lines. Supersessions appended (not rewritten) to §3.2k's
+  0b/0c bullet and §3.2q's kept-paragraph and flag; the conventions
+  "Section numbering" note replaced (nothing remains dangling); the §8
+  traceability risk marked CLOSED per that section's own convention; repo
+  `CLAUDE.md`'s scope line now states the rule plainly and carries the
+  supersession.
+- **Suite:** baseline before any change 289 passing / 0 failing across 21
+  suites (green — unlike §3.2q's inherited red, nothing stood behind the
+  record this time); post-change run identical, 289 / 0 across 21, exit 0.
+  The unchanged count is the expected result and it is the result.
+- **Head before: `f05f82c`** (confirmed against the kickoff before acting;
+  tree clean). The removal commit is the head after — it carries this
+  section, so its hash is stated in the session report and confirmed by
+  the operator at b-015 (pull-and-push with the identity check).
+
+Delivery on the no-token path: one commit, identity `Onionwright` /
+GitHub-noreply checked before the commit; bundle
+`truth-onion-doc-removal.bundle` (that exact name — b-015's paste block
+depends on it) delivered to the build workstream folder.
+
+Reported, not verified: verification is the operator's b-015 push, a look
+at the repo tree on GitHub, and an independent boot and suite run.
 
 ---
 
@@ -2060,14 +2164,13 @@ initialized on `main` with a clean first commit (.gitignore in place before
 it; no DB blob or secret staged — verified). The operator creates the
 remote and pushes; credentials never pass through the agent.
 
-**The `§` numbering points outside the repo.** Comments across the companion
-cite `§9b`, `§11`, `§12c`, `§13c`, `§14` as if they were durable references, but
-those kickoff documents were pasted into chat and never saved. Anyone reading
-the code later — including me in a fresh session — cannot resolve them. Either
-save the kickoffs into the repo or convert the citations to self-describing
-names. *(Partially addressed 2026-07-27: the Stage 2.9 addendum and kickoff
-are now saved in the repo root, so 2.9-era references resolve. The older
-kickoffs remain unsaved.)*
+**The `§` numbering points outside the repo — CLOSED (doc-removal session,
+2026-08-11, §3.2r).** Comments across the companion cited `§9b`, `§11`,
+`§12c`, `§13c`, `§14` as if they were durable references, but those documents
+were pasted into chat and never saved. Resolved by the second of the two
+paths this entry named: every citation converted to a self-describing
+statement of its constraint (the save-into-the-repo path was superseded by
+the same ruling that removed the committed documents from HEAD).
 
 **The taxonomy redesign has no scoped shape yet.** Six entries say *where* the
 vocabulary strains; none of them proposes a replacement, correctly, since the

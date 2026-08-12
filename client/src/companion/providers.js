@@ -137,7 +137,7 @@ function googleContent(m) {
 // Build one non-streaming chat request. Sampling params are deliberately
 // never sent — newer models reject them, and the companion doesn't need them.
 // `extraBody` carries provider-specific additions (e.g. the OpenRouter web
-// plugin for online search, §14) merged into the OpenAI-shape body.
+// plugin for online search) merged into the OpenAI-shape body.
 export function buildChatRequest({ provider, baseUrl, apiKey, model, system, messages, tools, extraBody }) {
   const spec = PROVIDERS[provider];
   if (!spec) throw new Error(`Unknown provider "${provider}".`);

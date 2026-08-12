@@ -135,7 +135,7 @@ await test('C2. invalid card files are refused whole with the blocker NAMED', as
   assert.throws(() => validateCardText('{"name":"X","personality":42}'), /Wrong type for "personality"/);
   assert.throws(() => validateCardText('{"name":"X","powers":"strong"}'), /Wrong type for "powers"/);
   assert.throws(() => validateCardText('{"name":"X","voice":"loud"}'), /Wrong type for "voice"/);
-  // §11 unchanged: any persona CONTENT is legal once the shape is right.
+  // The any-persona ruling unchanged: any persona CONTENT is legal once the shape is right.
   const agreeable = validateCardText('{"name":"Yes-Man","personality":"Always agrees with everything."}');
   assert.equal(agreeable.name, 'Yes-Man');
 });

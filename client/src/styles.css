@@ -218,7 +218,7 @@ fieldset.action-area:disabled { opacity: 0.75; }
 .search-log .log-ok { color: var(--muted); }
 .search-log .log-refused { color: var(--critical); }
 
-/* interleaved rendering (§9b): gated record blocks + free-voice commentary */
+/* interleaved rendering: gated record blocks + free-voice commentary */
 .interleaved { display: flex; flex-direction: column; gap: 5px; }
 .seg-record {
   border-left: 3px solid var(--baseline);
@@ -242,7 +242,7 @@ fieldset.action-area:disabled { opacity: 0.75; }
 }
 .build-preview .muted { font-size: 11.5px; }
 
-/* conversation list (§12a) */
+/* conversation list */
 .companion-head-actions { display: flex; gap: 4px; align-items: center; }
 .thread-list {
   border-bottom: 1px solid var(--border);

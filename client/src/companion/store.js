@@ -3,7 +3,7 @@
 // browser and computer restarts). Nothing here ever enters a request to the
 // app, is logged, or appears in the topic export.
 //
-// Durability layout (§12b + §13c): the volatile things each live in their OWN
+// Durability layout: the volatile things each live in their OWN
 // isolated `onion.companion.*` entry so no single bad write or reset can take
 // another down with it:
 //   onion.companion        UI prefs (provider, model, modes, search config)
@@ -37,7 +37,7 @@ const DEFAULTS = {
   baseUrl: '',
   helpingMode: 'full', // full | interleaved | light | bare
   autoSpeak: false,
-  // §14 live search config (client-side only, same key discipline).
+  // Live search config (client-side only, same key discipline).
   search: {
     enabled: true,
     mode: 'openrouter-online', // 'openrouter-online' | 'search-api'

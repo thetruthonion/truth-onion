@@ -16,9 +16,15 @@ missing from .gitignore, add it before anything else.
 ## Scope discipline
 
 - Build only what the current kickoff scopes. Kickoff documents live in the build
-  supervision workstream, not in this repository; section citations (§9b, §12c,
-  §14) refer to them. If work depends on one and it is not available to this
-  session, say so and stop rather than reconstructing it from memory.
+  supervision workstream, are not in this repository, and are never read for what
+  the system does — a kickoff is a stage's input and goes stale the moment a build
+  deviates from it; PROJECT-STATE.md is the record of what was built. (The
+  release-prep note recording internal documents as committed "so § citations
+  resolve" — PROJECT-STATE.md §3.2k, the 0c line of the combined 0b/0c bullet —
+  was superseded by operator ruling 2026-08-11; those documents are out of HEAD,
+  and this line was the rule all along.) If work depends on a kickoff and it is
+  not available to this session, say so and stop rather than reconstructing it
+  from memory.
 - A new stage means a new kickoff with an explicit definition of done, and work
   stops at the definition of done. When in doubt, do less.
 - Later-stage design in the spec addendum is foundational, not buildable now.
