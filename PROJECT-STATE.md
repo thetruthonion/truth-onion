@@ -98,7 +98,18 @@ the operator commits as Onionwright. **Doc-removal session (2026-08-11,
 operator ruling; the three citing comments repointed at the build
 supervision workstream; the dangling `§` citations rewritten out of the
 code and tests; suite green at baseline counts, unchanged. Reported, not
-verified.**
+verified.** **Edit visit (2026-08-15): twenty-six operator-ruled corrections
+applied here (lead status line, scoped headlines, dangling citations, stale
+counts and stages); a five-reader fan-out then swept the repository and its
+thirteen confirmed findings were fixed under same-day operator rulings —
+including the strict rule that no repository file cites a document outside
+the repository, applied across this file, code comments, tests, and README.
+b-019 landed the splitting convention, the workstream-reader agent, and the
+rebuild-before-reporting rule in CLAUDE.md. client/dist and demo/ rebuilt
+(untracked local artifacts; the stale copies carried two pre-removal `§`
+strings). Suite green at 289 across 21, unchanged. Pushed as commits
+095422e and 2d0dd31; this status entry rides one commit above them.
+Reported, not verified.**
 
 **Standing rule (operator, 2026-07-27, applies to every future session):**
 nothing created during a build session — verification fixtures, seeded data,
