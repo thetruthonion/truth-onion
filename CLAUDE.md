@@ -27,7 +27,8 @@ missing from .gitignore, add it before anything else.
   from memory.
 - A new stage means a new kickoff with an explicit definition of done, and work
   stops at the definition of done. When in doubt, do less.
-- Later-stage design in the spec addendum is foundational, not buildable now.
+- Later-stage design captured in the build supervision workstream is
+  foundational, not buildable now.
 
 ## Invariants — hard constraints, not preferences
 
@@ -70,6 +71,25 @@ and stop — never propose the break.
   not sufficient: completion is "reported" until the operator has booted the
   package and run the suites independently, and only then "verified." State your
   own session's results in those terms.
+
+**A UI change is not demo-visible until `build-demo` runs.** Rebuild before
+reporting. The demo package is a build artifact, not a view of the working
+tree: a change that is correct in the dev server is absent from `demo/` until
+the package is rebuilt, and reporting from the dev server is reporting from
+the wrong surface. This is not style — the drop-box upload panel was reported
+built and was not in the package, which is one of the three incidents behind
+the reported / audited / verified vocabulary. Rebuild, check the package, then
+report.
+
+## Splitting work across subagents
+
+When a task fans over many independent files — an audit across the folder, a
+check per document, a sweep the diff says is wide — split it: spawn one read-only
+subagent per slice, in parallel, each returning findings as its final message
+with file and line cited. Readers never write; this session merges, decides, and
+does all writing itself. A task on one document, or where each step depends on
+the last, is not split. A subagent holds this folder's access and nothing more,
+so the one-folder boundary holds automatically.
 
 ## Session close
 
