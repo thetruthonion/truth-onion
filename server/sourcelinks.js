@@ -5,11 +5,10 @@
 // than a labeled absence). Verification record: every URL below was
 // resolved live on 2026-08-01 (HTTP 200, DOI handle registry responseCode 1,
 // or CourtListener API citation match); the two could-not-verify items are
-// LABELED, not guessed. The audit table lives in
-// truth-onion-2-98b-source-audit.md, in the build supervision workstream —
-// not this repository.
+// LABELED, not guessed. The audit table that drove this mapping is
+// archived in the build supervision workstream — not this repository.
 
-// Canonical homes preferred, per the kickoff: gov originals (Senate,
+// Canonical homes preferred — a standing curation rule: gov originals (Senate,
 // govinfo, presidential library), court dockets (CourtListener/RECAP),
 // agency reading rooms (FBI Vault), DOIs for journal articles, archive.org
 // for defunct pages.
@@ -97,7 +96,7 @@ export const SOURCE_LINKS = [
 ];
 
 // ---- AI Evaluation (2.99b-2 — web-verified 2026-08-09, operator-confirmed
-// same day; ledger in truth-onion-ai-eval-topic-sources-verified.md in the
+// same day; the operator-verified sources ledger is archived in the
 // build supervision workstream, not this repository; archive
 // captures triggered at seed time, mandatory for the hash-based CDN PDFs,
 // the living deprecations page, and the renamed-institute domain). Defined

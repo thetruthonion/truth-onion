@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
-/* Dark UI on Void Indigo, per the design brief (2.9c). Tier colors are
+/* Dark UI on Void Indigo. Tier colors are
    NEVER stated here — they arrive as --tier-* variables injected from
    tokens.js, the single source of truth. */
 :root {

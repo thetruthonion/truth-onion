@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Release checklist pins (decision record items 0a, 0a-i, 2, 2a, 2b, 3 and
+// Release checklist pins (operator decision items 0a, 0a-i, 2, 2a, 2b, 3 and
 // the Fly.io deploy artifacts). These tests state the guarantees the public
 // artifact ships under: the seed is curated and clean of mojibake, the
 // absent fetch proxy always degrades to the showcase message, verification
@@ -57,7 +57,7 @@ const base = `http://localhost:${server.address().port}`;
 await test('R1 (0a, amended twice — 2.99b, 2.99b-2). the shipped seed is the curated FIVE — no test residue, no "Christ is God"', () => {
   // R1 FIRST AMENDMENT (operator decision, 2026-08-02): UAP joins as the
   // fourth curated topic. R1 SECOND AMENDMENT (operator decision,
-  // 2026-08-09, recorded in the 2.99b-2 kickoff, superseding the
+  // 2026-08-09, on the operator's record, superseding the
   // live-only mini-build ruling of 2026-08-08): AI Evaluation joins as
   // the fifth. Explicit amendments, never silent changes.
   const names = db.prepare('SELECT name FROM topics ORDER BY id').all().map((t) => t.name);

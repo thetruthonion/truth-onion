@@ -336,7 +336,7 @@ await test('E6. every listed surface parks; resume rides the live resolver; the 
   assert.match(app, /noted as/, 'the listing labels the stored snippet as park-time, never current');
   const parkPane = app.slice(app.indexOf("topicTab === 'parking'"), app.indexOf('export notes'));
   assert.match(parkPane, /className="composer"/, 'the notepad input auto-grows (composer pattern)');
-  // 2.97 punch list: topic park + compact labeled controls + search creation.
+  // 2.97 operator additions: topic park + compact labeled controls + search creation.
   assert.match(app, /kind: 'topic-pointer'/, 'the topic panel parks a topic pointer');
   const noteLabels = (app + panel).match(/note for your parking lot \(optional\)/g) || [];
   assert.ok(noteLabels.length >= 2, 'park note fields are labeled unambiguously, everywhere');

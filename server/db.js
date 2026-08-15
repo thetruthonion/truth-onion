@@ -165,14 +165,15 @@ END;
 
 -- Stage 2.98's feedback quarantine table was REMOVED in 2.99a (Amendment
 -- B): an ephemeral demo database cannot honestly keep an accept-then-lose
--- inbox promise. Feedback is a mailto (category in the subject) until the
--- durable in-product pipe ships with 2.99b. The operator's live DB keeps
+-- inbox promise. Feedback rides the anonymous drop box on the site origin
+-- (the durable primary path, shipped with 2.99b), with the monitored
+-- address as fallback. The operator's live DB keeps
 -- its existing table and rows — this schema simply no longer creates one.
 --
--- Still reserved here (Stage 2.98 kickoff C): the 'review' value of
--- events.action. Append-only like every event, same actor/timestamp/reason
--- shape; NO path writes one yet — contest-the-key (2.99) and multiplayer
--- review (Stage 3) plug into that socket.
+-- Still reserved here (a Stage 2.98 operator decision): the 'review' value
+-- of events.action. Append-only like every event, same actor/timestamp/
+-- reason shape; NO path writes one yet — contest-the-key (planned, not yet
+-- built) and multiplayer review (Stage 3) plug into that socket.
 
 -- Stage 2.9d: the global search index (FTS5, trigger-maintained). DERIVED
 -- data only — it adds no authored fields and can be rebuilt from the record

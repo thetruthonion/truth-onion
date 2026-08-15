@@ -6,14 +6,13 @@
 // Sources: located and web-verified 2026-08-09, OPERATOR-CONFIRMED the same
 // day — full ledger click-through including the operator-only checks (the
 // GPT-5 system card PDF, the Stochastic Parrots §6.1 passage, the CanLII
-// decision, the deprecations table). Ledger:
-// truth-onion-ai-eval-topic-sources-verified.md, in the build supervision
-// workstream — not this repository. Every citation string is
+// decision, the deprecations table). The ledger is archived in the build
+// supervision workstream — not this repository. Every citation string is
 // imported from sourcelinks.js (AIEVAL_SOURCES) so the seeded citation and
 // the audit mapping are structurally the same string.
 //
 // Operator decisions carried (2026-08-09): ALL EIGHT claim shapes seed
-// (supersedes the kickoff's proposed seed-1,2,3,7,8/probe-4,5,6 split);
+// (operator supersession of the originally proposed seed/probe split);
 // Moffatt v. Air Canada included, order text read off the decision by the
 // operator.
 //

@@ -60,7 +60,7 @@ await test('S1. every required stop exists, in one deterministic order, each wit
       `${key} shows the sidebar — the panel must sit on the other side`
     );
   }
-  // The listed substance is actually covered where the kickoff demands it.
+  // The listed substance is actually covered where each stop's requirements demand it.
   const all = TOUR_STOPS.map((s) => s.copy).join(' ');
   for (const phrase of ['hides content, never existence', 'the floor, not a promise', 'where the evidence stops', 'recorded history begins', 'clone the repo']) {
     assert.ok(all.toLowerCase().includes(phrase.toLowerCase().replace('clone the repo', 'clone the repo')), `tour copy never states: "${phrase}"`);

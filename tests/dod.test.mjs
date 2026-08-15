@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Definition-of-done checks, run against the real API with the real seed.
-// Each test corresponds to one numbered criterion in the Stage One kickoff.
+// Each test corresponds to one numbered Stage One definition-of-done criterion.
 
 import assert from 'node:assert/strict';
 import { openDb } from '../server/db.js';

@@ -33,7 +33,7 @@ async function test(name, fn) {
 console.log('\nStage 2.9c — tier tokens, kind separation, lexical search\n');
 
 // ------------------------------------------------------------ tokens
-await test('K1. the token sets match the kickoff palette exactly, both surfaces, all five tiers', async () => {
+await test('K1. the token sets match the operator-ruled palette exactly, both surfaces, all five tiers', async () => {
   assert.deepEqual(TIER_COLORS_DARK, {
     core: '#3680E0',
     inner: '#FF5E3A',

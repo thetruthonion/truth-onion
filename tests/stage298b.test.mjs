@@ -126,7 +126,7 @@ await test('A3. withdrawn evidence is diminished, never vanished: reason + date 
   const page = renderClaimPage(db, c.id, {});
   assert.ok(page.includes('Withdrawn — no longer part of the case'));
   assert.ok(page.includes('retracted by publisher'));
-  assert.ok(page.includes('single-curator record'), 'review line on the withdrawn entry (kickoff B)');
+  assert.ok(page.includes('single-curator record'), 'review line on the withdrawn entry (a 2.98b operator requirement)');
 });
 
 await test('A4. library withdrawal: entry stays listed, every leaning claim re-evaluates, withdrawn evidence cannot re-attach', async () => {

@@ -7,7 +7,7 @@
 // the same code path, so sandbox behavior structurally cannot drift from
 // engine behavior.
 //
-// Copy-on-first-write (kickoff Amendment C): a copy exists only because a
+// Copy-on-first-write (a 2.99a operator ruling): a copy exists only because a
 // visitor attempted a write. Reads never create one; reads never consume a
 // session slot. Ephemeral by design: wiped on TTL expiry, capped in count
 // and size, never persisted server-side — the visitor's save file is the

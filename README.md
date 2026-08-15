@@ -78,7 +78,7 @@ Contributing).
   plus schema constraints and triggers, React frontend, adversarially tested (a
   permanent pressure-test suite attempts laundering, circular support, self-published
   stacking, cross-topic smuggling, and edit-after-placement on every run).
-- **Five curated topics in the shipped seed:** MKUltra, COINTELPRO, the Replication
+- **The curated topics in the shipped seed:** MKUltra, COINTELPRO, the Replication
   Crisis, UAP disclosure, and AI evaluation — each spanning the full range from
   documented Core to faithfully-stated-and-debunked edge, every seeded source carrying
   its canonical link or an honest label (audited; the UAP and AI-evaluation genres also
@@ -133,8 +133,9 @@ built-in `node:sqlite`, so there is no native build step. The dev server prints 
 local URLs; the database lives at `server/data/truth-onion.db`, seeded on first run.
 Other commands:
 
-- `npm test` — the full suite: **289 tests across 21 suites**, run against the real API
-  with the real seed, in memory. Definition-of-done, adversarial pressure, the pins for
+- `npm test` — the full suite (current totals are stated in `PROJECT-STATE.md`), run
+  against the real API with the real seed, in memory. Definition-of-done, adversarial
+  pressure, the pins for
   every shipped feature (kernel grammar, time machine, tour, parking, claim pages,
   record permanence, sandbox personas), demo read-only enforcement, companion
   grounding and key privacy, the SSRF-guarded fetch proxy, the release checklist (seed
@@ -211,8 +212,7 @@ welcome and expected.
 `CONTRIBUTING.md`, `LICENSING.md`, and `SECURITY.md` govern contribution, licensing,
 and reporting. `PROJECT-STATE.md` is the working picture of the build; `DECISIONS.md`
 holds designs agreed but deliberately not built; `TAXONOMY-STRAINS.md` is the
-append-only strain journal behind the coming taxonomy revision; the `truth-onion-*.md`
-files are the specs, kickoffs, and addenda the code comments cite.
+append-only strain journal behind the coming taxonomy revision.
 
 ## License
 
@@ -225,8 +225,9 @@ statements, seeded fixtures) is licensed under **CC BY-SA 4.0**; the verbatim te
 ## Status
 
 Solo-built by **Onionwright**. Launched 2026-08-09 and operator-verified end to end:
-the live demo at https://demo.thetruthonion.org/ running the five curated topics, with
-289 tests across 21 suites green behind the deployed build. The full single-player
+the live demo at https://demo.thetruthonion.org/ running the curated topics, with the
+full suite green behind the deployed build (current totals are stated in
+`PROJECT-STATE.md`). The full single-player
 ladder — engine, companion, time machine, claim pages, record permanence, sandbox — is
 complete and adversarially verified. Next: the one deliberate taxonomy revision, then
 multiplayer. The roadmap runs to the shared universe.

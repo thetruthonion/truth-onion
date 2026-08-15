@@ -5,7 +5,7 @@
 // changed its mind. The system does not quietly become correct — it shows
 // its corrections.
 //
-// THE LOG EPOCH (kickoff Amendment A). No general event log existed before
+// THE LOG EPOCH (a 2.95 design ruling). No general event log existed before
 // the `events` table (2026-07-27). The replay exposes that honestly:
 // - Scrubbing before the epoch shows "recorded history begins here" — never
 //   an empty map passing itself off as "nothing had happened yet".
@@ -17,7 +17,7 @@
 // - No pre-epoch view presents itself as complete: complete:false, and the
 //   payload says why.
 //
-// SCOPE EVENTS (kickoff D): the 2.9 audit certified the schema has NO
+// SCOPE EVENTS (a 2.95 design ruling): the 2.9 audit certified the schema has NO
 // scope-event or hash-supersession record types (Legal Amendments F/G
 // unimplemented). This replay therefore covers EVIDENCE EVENTS ONLY; scope
 // tombstone rendering is deferred until those record types exist. Recorded
@@ -80,7 +80,7 @@ function tierAt(claim, moves, ts) {
   return firstLater ? firstLater.from : claim.radial_tier;
 }
 
-// ---- error vs. supersession (kickoff B) ----------------------------------
+// ---- error vs. supersession ----------------------------------------------
 // The reason this stage exists: "correctly placed on then-available
 // evidence, later superseded" must not flatten into "mis-placed and
 // corrected". Classified MECHANICALLY from the record; when the record
@@ -383,7 +383,7 @@ export function claimAtTime(db, claimId, rawTs) {
   };
 }
 
-// ---- claim history (kickoff B + E) ---------------------------------------
+// ---- claim history --------------------------------------------------------
 // The full interleaved record for one claim: placements, moves (with the
 // superseded/corrected classification where the record supports one),
 // FAILED promotion attempts, attachments, challenges, kernel links — each
@@ -529,7 +529,7 @@ export function claimHistory(db, claimId) {
   return { claim_id: claimId, epoch, entries };
 }
 
-// ---- topic health (kickoff F) --------------------------------------------
+// ---- topic health ---------------------------------------------------------
 // Readouts, never leaderboards: TOPIC AGGREGATES ONLY. No actor appears in
 // any statistic; nothing here feeds tiers or reputation; nothing ranks
 // participants or claims as achievement. Pinned by test on the payload.

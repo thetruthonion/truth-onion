@@ -5,8 +5,8 @@ removal per operator ruling — see §3.2r; the second 08-11 session was the
 public-tree removal, §3.2q; the first corrected this
 header's date lag and added the living-people gate to the Stage 3+ list). A working handoff document:
 what exists, why it is shaped the way it is, what was tried and abandoned, and
-what is still open. The design documents (`truth-onion-spec.md`,
-`truth-onion-spec-addendum.md`, the stage kickoffs and their addenda) remain
+what is still open. The design documents (the spec, its addendum, the stage
+kickoffs and their addenda) remain
 the source of intent and live in the build supervision workstream — removed
 from this repository 2026-08-11 per operator ruling (§3.2r); this describes
 the state of the build against them.
@@ -25,11 +25,19 @@ reach the ledger. The eventual goal (Prototypes 4–6) is a shared spatial world
 whose geometry *is* the epistemology; nothing about that is built yet, and the
 current stage deliberately assumes none of it.
 
-**Status: Stage 2.98 complete — claim pages, review-status socket, and the
-operator's anonymized feedback path. Final pre-release feature stage (by
-operator decision, superseding 2.97's claim to the title). Next: the
-public release checklist — then 2.99 (the Proving Grounds, per the
-post-release design capture Amendment A), then Stage 3.
+**Status: LAUNCHED 2026-08-09 — public repository at
+github.com/thetruthonion/truth-onion, demo live at demo.thetruthonion.org,
+five topics, 289 tests / 21 suites green (operator-verified 2026-08-11 on his
+own machine, stage299a H11 passing), published head 1504395. Last stage
+shipped: 2.99b-2, the AI-evaluation fifth topic. Next: Stage 2.99c, the
+taxonomy revision — then multiplayer (Stage 3). Everything below this line is
+the accretive pre-release and launch history, kept in place and read in date
+order; this sentence is the only current-status statement in the file.
+Superseded by it, kept for the record: "Stage 2.98 complete — claim pages,
+review-status socket, and the operator's anonymized feedback path. Final
+pre-release feature stage (by operator decision, superseding 2.97's claim to
+the title). Next: the public release checklist — then 2.99 (the Proving
+Grounds, per the post-release design capture Amendment A), then Stage 3."
 The header add-claim question is resolved: the FEEDBACK link replaced it
 (operator decision); adding a claim lives in the search dropdown. Operator addition
 (2026-07-29): CONFIRM-BEFORE-MUTATE — adding or removing a record entity
@@ -106,7 +114,8 @@ Cleanup is a separate step, proposed and operator-approved.
 ```
 client/  React + Vite. Presentation and the companion. Trusted with NOTHING.
 server/  Express + SQLite (node:sqlite). rules.js + service.js + schema CHECKs.
-tests/   Seven suites against the real API with the real seed, in memory.
+tests/   Twenty-one suites, 289 tests, against the real API with the real
+         seed, in memory.
 ```
 
 The rule that organizes everything: **the UI never decides.** Every write that
@@ -145,7 +154,7 @@ A read-and-talk layer with a hard structural boundary, not a behavioral one.
 |---|---|
 | `providers.js` | BYOK transport. `guardProviderUrl` is the choke point. |
 | `tools.js` | The read-only manifest + executor. Unknown name → refusal. |
-| `search.js` | §14 live search, fetch, and mechanical verification. |
+| `search.js` | Live search, fetch, and mechanical verification. |
 | `pipeline.js` | The two-pass mask-lift + fidelity gate + chat turn. |
 | `cards.js` | Character-card parsing and the persona prompt block. |
 | `store.js` | localStorage: settings, keys, card — isolated entries. |
@@ -202,9 +211,17 @@ quietly come to say another — the single most dangerous silent failure the
 model allows. `PATCH`/`PUT` on a claim throws by design. A revision is a new
 claim that earns its own placement.
 
-**Hard to promote, easy to demote.** Promotion requires surviving the review
-battery and is recorded pass-or-fail in challenge history; demotion is one step
-with a stated reason. The asymmetry is the epistemics.
+**Hard to promote, easy to demote — of a claim's tier, and only that.**
+Promotion requires surviving the review battery and is recorded pass-or-fail in
+challenge history; demotion is one step with a stated reason. The asymmetry is
+the epistemics of tier movement. It says nothing about removing a record
+entity: withdrawing a source, ending an attachment, severing a link — those
+adjudicate before they have any effect at all (§3.2j, "stated asymmetry
+(settled)"). The two couple in practice, because a demotion usually follows a
+source being discredited or withdrawn and that upstream act is gated, with the
+ripple re-evaluating every dependent claim in the same transaction. So the
+route outward runs through an adjudicated gate even where the final step is one
+move. A summary of this sentence that drops the scope is wrong.
 
 **Metaphysical claims take no radial tier.** Ranking "God exists" as weakly
 supported covertly asserts its negation as strong. Routing it off-axis keeps
@@ -229,15 +246,19 @@ coiner cited as evidence for the claim. The relation displays provenance
 honestly while contributing nothing promotional.
 
 **Source library with ripple.** A source is one entity per topic attached to
-many claims. Deleting it re-evaluates every dependent claim in the same
-operation, demoting each to what its remaining evidence earns. Convenience was
-the excuse; integrity is the reason.
+many claims. Withdrawing it re-evaluates every dependent claim, demoting each
+to what its remaining evidence earns. **Two later refinements are load-bearing
+and this summary is read past them, so they are stated here: the source is
+never deleted** — it stays in the library listing marked withdrawn (§3.2j) —
+**and the withdrawal has zero rule effect until it is adjudicated**, at which
+point the ripple fires through every dependent claim in one transaction (§3.2j
+Amendment A). Convenience was the excuse; integrity is the reason.
 
 ### 3.2 The companion
 
 **Structural protection, not content policing.** Card validation used to reject
 "programmed agreement" instructions by string-matching persona text. That was
-removed by operator ruling (§11): the mask lift already removes the card from
+removed by operator ruling: the mask lift already removes the card from
 analysis, so string-checking was a lock on a door that no longer existed — and
 a bypassable rule teaches hiding rather than honesty. The real floor is the
 immutable core prompt no card touches. **Cards may now contain any persona
@@ -250,10 +271,10 @@ with a test, not by discipline.
 
 **The write boundary is the executor, not the prompt.** The manifest contains
 no mutating operation, and any tool name outside it throws `RefusedToolError`.
-Adding search (§14) routed new tools through `makeCompanionExecutor` precisely
+Adding search routed new tools through `makeCompanionExecutor` precisely
 so the refusal path stayed identical — a name in neither set is still refused.
 
-**The character is present in 100% of responses (§12c).** On fidelity-gate
+**The character is present in 100% of responses.** On fidelity-gate
 failure the pipeline makes ONE attempt then degrades automatically to
 *interleaved* — gated record blocks with in-character commentary between them.
 The earlier behavior (retry, then fall back to bare analysis) is gone: a
@@ -266,7 +287,7 @@ anchors, and terms of art ("zero weight", "not established") must survive;
 ordinary vocabulary belongs to the voice and is free. A gate on wording would
 have made every persona sound the same, defeating the point of personas.
 
-**Topic context is injected, never requested (§13b).** The active topic's id
+**Topic context is injected, never requested.** The active topic's id
 and name go into the system prompt with an instruction to use the id in tool
 calls and never show it. An internal database id surfacing to an operator is a
 leak of the machine into the fiction.
@@ -296,7 +317,7 @@ against live providers require the operator's own keys; wire shapes are
 pinned by test.
 
 **Card import (2.9d B):** picker, drag-drop, and paste all funnel through
-`validateCardText` — SHAPE validation only (§11 stands: any persona content
+`validateCardText` — SHAPE validation only (the no-content-policing ruling stands: any persona content
 is legal); refusals name the blocker; export/import round-trips losslessly
 (pinned). **Composer** auto-grows to 140px then scrolls; Enter sends,
 Shift+Enter newlines. **Panel widths** persist in `onion.ui.*` (own family,
@@ -347,9 +368,12 @@ live: "[REFUTED · outermost tier] MKUltra evolved into…"). Off-axis
 claims render their explanation, never a rank. Record-only generation
 pinned (the page grows only when the record grows). Pages inherit every
 demo protection: non-GET → 405, rate limiter mounted on `/claim`,
-cacheable (max-age 60). **Look:** light mode = the public site's palette
-(parchment/pastel/Georgia serif, matching truthonion-site); dark mode =
-the engine (Void Indigo/neon) via prefers-color-scheme — both pinned.
+cacheable (max-age 60). **Look:** the public site's palette
+(parchment/pastel/Georgia serif, matching truthonion-site). *(Superseded
+below: the dark-mode half of this line — the engine's Void Indigo/neon via
+prefers-color-scheme — was reversed by operator correction in this same
+section. Pages are LIGHT/PASTEL ONLY, and the neon set and
+prefers-color-scheme are pinned ABSENT, P7/P8.)*
 **Stretch (interactive embedded mini-map): DEFERRED** — the static link
 tree ships; report per kickoff.
 
@@ -595,9 +619,9 @@ reach beyond the attachable candidates it is handed (pinned).
 
 ### 3.2c Stage 2.9c — color system, tabs, search
 
-**Tier tokens live in ONE file: `client/src/tokens.js`** (design authority:
-`truth-onion-design-brief.md`, scoped by the 2.9c kickoff, both in the repo
-root). The neon set colors dark surfaces (3D tiles, 2D rings, chips, legend);
+**Tier tokens live in ONE file: `client/src/tokens.js`** (the design
+authority is archived in the build supervision workstream, not this
+repository). The neon set colors dark surfaces (3D tiles, 2D rings, chips, legend);
 the pastel set is defined and reserved for light/reading surfaces, which do
 not exist in-app yet. JS consumers import the maps; CSS consumers use the
 `--tier-*` variables injected by `applyTokens()` at boot — the stylesheet
@@ -634,9 +658,13 @@ dial"), never excerpted. Selecting a claim uses single-click semantics
 
 ### 3.3 Stage 2.9 — kernel links and lineages
 
-**A kernel link is annotation, not support — and the rules never read it.**
-`claim_kernels` is a separate table the placement functions never query, so
-zero weight is structural, not policed. The explicit guards on top (a
+**A kernel link is annotation, not support — the placement functions never
+read it.** `claim_kernels` is a separate table the placement functions never
+query, so zero weight is structural, not policed. *Scope, because the headline
+has been quoted past it: the rules layer does read the table elsewhere — it
+refuses a kernel and support link on the same pair, and severs a falsified
+link inside a promotion's transaction. What never reads it is anything that
+computes weight or placement.* The explicit guards on top (a
 `kernel_of` source relation refused by name; `carriesWeight` keyed to
 `'supports'` alone) close the mis-shaping paths. Pinned by tests that a claim
 kernel-linked to a two-primary-doc Core claim still fails every floor.
@@ -785,7 +813,7 @@ No guide ring is drawn; the equator population is a natural cluster.
 Weathering keeps its single meaning (challenge survival); netted-vs-undecided
 is carried by position, not material.
 
-### 3.4 Storage durability (§12b/§13c)
+### 3.4 Storage durability
 
 Keys, the active card, and threads each live in their **own** `onion.companion.*`
 localStorage entry, never inside the settings blob. A single bad write or parse
@@ -814,10 +842,18 @@ superseded entry gets a correction appended, not a rewrite.
 `§9b`-family citations referenced 2.9d-era documents pasted into a session
 and never saved; they could not be made to resolve. Every such citation was
 rewritten to state the constraint it stood in for, or dropped where the
-comment already stated it. The only `§` references remaining in code are
-real legal/document citations inside seeded source strings and one pointer
-to this file's §6, which resolves. Do not reintroduce section-number
-citations to documents that do not live in a durable tree.
+comment already stated it. That sweep covered code and tests only — this
+document itself was swept the same way on 2026-08-15, when eleven kickoff-era
+citations (§11, §12b, §12c, §13b, §13c, §14, and one `spec §4`) were found
+live in it and dropped or restated on the same rule (and on 2026-08-15 the
+rule was widened by operator ruling: no repository file cites a document
+that is not in the repository — the fact is carried inline instead). The
+only `§` references remaining anywhere are real citations to published
+statutes and papers — inside seeded source strings and the records
+describing the operator's checks — this file's own self-citations, and
+historical passages describing the removed citations without making them;
+all resolve. Do not reintroduce section-number citations to documents that
+do not live in this repository.
 
 **Code comments explain *why*, never *what*.** The house style is a short
 paragraph at the head of a module stating the threat it defends against or the
@@ -851,18 +887,20 @@ rule set with schema backstops; promotion battery with challenge history;
 demote/correct (debunker) flow; challenges; source library with ripple
 re-evaluation; tier-requirements preview; parking lot; `is_origin_of`;
 export/import through the rules layer; multi-topic; depth dial; 3D onion view
-(Three.js, Voronoi tiles on nested shells); read-only demo package + Docker
+(Three.js — discrete crisp tiles on nested shells; the Voronoi full-surface
+tessellation was superseded at 2.9b, see §7); read-only demo package + Docker
 deploy variant.
 
 **Companion (Stage 2.8) — complete.**
-BYOK provider layer (OpenRouter / Anthropic / OpenAI-compatible) with the key
+BYOK provider layer (OpenRouter, Anthropic, Google Gemini — OpenAI direct is
+UNSUPPORTED, no CORS; see §3.2d) with the key
 guard; read-only tool manifest (5 tools) with executor refusal; two-pass
 mask-lift with the substance-fidelity gate and automatic interleaved degrade;
 character cards (standard card JSON, structured `powers` declarations); TTS
 (Web Speech default, BYOK premium voices, visible fallback notice); prompt-hash
 display; isolated storage for keys/card/threads.
 
-**Live search + verification (§14 + this week) — complete.**
+**Live search + verification — complete.**
 `web_search` (OpenRouter online plugin, or Brave/Tavily/Exa with a dedicated
 key), `fetch_url`, `verify_source`; deterministic host→tier pre-classification
 with an explicit "unclassifiable → strain candidate" signal; SSRF-guarded
@@ -885,7 +923,10 @@ rest/hover/select/double-click interaction model with record-derived tile
 materials (mass/weathering/pulse); lineage-aware narration with the gap
 statement in the groundable record; pin-to-notebook (isolated
 `onion.companion.notebook` entry, no API path); append-only `events` table
-recording every state change with actor, timestamp, reason.
+recording every state change with actor, timestamp, reason — with two stated
+exceptions, both disclosed where they arise: parked notes (§3.2j, outside the
+epistemics entirely) and source-metadata correction, for which no event type
+exists.
 
 **Stage 2.9b — legibility & seeding — complete.** Chain view on double-click
 with the single-click supersession (see §3.3b); discrete crisp tiles with
@@ -896,7 +937,9 @@ all debunked claims (see the seeding report in §6).
 
 **Principle enacted:** record entities are never hard-deleted through any
 UI or API path — they change status, with a reason, and remain visible in
-a diminished state. Two independent layers say no: the rules layer refuses
+a diminished state. *One stated exception, below: a parked note is truly
+deletable and unlogged, because it carries no tier, weight or place on the
+rings and so cannot make a replay dishonest.* Two independent layers say no: the rules layer refuses
 first in plain language; schema triggers (`trg_sources_no_delete`,
 `trg_attach_no_delete`) refuse again beneath the code.
 
@@ -928,7 +971,10 @@ first in plain language; schema triggers (`trg_sources_no_delete`,
   in the payload but logged NO event — replay could not reconstruct those
   links. It now logs `support_link_removed` per severed link.
 
-**Event-type reuse (none added):** withdrawal reuses `source_detached` and
+**Event-type reuse (none added at the time — see Amendment A below, which
+adds `withdrawal_proposed` and `withdrawal_rejected` for the proposal and
+rejection legs; the EFFECT events remain reused):** withdrawal reuses
+`source_detached` and
 `library_source_deleted` (same semantics, now always carrying the
 operator's reason); link ends reuse `kernel_link_removed` /
 `support_link_removed`. Kernel removal events now carry the full authored
@@ -949,8 +995,9 @@ Carney statement and the Marks book), 6 class-labeled, 2 could-not-verify
 (Media PA cache, the Nov 1964 King letter) — labeled, not guessed. Single
 mapping in `server/sourcelinks.js`, applied by `seed()` and once to the
 live DB (38 rows; disclosed — no event type exists for source-metadata
-correction and the kickoff forbids new types). Audit table:
-`truth-onion-2-98b-source-audit.md`. Seed-lint pinned (stage298b C1).
+correction and the kickoff forbids new types). The 2.98b source-audit table
+that drove this mapping is archived in the build supervision workstream, not
+in this repository. Seed-lint pinned (stage298b C1).
 
 **Also this session (operator requests):** the claim-page logo mark now
 links to https://thetruthonion.org/ and the masthead is sticky
@@ -983,8 +1030,9 @@ longer subtracts anything. Withdrawal is two-phase, challenge-shaped:
   yet — single-curator record" renders on pending proposals, withdrawn
   entries, and proposal/rejection history lines (panel + page). Stage 3
   swaps the adjudicator for the review pipeline with no schema change;
-  bad-actor bounding is Stage 3 scope, noted and not built (see design
-  capture Amendment C for the Sybil-resistance design).
+  bad-actor bounding is Stage 3 scope, noted and not built — the
+  Sybil-resistance design is held in the build supervision workstream's
+  post-release design capture, not in this repository.
 - **Stated asymmetry (settled):** additions take effect immediately and
   answer to challenges afterward; removals adjudicate before effect.
 - **Replay:** proposal and adjudication are distinct events; the pending
@@ -1036,7 +1084,7 @@ it; all kickoff/spec/addendum docs committed so `§` citations resolve.
 Verified staged: no DB blob, no secret (pattern scan), Epstein export empty.
 **The §8 "no version control" risk is closed.**
 *[Superseded in part, 2026-08-11 — operator ruling at the fifth
-reconciliation (reconciled-state §2.10, Amendment C.4, operator-log b-013):
+reconciliation:
 the "committed so `§` citations resolve" line stays on the record as what
 was done, but no longer governs. The rationale was empty at the time — the
 `§` citations in shipped code resolved to nothing in or out of the repo,
@@ -1477,8 +1525,8 @@ infrastructure** — a Netlify Function + Netlify Blobs on thetruthonion.org
 app database (standing constraint satisfied). Contribution no longer taxes
 identity as its price.
 
-**The Function** (`netlify/functions/dropbox.mjs` in the SITE repo —
-`C:\Users\Dane\Downloads\truthonion-site`, which is not under git):
+**The Function** (`netlify/functions/dropbox.mjs`, in the SITE repo — a
+separate tree from this repository, deployed to Netlify):
 one POST endpoint (`/api/dropbox`) accepting save-file contributions
 (`{kind:'save', save}`, format-sniffed, ≤10 MB) and anonymous feedback
 (`{kind:'feedback', category ∈ enum, message ≤2000}`, ≤4 KB), plus the
@@ -1541,7 +1589,7 @@ gate; if the site Function isn't deployed by launch, the demo panels
 already say so honestly and fall back to email, and the drop box follows
 by site redeploy — the two deploys are independent by design.
 
-### 3.2n-i — correction: the §B upload panel did not exist (UI fix, 2026-08-09)
+### 3.2n-i — correction: the save-file upload panel did not exist (UI fix, 2026-08-09)
 
 The paragraph above reported a save-file upload path; the operator — the
 verifier — found on 2026-08-09 that no drop-or-pick upload panel existed
@@ -1648,8 +1696,8 @@ new columns (R2).
 **Part 3 — UAP topic: DRAFTED, NOT SEEDED.** Per the kickoff's own
 division of labor (operator locates and verifies every source; Claude
 Code invents nothing), no source could be verified in this build session,
-so nothing entered the seed. `truth-onion-uap-topic-draft.md` holds the
-full claim skeleton for the operator's verification pass: split-claim
+so nothing entered the seed. The full claim skeleton is archived in the
+build supervision workstream for the operator's verification pass: split-claim
 discipline throughout (testified-that vs. is-true), candidate primary
 documents flagged UNVERIFIED, the Bennewitz disinformation counter-layer,
 the recast pair (off-axis "supernatural beings" ↔ historical
@@ -1729,8 +1777,8 @@ determinism, release-suite extension, operator source verification on the
 release path) were accepted on the record by the operator. The set-aside
 topics stay dropped.
 
-**Operator decisions at session start (recorded in
-`truth-onion-ai-eval-topic-sources-verified.md`, repo root + build tree):**
+**Operator decisions at session start (recorded in the operator-verified
+sources ledger, archived in the build supervision workstream):**
 the full 24-entry sources ledger confirmed 2026-08-09 including every
 operator-only check (GPT-5 system card PDF opened — third-party section
 names METR; Stochastic Parrots §6.1 read off the ACM PDF and deliberately
@@ -1867,6 +1915,11 @@ record, reference safety) and three files came out of HEAD, history untouched:
   in the workstream tree only — the same class as the §9b/§12c citations,
   documented in §8.
 
+*[Superseded by §3.2r, 2026-08-11 — the committed kickoff/spec/addendum/audit
+documents described below came OUT of HEAD in the doc-removal session. The
+paragraph is kept because its reasoning is the record of why they were kept
+first. It does not govern.]*
+
 Everything else superficially unreferenced was kept, with reasons: the
 committed kickoff/spec/addendum/audit/draft documents were committed
 deliberately at release prep "so § citations resolve" (§3.2k 0c), and shipped
@@ -1885,11 +1938,15 @@ are re-pinned to the approved wording (emphasis markers and line wrap
 stripped as presentation); the README itself did not move — it is the
 operator-approved text. Suite counts are unchanged.
 
-**Stray, not acted on:** `package-lock.json` never picked up the `engines`/
-`license` fields added to `package.json` at the signpost-fix commit; any
-`npm install` regenerates it with npm-version-dependent churn attached, so
-the sync is left to the operator's machine rather than committed from a
+**Stray, not acted on at the time:** `package-lock.json` never picked up the
+`engines`/`license` fields added to `package.json` at the signpost-fix commit;
+any `npm install` regenerates it with npm-version-dependent churn attached, so
+the sync was left to the operator's machine rather than committed from a
 different npm.
+*[Superseded 2026-08-11: done. Synced on the operator's machine and pushed as
+its own commit, `f05f82c` — exactly four insertions, no unrelated churn,
+audited from an independent fresh clone. It was deliberately NOT ridden into
+the removal push, so that removal's diff stayed readable in one glance.]*
 
 **Flag for the operator (kept, not removed — flag-the-tension):** the record
 points two ways on the committed kickoffs. This document's §3.2k says all
@@ -1903,7 +1960,7 @@ same ruling. Operator's call; nothing removed on it this session.
 
 *[Superseded, 2026-08-11: the flag above is resolved — flagging rather than
 acting was correct then, and the operator has now ruled (fifth
-reconciliation; reconciled-state §2.10, Amendment C.4, b-013). CLAUDE.md's
+reconciliation, 2026-08-11). CLAUDE.md's
 line is the rule; the kept kickoff/spec/addendum/audit/draft/sources set
 came out of HEAD in the next repo session (§3.2r). The "kept, with reasons"
 paragraph above stays as what was decided then; it no longer governs. Also
@@ -1913,17 +1970,17 @@ one combined "0b/0c — repo" bullet), and 0b, the repo-goes-public
 resolution, is the decision carrying operator attribution. He was never
 asked whether the internal documents should ship.]*
 
-Post-removal verification, reported not verified: full suite green at the
-canonical counts stated in the status paragraph; demo package rebuilt; booted
+Post-removal verification, reported not verified: full suite green at 289
+tests across 21 suites; demo package rebuilt; booted
 in-session serving exactly the five curated topics with mutations refused
 (403) and the root page 200. Verification is the operator's boot and suite
 run, plus a look at the repo tree on GitHub after push.
 
 ## 3.2r Repo document removal session (2026-08-11, third session that date)
 
-**Operator ruling at the fifth reconciliation, 2026-08-11 (reconciled-state
-§2.10, Amendment C.4, operator-log b-013): the seventeen internal working
-documents at the repository root — stage kickoffs, the spec and its
+**Operator ruling at the fifth reconciliation, 2026-08-11: the seventeen
+internal working documents at the repository root — stage kickoffs, the spec
+and its
 addendum, two stage addenda, the source audit, the design brief, the topic
 draft, and the verified-sources ledger — come out of HEAD.** They shipped
 with the 2026-08-09 publication without anyone being asked whether they
@@ -1946,13 +2003,16 @@ removed documents remain in history on the same accepted terms as §3.2q:
   hash-verified the copies byte-identical (SHA-256) before removal.
 - **Seventeen documents `git rm`'d from HEAD** — the fourteen plain
   removals plus the three code-cited ones. The per-file reference table
-  from reconciled-state §2.10 verified exactly: no extra references, no
+  from the ruling verified exactly: no extra references, no
   missing paths.
 - **The three citing comments repointed** at the build supervision
   workstream: `client/src/tokens.js` (design brief + 2.9c kickoff),
   `server/sourcelinks.js` (the 2.98b audit table, and the ai-eval ledger),
-  `server/seed-aieval.js` (the ai-eval ledger). No comment anywhere points
-  at a file that is not there.
+  `server/seed-aieval.js` (the ai-eval ledger). No comment in the kickoff's
+  reference set points at a file that is not there — stated at that scope
+  deliberately, because this same session found four sites the reference walk
+  had missed (below), so a claim over all comments is not one this session
+  earned.
 - **The dangling `§` citations rewritten or removed.** Each now states the
   constraint it stood in for, or the stale marker is dropped where the
   comment already stated it; none were mapped into the 2.9d A–E scheme
@@ -1971,7 +2031,9 @@ removed documents remain in history on the same accepted terms as §3.2q:
   finding: §3.2k carries the two as ONE combined "0b/0c — repo" bullet,
   not separate lines. Supersessions appended (not rewritten) to §3.2k's
   0b/0c bullet and §3.2q's kept-paragraph and flag; the conventions
-  "Section numbering" note replaced (nothing remains dangling); the §8
+  "Section numbering" note replaced (nothing dangling remained IN CODE — the
+  scope this session actually swept; this document's own citations were not
+  swept until 2026-08-15); the §8
   traceability risk marked CLOSED per that section's own convention; repo
   `CLAUDE.md`'s scope line now states the rule plainly and carries the
   supersession.
@@ -2014,18 +2076,25 @@ at the repo tree on GitHub, and an independent boot and suite run.
   for the Entry 5 reason. Reaching core needs the filed plea agreement and
   Information off the docket — PACER remains unreachable.
 
-**Stage 2.95 — the time machine.** Separate kickoff, does not start in the
-2.9 session. The event-log audit it depends on is done (see the audit findings
-below); two record types it may want do NOT exist and were deliberately not
-invented here: hash-supersession events and scope events (Legal Amendments
-F/G). 2.95 must scope around their absence — that is a design decision left
-open, not a gap someone forgot.
+**Stage 2.95 — the time machine — BUILT AND SHIPPED (§3.2f).** This entry is
+kept because its reasoning is the record, and superseded because the stage
+closed: `server/timemachine.js` is read-only by construction, the epoch is
+first-class, and suite `stage295` (9 tests) is inside the 289. The two record
+types it might have wanted — hash-supersession events and scope events (Legal
+Amendments F/G) — still do NOT exist and were deliberately not invented; 2.95
+scoped around their absence with `origin:'derived'` / `actor:null`, which is
+the design decision this entry left open. *The absence is still a real
+constraint on any later stage that wants replay to explain a hash change.*
 
-**Stage 2.99 — the taxonomy redesign** (moved from 2.9 by operator decision
-2026-07-27; last stage before multiplayer). The whole point of the strain
-journal. Six entries across two genres is the input the redesign was waiting
-for. Not started, and deliberately so: the taxonomy is revised **once**,
-never patched piecemeal.
+**Stage 2.99c — the taxonomy redesign** (moved from 2.9 by operator decision
+2026-07-27; last stage before multiplayer). *Numbering note: 2.99a, 2.99b and
+2.99b-2 shipped under the 2.99 label as feature stages; the redesign this
+entry describes is 2.99c, and `ROADMAP.md` entry 3 is its forward chain.* The
+whole point of the strain journal, which now stands at twenty entries across
+four genre sections — Replication Crisis 1–4, legal 5–6, UAP, and Entries
+13–20 (§3.2p) — not the six across two this entry was written against. Not
+started, and deliberately so: the taxonomy is revised **once**, never patched
+piecemeal.
 
 **Event-log audit findings (2.9, scope F).** Before this stage there was NO
 general event log: placements/promotions/demotions lived only in the
@@ -2037,13 +2106,19 @@ refused by trigger): claim_created, promotion, promotion_failed, demotion
 source_detached, library_source_deleted, support_link_added/removed,
 kernel_link_created/removed, challenge_recorded, vertical_set, topic_created —
 each with actor (default 'local' until multiplayer supplies real ones),
-timestamp, and reason. Known residual gaps, reported not papered over:
-support/kernel link removals accept an omitted reason and record "no reason
-stated"; pre-2.9 history exists only in the challenges table and cannot be
-back-filled honestly.
+timestamp, and reason. **Added after this audit, and part of the current set:**
+`withdrawal_proposed` and `withdrawal_rejected` (§3.2j Amendment A), and
+`kind_changed`, `kind_challenge_proposed`, `kind_challenge_rejected` (§3.2o).
+Known residual gaps, reported not papered over: support/kernel link removals
+accept an omitted reason and record "no reason stated"; pre-2.9 history exists
+only in the challenges table and cannot be back-filled honestly; **and no event
+type exists for source-metadata correction, under which 38 live rows were
+edited outside the log (§3.2j) — disclosed there and repeated here because a
+residual-gap list that omits a gap is the defect this list exists to prevent.**
 
-**Parked-note deletion stays unlogged — SETTLED (operator, 2.9b kickoff), do
-not re-decide in 2.95.** The event log exists so the map can replay honestly;
+**Parked-note deletion stays unlogged — SETTLED (operator, 2.9b kickoff). Do
+not re-decide it in any later stage** — the guard originally named 2.95, which
+has since shipped; it binds 2.99c and Stage 3 the same way. The event log exists so the map can replay honestly;
 a parked note has no tier, weight, or place on the rings and cannot affect
 the map at any timestamp, so its deletion cannot make a replay dishonest.
 Logging it would drag private scratch into a permanent record for zero
@@ -2068,7 +2143,7 @@ same-content re-creation with correct encoding, on operator sign-off.
 
 **Stage 3+ (designed, not built).** Multiplayer and adversarial review;
 Matrix/Postgres split with canonical placement never living in the federated
-layer; source capture + content hashing (spec §4); pseudonymous identity;
+layer; source capture + content hashing; pseudonymous identity;
 the heightened evidence bar for claims about living, identifiable people — a
 named gate that lands in `rules.js` by Stage 3 at the latest (until it ships,
 a roadmap item, not a present-tense promise);
@@ -2080,12 +2155,12 @@ and transmits as audio, never re-rendered per listener.
 
 ## 7. Approaches tried and rejected
 
-**Card content validation by string-matching.** Rejected on the §11 ruling: the
+**Card content validation by string-matching.** Rejected on the no-content-policing ruling: the
 mask lift already removes the card from analysis, so the check guarded nothing,
 and a bypassable behavioral rule teaches evasion. Replaced by structural
 absence.
 
-**Retry-on-gate-failure, then bare analysis.** Rejected (§12c). Retrying a
+**Retry-on-gate-failure, then bare analysis.** Rejected on the fidelity-gate ruling. Retrying a
 persona render is a slot machine, and falling back to bare output makes the
 character disappear exactly when the record is hardest. Replaced by one attempt
 then automatic interleaved delivery.
@@ -2171,20 +2246,33 @@ were pasted into chat and never saved. Resolved by the second of the two
 paths this entry named: every citation converted to a self-describing
 statement of its constraint (the save-into-the-repo path was superseded by
 the same ruling that removed the committed documents from HEAD).
+*Appended 2026-08-15:* that closure was true of code and tests and was read
+as true of the tree. This document carried eleven of the same class until it
+was swept on 2026-08-15. Closed for the document too as of that pass; the
+scope of the 2026-08-11 closure is stated here so the next reader does not
+inherit the wider reading.
 
 **The taxonomy redesign has no scoped shape yet.** Six entries say *where* the
 vocabulary strains; none of them proposes a replacement, correctly, since the
 journal's discipline is log-don't-solve. But at some point that has to convert
 into a design, and the conversion criteria ("enough genres") are not written
 down anywhere.
+*[Updated 2026-08-15: the journal now stands at twenty entries across four
+genre sections (see the 2.99c entry in §6); the conversion criteria remain
+unwritten, and by the entry's own terms are now overdue.]*
 
-**Two-source Core in the legal genre may be miscalibrated.** Entries 5 and 6
-both bottom out in the same place: an adjudicated federal conviction earns
-`middle` because its only attachable source is an agency page. That has now
-happened twice with different claims. It may be a taxonomy gap, or it may be
-that "two independent primary documents" is the wrong floor when the primary
-document is a court filing behind a paywall. Worth deciding deliberately in 2.9
-rather than drifting.
+**Two-source Core may be miscalibrated — and it is NOT genre-specific.**
+Entries 5 and 6 bottom out in the same place: an adjudicated federal
+conviction earns `middle` because its only attachable source is an agency
+page. **The same floor then fired outside the legal genre** — the AARO claim
+in the UAP topic was refused live, *"Core requires at least two independent
+primary documents; this claim has 1"*, logged as strain Entry 12 (§3.2o). At
+least three instances across two genres. It may be a taxonomy gap, or it may
+be that "two independent primary documents" is the wrong floor when the
+primary document sits behind a paywall or an agency's own publication. **The
+original disposition said "decide deliberately in 2.9"; 2.9 and five stages
+after it have shipped and the risk is still open, so it belongs to the
+taxonomy revision (2.99c, ROADMAP entry 3) with no further deferral.**
 
 **Demo companion behavior with the proxy absent — CLOSED (release item 2).**
 The showcase message ships in both layers (demo-flag short-circuit +
@@ -2219,6 +2307,10 @@ sink, with no demo benefit whatsoever. The route is now registered only when
 not carry them. Pinned by `demo` tests D4 (absent in demo) and D5 (present in
 the local engine). The rebuilt package boots, serves three topics, and answers
 404 on `/api/fetch`.
+*[Superseded on the count, 2026-08-15: "three topics" was true when this
+correction was written. The curated set was later re-cut — Purdue and Epstein
+moved to live-only, UAP and AI Evaluation added — and the rebuilt package
+serves the five curated topics as of the 2026-08-11 rebuild (§3.2q).]*
 
 ---
 
@@ -2246,7 +2338,9 @@ Twenty-one suites, 289 tests, against the real API with the real seed, in memory
 npm run build-demo
 ```
 
-Writes the read-only showcase to `demo/` and the hosted variant to `deploy/`.
+Writes the read-only showcase to `demo/` only. It does NOT generate the
+`deploy/` artifacts — those are authored, reviewed and pinned by R10 (see
+§3.2k); regenerating over them is the mistake this sentence used to invite.
 `npm run export -- "<topic>"` and `npm run import -- <file>` move topics through
 the rules layer; `npm run reset` wipes and reseeds (**hand-built topics are
 destroyed — export first**).

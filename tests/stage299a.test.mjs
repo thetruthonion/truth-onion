@@ -531,7 +531,7 @@ await test('F1. the entry card is doors, not teaching — and no first-run surfa
   const app = readFileSync(join(root, 'client', 'src', 'App.jsx'), 'utf8');
   // The minimal copy, verbatim facts: curated record; read-only; the
   // sandbox's private copy; the two doors (Amendment C reduced them).
-  assert.match(app, /The curated record of five documented topics/);
+  assert.match(app, /The curated record of documented topics/);
   // Punch 2: concrete verbs, no fog — everywhere the copy is described.
   assert.match(app, /add claims, attach sources, file\s+challenges; the rules accept or refuse them, with reasons/);
   assert.ok(!/rules answer to you/.test(app), 'the fog sentence is gone from the app');

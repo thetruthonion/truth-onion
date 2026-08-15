@@ -164,8 +164,8 @@ export function annotateResults(raw) {
 // deliberately absent from the public demo (an open keyless fetcher that can
 // spawn a headless browser is an abuse relay — see server/index.js). When it
 // is absent, fetch_url / verify_source surface THIS, never a raw 404. The
-// wording is host-neutral on purpose: it must fit the read-only exhibit
-// today and the 2.99a sandbox tomorrow.
+// wording is host-neutral on purpose: it must fit both the read-only
+// exhibit and the sandbox.
 export const SHOWCASE_VERIFY_UNAVAILABLE =
   'Mechanical verification is not available in this demo — clone the repo to run mechanical verification locally. ' +
   'The live fetcher is deliberately switched off on this public host; nothing was fetched, so nothing was learned about the page.';

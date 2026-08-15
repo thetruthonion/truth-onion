@@ -3,7 +3,7 @@
 // READ-ONLY permalink — a fact-check-article-shaped page generated entirely
 // from the record. Shared like a fact-checker link, checkable unlike one.
 //
-// Binding rules (from the design capture, all pinned):
+// Binding rules (operator-settled, all pinned):
 // 1. STATUS TRAVELS INSEPARABLY, including share previews: the <title> and
 //    OpenGraph card carry status and tier — a refuted claim unfurls as
 //    refuted, never as a neutral headline.
@@ -49,9 +49,9 @@ export const FEEDBACK_ADDRESS = 'contact@thetruthonion.org';
 export const IMPERMANENCE_LINE =
   'This page is served by the demo host, temporary by design — permanent claim addresses arrive with multiplayer.';
 
-// The reserved review event type (kickoff C). Append-only like every event;
-// NO path writes one yet — contest-the-key (2.99) and multiplayer review
-// (Stage 3) plug in here.
+// The reserved review event type (a Stage 2.98 operator decision).
+// Append-only like every event; NO path writes one yet — contest-the-key
+// (planned, not yet built) and multiplayer review (Stage 3) plug in here.
 export const REVIEW_EVENT_ACTION = 'review';
 
 export function reviewStatus(db, claimId, { upTo = null } = {}) {

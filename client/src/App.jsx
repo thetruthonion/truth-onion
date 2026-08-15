@@ -41,6 +41,7 @@ import { loadPanelWidth, savePanelWidth, PANEL_BOUNDS } from './uiPrefs.js';
 import TimeScrubber from './TimeScrubber.jsx';
 import { writeBlockedReason, formatTs } from './timeState.js';
 import Tour from './tour/Tour.jsx';
+import { TOUR_STOPS } from './tour/stops.js';
 import {
   makeParkingStore,
   serializeParking,
@@ -938,7 +939,7 @@ export default function App() {
               Truth Onion
             </h2>
             <p>
-              The curated record of five documented topics — every claim placed by its
+              The curated record of documented topics — every claim placed by its
               evidence, debunked claims kept visible. This shared record is read-only; the
               sandbox gives you your own private copy — add claims, attach sources, file
               challenges; the rules accept or refuse them, with reasons.
@@ -1740,8 +1741,8 @@ export default function App() {
 
       {tourInvite && !showIntro && !tourState && (
         <div className="tour-invite">
-          Take the tour? Eight stops, skippable anywhere — with your companion's voice or as
-          written copy.
+          Take the tour? {TOUR_STOPS.length} stops, skippable anywhere — with your companion's
+          voice or as written copy.
           <div className="row" style={{ marginTop: 6 }}>
             <button
               className="small primary"

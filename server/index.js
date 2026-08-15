@@ -56,8 +56,9 @@ const DEMO_MESSAGE = () =>
 
 // 2.99a Amendment B: the in-product feedback modal and its quarantine
 // endpoint are REMOVED — an ephemeral app DB cannot honestly keep an
-// accept-then-lose inbox promise. Feedback is a mailto until the durable
-// pipe ships with 2.99b.
+// accept-then-lose inbox promise. Feedback rides the anonymous drop box on
+// the site origin (the durable primary path, shipped with 2.99b — see
+// claimpages.js), with the monitored address as fallback.
 
 // `sandbox: true` builds the app that serves ONE visitor's private copy:
 // writes allowed (that is the point), fetch proxy still absent (demo
