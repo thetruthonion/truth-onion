@@ -109,7 +109,16 @@ rebuild-before-reporting rule in CLAUDE.md. client/dist and demo/ rebuilt
 (untracked local artifacts; the stale copies carried two pre-removal `§`
 strings). Suite green at 289 across 21, unchanged. Pushed as commits
 095422e and 2d0dd31; this status entry rides one commit above them.
-Reported, not verified.**
+Reported, not verified.** **Operator-verified 2026-08-15, same day, all four
+checks: (1) GitHub shows head 1891c2d carrying the b-019 and edit-visit
+commits, with no internal documents in the public tree; (2) an independent
+fresh clone at 1891c2d ran npm install and the full suite — 21 suites, 289
+passed, 0 failed; (3) the demo package booted via run.bat and passed the
+in-app checks (five topics, number-free intro copy, the derived tour-stop
+count, no `§` rendering); (4) both built bundles grep-clean of `§`, with
+the positive control passing against this file. The verification clone was
+deleted after. This verification line rides one further commit above the
+head it verifies.**
 
 **Standing rule (operator, 2026-07-27, applies to every future session):**
 nothing created during a build session — verification fixtures, seeded data,
