@@ -10,7 +10,7 @@ move inward only by surviving challenge, and outward the moment their evidence f
 The rules are write-time constraints in the database itself: they cannot be overridden
 at runtime, not even by the operator.
 
-It is part research tool, part game, and — on the roadmap — a shared 3D universe built
+It is part research tool, part game, and — on the roadmap — a shared spatial world built
 literally on what's been established.
 
 ---
@@ -25,7 +25,8 @@ wants to know what's established, what's contested, and what's empty — and wan
 check the reasoning themselves.
 
 The Truth Onion is built for that person. It doesn't tell you what to believe. It shows
-you where every claim sits, why it sits there, and exactly what evidence would move it.
+you where every claim sits, why it sits there, and what its evidence still lacks — the
+gap is written down next to the claim, not implied.
 
 ## The layers and the dial
 
@@ -33,11 +34,12 @@ Every topic is an onion of tiers: **Core** (claims backed by primary documents a
 court records that survived challenge), **Inner** (well-supported, credible dispute
 remaining), **Middle** (partial support), **Outer** (speculative — stated faithfully,
 with the path inward written down), and **Outermost** (checked and failed — kept
-visible so nothing gets re-litigated forever).
+visible, with the failed check on the record; a claim that failed carries its history
+instead of vanishing and returning fresh).
 
-By default you see the Core only; nothing speculative is on screen. Turning the
-**depth dial** outward brings the further tiers into view. The dial hides content,
-never existence — the count of what sits deeper is always shown, so nothing is
+By default you see the Core only; reaching the speculative edge is a deliberate act
+of turning the **depth dial** outward, which brings the further tiers into view. The
+dial hides content, never existence — the count of what sits deeper is always shown, so nothing is
 quietly withheld. Uncertainty is opt-in: you choose how far down the rabbit hole
 your view reaches. The same record renders as flat concentric rings or nested
 spherical shells — the 2D and 3D views described below.
@@ -46,15 +48,18 @@ spherical shells — the 2D and 3D views described below.
 
 Every rule below is a **write-time constraint in the database**, not a moderation policy:
 
-1. **Promotion requires surviving challenge.** Hard to move inward, easy to move outward
-   — the asymmetry is deliberate.
+1. **Hard to promote, easy to demote — of a claim's tier, and only that.** Promotion
+   requires surviving challenge, recorded pass-or-fail; demotion is one step with a
+   stated reason. Removing anything from the record is the opposite shape: withdrawals
+   adjudicate before they have any effect at all (rule 7).
 2. **Outer cannot feed inner.** A weak claim can never be cited as support for a stronger
    one, within or across topics.
 3. **Moral and framing claims cannot occupy the factual Core** — no matter how strongly
    held, including by the operator.
 4. **Metaphysical claims take no tier at all.** "God exists" and "no god exists" are the
    same kind of claim; the evidence axis measures neither, in either direction. They live
-   on an attributed-positions layer instead — argued, discussed, never ranked.
+   in a dedicated off-axis space instead — never ranked, though an empirical rewording
+   can earn its own placement, without the original's standing ever moving with it.
 5. **Self-assertion scores zero.** A website asserting its author is right is a
    restatement of the claim, not evidence for it. Only claimant-independent provenance
    moves anything inward.
@@ -71,6 +76,36 @@ These constraints bind the author's claims exactly as they bind anyone's. Under 
 self-assertion rule, the author's own tests are self-assertion — which is why the
 project's credibility claim sits at Outer until independently audited (see
 Contributing).
+
+## How review works
+
+Filing and ruling are separate acts, and no party rules on its own filing —
+proposer-never-upholds is enforced in code, with the proposer read from the append-only
+event log rather than from a trusted column. The asymmetry is stated and deliberate:
+additions take effect immediately and answer to challenges afterward; removals
+adjudicate before they have any effect at all. A rejected challenge is kept as
+permanently as an upheld one — the attempt is history either way. Even the routing
+decision (is this claim empirical, or off-axis?) is contestable through the same
+two-phase machinery, and a claim moved on-axis enters at exactly the tier its evidence
+earns — no free inward movement. Every ruling carries its filer, its reason, and its
+date in the append-only events table.
+
+Today's record is a single-curator record, and the product says so on its face:
+"Adjudicated by curator · Independent review: none yet — single-curator record" renders
+on every adjudication, and the socket where independent review will plug in is built
+and reads empty rather than pretending. You can hold every seat yourself now — the
+sandbox runs Curator, Contributor, and Reviewer against the real rules layer, and the
+rules refuse you when you try to rule on your own filing. Save files carry the full
+record, and nothing carries standing in from a file: imports pass the real rules layer
+entry by entry. Source verification is computed, not asserted — `verified` derives
+server-side from text actually retrieved through a guarded proxy, a page that cannot be
+read is recorded as unreadable, and no model can declare a source checked.
+
+The line between running and coming, plainly: today's challenge is single-shot — filing
+one carries its own adjudication — and the two-phase split, where a ruling can itself
+be challenged and that ruling reversed and contested again, arrives with multiplayer,
+along with other people in the other seats, the heightened evidence bar for claims
+about living people, and topic pages.
 
 ## What exists today
 
@@ -118,7 +153,11 @@ Contributing).
 - **Multiplayer and adversarial review** — persistent pseudonymous identity, claims
   moved by other people's challenges, dissent preserved rather than steamrolled.
   Sandbox saves enter multiplayer only entry by entry, through the rules layer.
-- **The shared universe** — everyone spawns inside a vast sphere on the same bedrock of
+- **Topic pages** — stable public pages for each topic, surfacing what was reviewed
+  recently the way claim pages already do for a single claim. They arrive with
+  multiplayer: a page that surfaces reviews needs real reviewers before there is
+  anything to surface or test.
+- **The shared world** — a shared spatial world built on the same bedrock of
   established claims; the world's geometry *is* the epistemology.
 
 ## Running it
@@ -230,6 +269,6 @@ full suite green behind the deployed build (current totals are stated in
 `PROJECT-STATE.md`). The full single-player
 ladder — engine, companion, time machine, claim pages, record permanence, sandbox — is
 complete and adversarially verified. Next: the one deliberate taxonomy revision, then
-multiplayer. The roadmap runs to the shared universe.
+multiplayer. The roadmap runs to the shared world.
 
 *The center is the same for everyone. That's the point.*
