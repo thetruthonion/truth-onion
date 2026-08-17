@@ -31,8 +31,9 @@ current stage deliberately assumes none of it.
 github.com/thetruthonion/truth-onion, demo live at demo.thetruthonion.org,
 five topics, 289 tests / 21 suites green (operator-verified 2026-08-11 on his
 own machine, stage299a H11 passing; re-verified 2026-08-15 on an independent
-fresh clone at 1891c2d), published head a09ac00, the 2026-08-16 README
-redraft. Standing note (2026-08-16): any session that pushes refreshes this
+fresh clone at 1891c2d), published head d32b60a, the 2026-08-16
+reconciliation-leftovers visit (which also pushed the README redraft,
+a09ac00). Standing note (2026-08-16): any session that pushes refreshes this
 head figure before it closes — the 08-15 visit's own two pushes staled the
 figure that visit's lead-line fix had just corrected; the figure names the
 last completed push and necessarily trails whatever commit carries this
