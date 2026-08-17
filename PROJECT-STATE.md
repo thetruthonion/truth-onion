@@ -1,9 +1,11 @@
 # Truth Onion — state of the project
 
-Written 2026-07-20; updated 2026-08-11, third session that date (repo document
-removal per operator ruling — see §3.2r; the second 08-11 session was the
-public-tree removal, §3.2q; the first corrected this
-header's date lag and added the living-people gate to the Stage 3+ list). A working handoff document:
+Written 2026-07-20; updated 2026-08-16 (ninth-run reconciliation leftovers:
+this header's date lag — the body already recorded the 08-15 edit visit the
+header didn't — plus the lead status line's head refresh with its standing
+note, and the stale Stage 2.9 label in §6. The 08-11 sessions this note
+replaces are on the record at §3.2q and §3.2r; the first of them also added
+the living-people gate to the Stage 3+ list). A working handoff document:
 what exists, why it is shaped the way it is, what was tried and abandoned, and
 what is still open. The design documents (the spec, its addendum, the stage
 kickoffs and their addenda) remain
@@ -28,7 +30,13 @@ current stage deliberately assumes none of it.
 **Status: LAUNCHED 2026-08-09 — public repository at
 github.com/thetruthonion/truth-onion, demo live at demo.thetruthonion.org,
 five topics, 289 tests / 21 suites green (operator-verified 2026-08-11 on his
-own machine, stage299a H11 passing), published head 1504395. Last stage
+own machine, stage299a H11 passing; re-verified 2026-08-15 on an independent
+fresh clone at 1891c2d), published head a09ac00, the 2026-08-16 README
+redraft. Standing note (2026-08-16): any session that pushes refreshes this
+head figure before it closes — the 08-15 visit's own two pushes staled the
+figure that visit's lead-line fix had just corrected; the figure names the
+last completed push and necessarily trails whatever commit carries this
+line. Last stage
 shipped: 2.99b-2, the AI-evaluation fifth topic. Next: Stage 2.99c, the
 taxonomy revision — then multiplayer (Stage 3). Everything below this line is
 the accretive pre-release and launch history, kept in place and read in date
@@ -118,7 +126,21 @@ in-app checks (five topics, number-free intro copy, the derived tour-stop
 count, no `§` rendering); (4) both built bundles grep-clean of `§`, with
 the positive control passing against this file. The verification clone was
 deleted after. This verification line rides one further commit above the
-head it verifies.**
+head it verifies.** **Reconciliation-leftovers visit (2026-08-16): earlier
+the same session, the b-020 README redraft was pushed as head a09ac00 and
+verified byte-identical to the public-surfaces draft. Then the ninth run's
+six leftover findings, all small, all one visit: in this file, the header's
+date lag, the lead line's superseded head (refreshed, with the standing note
+that every pushing session refreshes it), and §6's stale Stage 2.9 label
+(ruling restated inline); in the build workstream, ROADMAP entry 1 closed
+against the verified 08-15 record with b-020 promoted to the head of the
+chain, its stale ten-citation list deleted, and its preference (2) struck
+with the no-external-citation rule stated in the closed record; and
+check-94.mjs's comment corrected from 17/17 to 18/18 (its own array and
+output already said eighteen). Entry 1's tail stays owed to the operator
+log: the archive paste block for the three spent originals, still in build/
+at this close. check-94 re-run against this file post-edit: 18/18 present.
+Suite green at 289 across 21, unchanged. Reported, not verified.**
 
 **Standing rule (operator, 2026-07-27, applies to every future session):**
 nothing created during a build session — verification fixtures, seeded data,
@@ -2084,7 +2106,10 @@ at the repo tree on GitHub, and an independent boot and suite run.
   plain fetch defeats the *bot-block*, not *JavaScript rendering*, and the split
   runs through a single domain (justice.gov `criminal-vns` pages are
   server-rendered; `/archives/opa/pr/` releases are JS shells). Uncorrected, it
-  will mislead the Stage 2.9 redesign.
+  will mislead the Stage 2.99c redesign. *(Label corrected 2026-08-16,
+  operator-ruled: the 08-15 ruling that this bullet stays as written is
+  restated to cover its substance, not the stage label — which the same
+  visit's own edit renamed at the 2.99c entry below.)*
 - **Target #2, the civil settlement, is unblocked but not entered.** All nine
   candidate quotes now verify against live pages. Candidate A (DOJ federal
   civil, $2.8B FCA) and B (Sackler $225M, names living people — Rule 11) are
