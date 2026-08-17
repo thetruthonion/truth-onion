@@ -132,15 +132,21 @@ verified byte-identical to the public-surfaces draft. Then the ninth run's
 six leftover findings, all small, all one visit: in this file, the header's
 date lag, the lead line's superseded head (refreshed, with the standing note
 that every pushing session refreshes it), and §6's stale Stage 2.9 label
-(ruling restated inline); in the build workstream, ROADMAP entry 1 closed
-against the verified 08-15 record with b-020 promoted to the head of the
-chain, its stale ten-citation list deleted, and its preference (2) struck
-with the no-external-citation rule stated in the closed record; and
+(ruling restated inline); in the build workstream, the forward chain's
+first entry closed against the verified 08-15 record with b-020 promoted
+to its head, its stale ten-citation list deleted, and its preference (2)
+struck with the no-external-citation rule stated in the closed record; and
 check-94.mjs's comment corrected from 17/17 to 18/18 (its own array and
 output already said eighteen). Entry 1's tail stays owed to the operator
 log: the archive paste block for the three spent originals, still in build/
-at this close. check-94 re-run against this file post-edit: 18/18 present.
-Suite green at 289 across 21, unchanged. Reported, not verified.**
+at this close. A follow-on ruling the same visit struck this file's three
+namings of the workstream's chain document (§6's numbering note, §8's
+floor-risk disposition, and this entry's own first sentence): the public
+record does not name the document that holds future ideas — the forward
+chain is referred to generically as the build supervision workstream, the
+same treatment every other workstream document already received. check-94
+re-run against this file post-edit: 18/18 present. Suite green at 289
+across 21, unchanged. Reported, not verified.**
 
 **Standing rule (operator, 2026-07-27, applies to every future session):**
 nothing created during a build session — verification fixtures, seeded data,
@@ -2134,7 +2140,8 @@ constraint on any later stage that wants replay to explain a hash change.*
 **Stage 2.99c — the taxonomy redesign** (moved from 2.9 by operator decision
 2026-07-27; last stage before multiplayer). *Numbering note: 2.99a, 2.99b and
 2.99b-2 shipped under the 2.99 label as feature stages; the redesign this
-entry describes is 2.99c, and `ROADMAP.md` entry 3 is its forward chain.* The
+entry describes is 2.99c, and its forward chain is held in the build
+supervision workstream.* The
 whole point of the strain journal, which now stands at twenty entries across
 four genre sections — Replication Crisis 1–4, legal 5–6, UAP, and Entries
 13–20 (§3.2p) — not the six across two this entry was written against. Not
@@ -2317,7 +2324,7 @@ be that "two independent primary documents" is the wrong floor when the
 primary document sits behind a paywall or an agency's own publication. **The
 original disposition said "decide deliberately in 2.9"; 2.9 and five stages
 after it have shipped and the risk is still open, so it belongs to the
-taxonomy revision (2.99c, ROADMAP entry 3) with no further deferral.**
+taxonomy revision (2.99c) with no further deferral.**
 
 **Demo companion behavior with the proxy absent — CLOSED (release item 2).**
 The showcase message ships in both layers (demo-flag short-circuit +
